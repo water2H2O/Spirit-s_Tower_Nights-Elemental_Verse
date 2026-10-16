@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "elemental_verse_vial",
+  "pattern": [
+    "G"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:element_vial",
+    "count": 1
+  }
+}

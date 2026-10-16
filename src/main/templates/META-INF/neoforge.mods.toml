@@ -36,17 +36,25 @@ displayName="${mod_name}" #mandatory
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="examplemod.png" #optional
+logoFile="pack.png" #optional
 
 # A text field displayed in the mod UI
-#credits="" #optional
+credits="世界观与美术：水水（water2H2O）" #optional
 
 # The authors of the mod, displayed in the mod UI (optional)
 authors="Water2H2O"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Example mod description.
+《水塔夜谈》世界观的 Minecraft 模组。
+
+你用的每一分魔法，都在让世界变脏；而脏到一定程度，世界就不再属于你了。
+
+元素会衰变：稳定元素 → 衍生元素 → 死寂物质，不可逆。
+装进瓶子里的东西会自己变浑、变灰，最后什么都不剩。
+所以你要管的不只是背包，是仓储与节奏。
+
+—— 水塔夜谈 · 元素之诗
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
