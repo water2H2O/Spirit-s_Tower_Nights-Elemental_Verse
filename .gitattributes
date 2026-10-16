@@ -1,0 +1,19 @@
+# Disable autocrlf on generated files, they always generate with LF
+# Add any extra files or paths here to make git stop saying they
+# are changed when only line endings change.
+src/generated/**/.cache/* text eol=lf
+src/generated/**/*.json text eol=lf
+
+# gradlew 是 Linux/macOS 上直接执行的 shell 脚本：必须是 LF。
+# CI 里跑 ./gradlew，一旦被 checkout 成 CRLF 会以
+# "/usr/bin/env: 'sh\r': No such file or directory" 失败。
+gradlew text eol=lf
+*.sh text eol=lf
+gradlew.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不要做行尾转换
+*.jar binary
+*.png binary
+*.ogg binary
+*.zip binary

@@ -1,0 +1,13 @@
+{
+  "itemGroup.elemental_verse": "Example Mod Tab",
+  "block.elemental_verse.example_block": "Example Block",
+  "item.elemental_verse.example_item": "Example Item",
+
+  "elemental_verse.configuration.title": "Spirit's Tower Nights: Elemental Verse Configs",
+  "elemental_verse.configuration.section.elemental_verse.common.toml": "Spirit's Tower Nights: Elemental Verse Configs",
+  "elemental_verse.configuration.section.elemental_verse.common.toml.title": "Spirit's Tower Nights: Elemental Verse Configs",
+  "elemental_verse.configuration.items": "Item List",
+  "elemental_verse.configuration.logDirtBlock": "Log Dirt Block",
+  "elemental_verse.configuration.magicNumberIntroduction": "Magic Number Text",
+  "elemental_verse.configuration.magicNumber": "Magic Number"
+}
