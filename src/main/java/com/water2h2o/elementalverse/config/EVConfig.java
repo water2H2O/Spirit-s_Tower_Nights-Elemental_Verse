@@ -57,9 +57,9 @@ public final class EVConfig {
     // ---------------------------------------------------------------- 配置项
 
     public static final ModConfigSpec.EnumValue<Preset> DECAY_PRESET = BUILDER
-            .comment("时长预设：observe = 秒级（方便观察自然变化），normal = 日级（正式手感）")
+            .comment("时长预设：observe = 秒级（开发测试用），normal = 分钟级（正式手感：火 12 分钟转变）")
             .translation(EVLang.config("decayPreset"))
-            .defineEnum("decay.preset", Preset.OBSERVE);
+            .defineEnum("decay.preset", Preset.NORMAL);
 
     public static final ModConfigSpec.BooleanValue DECAY_ENABLED = BUILDER
             .comment("总开关。关掉之后元素永远不会变质（调试用，也给不喜欢这机制的服主）")
@@ -144,14 +144,17 @@ public final class EVConfig {
         observe.put(ElementType.ICE, seconds(10, 0));   // 冰会衰变：10 秒
 
         Map<ElementType, int[]> normal = new EnumMap<>(ElementType.class);
-        normal.put(ElementType.EARTH, days(8, 16));
-        normal.put(ElementType.WIND, days(3, 6));
-        normal.put(ElementType.WATER, days(3.5D, 7.5D));
-        normal.put(ElementType.GRASS, days(2.5D, 5));
-        normal.put(ElementType.FIRE, days(2, 4));
-        normal.put(ElementType.LIGHT, days(12, 20));
-        normal.put(ElementType.SHADOW, days(12, 20));
-        normal.put(ElementType.ICE, days(6, 0));        // 冰会衰变：6 游戏日
+        // 正式档：以「中等速率元素（火）= 12 分钟转变」为基准，其余按观察档比例缩放
+        // 观察档比例：水 5 / 草 6 / 火 8 / 风 9 / 地 11 / 光暗 15（秒）
+        // 阶段②一律取阶段①的两倍（与观察档一致）
+        normal.put(ElementType.WATER, minutes(7.5D, 15));    // 7.5 分钟 -> 霜
+        normal.put(ElementType.GRASS, minutes(9, 18));       // 9 分钟 -> 芽
+        normal.put(ElementType.FIRE, minutes(12, 24));       // 12 分钟 -> 烬（基准）
+        normal.put(ElementType.WIND, minutes(13.5D, 27));    // 13.5 分钟 -> 电
+        normal.put(ElementType.EARTH, minutes(16.5D, 33));   // 16.5 分钟 -> 砂
+        normal.put(ElementType.LIGHT, minutes(22.5D, 45));   // 22.5 分钟 -> 晨
+        normal.put(ElementType.SHADOW, minutes(22.5D, 45));  // 22.5 分钟 -> 影
+        normal.put(ElementType.ICE, minutes(15, 0));         // 冰没有父元素，只给阈值        // 冰会衰变：6 游戏日
 
         Map<Preset, Map<ElementType, int[]>> all = new EnumMap<>(Preset.class);
         all.put(Preset.OBSERVE, observe);
@@ -161,6 +164,11 @@ public final class EVConfig {
 
     private static int[] seconds(int stage1, int stage2) {
         return new int[] { stage1 * 20, stage2 * 20 };
+    }
+
+    /** 分钟 -> tick（1 分钟 = 1200 tick）。 */
+    private static int[] minutes(double first, double second) {
+        return new int[]{ (int) Math.round(first * 1200), (int) Math.round(second * 1200) };
     }
 
     private static int[] days(double stage1, double stage2) {
