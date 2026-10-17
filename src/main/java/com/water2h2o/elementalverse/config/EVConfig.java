@@ -139,9 +139,9 @@ public final class EVConfig {
         observe.put(ElementType.FIRE, seconds(8, 15));
         observe.put(ElementType.WIND, seconds(9, 18));
         observe.put(ElementType.EARTH, seconds(11, 23));
-        observe.put(ElementType.LIGHT, seconds(15, 30));
-        observe.put(ElementType.SHADOW, seconds(15, 30));
-        observe.put(ElementType.ICE, seconds(10, 0));   // 冰会衰变：10 秒
+        observe.put(ElementType.LIGHT, seconds(3, 6));    // 最快；亮处 6 秒
+        observe.put(ElementType.SHADOW, seconds(3, 6));   // 最快；暗处 6 秒
+        observe.put(ElementType.ICE, seconds(10, 0));   
 
         Map<ElementType, int[]> normal = new EnumMap<>(ElementType.class);
         // 正式档：以「中等速率元素（火）= 12 分钟转变」为基准，其余按观察档比例缩放
@@ -152,9 +152,11 @@ public final class EVConfig {
         normal.put(ElementType.FIRE, minutes(12, 24));       // 12 分钟 -> 烬（基准）
         normal.put(ElementType.WIND, minutes(13.5D, 27));    // 13.5 分钟 -> 电
         normal.put(ElementType.EARTH, minutes(16.5D, 33));   // 16.5 分钟 -> 砂
-        normal.put(ElementType.LIGHT, minutes(22.5D, 45));   // 22.5 分钟 -> 晨
-        normal.put(ElementType.SHADOW, minutes(22.5D, 45));  // 22.5 分钟 -> 影
-        normal.put(ElementType.ICE, minutes(15, 0));         // 冰没有父元素，只给阈值        // 冰会衰变：6 游戏日
+        // 光暗是**最不稳定**的：基础只给 6 分钟；
+        // 在有利环境里（光在亮处 / 暗在暗处）系数 0.5，正好拖到 12 分钟
+        normal.put(ElementType.LIGHT, minutes(6, 12));        // 6 分钟 -> 晨（亮处 12 分钟）
+        normal.put(ElementType.SHADOW, minutes(6, 12));       // 6 分钟 -> 影（暗处 12 分钟）
+        normal.put(ElementType.ICE, minutes(15, 0));         // 冰没有父元素，只给阈值
 
         Map<Preset, Map<ElementType, int[]>> all = new EnumMap<>(Preset.class);
         all.put(Preset.OBSERVE, observe);
