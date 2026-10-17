@@ -3,6 +3,7 @@ package com.water2h2o.elementalverse.element;
 import java.util.List;
 
 import com.water2h2o.elementalverse.config.EVConfig;
+import com.water2h2o.elementalverse.element.gathering.Gathering;
 import com.water2h2o.elementalverse.registry.EVDataComponents;
 import com.water2h2o.elementalverse.registry.EVItems;
 import com.water2h2o.elementalverse.util.EVLang;
@@ -134,46 +135,11 @@ public class ElementVialItem extends Item {
     }
 
     // ------------------------------------------------------------ 采集
-    // 阶段 01 只做一条最小链路：空瓶 → 水（或霜）。其余元素走创造物品栏。
+    // 全部规则在 element.gathering.Gathering 里，这里只做转发 ——
+    // 七种元素 + 冰 + 光暗 的判定都集中在那个类，避免两处实现分叉。
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (!getElement(stack).isEmpty()) {
-            // 已经装着东西了，不要覆盖掉玩家手里的元素
-            return InteractionResultHolder.pass(stack);
-        }
-
-        BlockHitResult hit = getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
-        if (hit.getType() != HitResult.Type.BLOCK) {
-            return InteractionResultHolder.pass(stack);
-        }
-
-        BlockPos pos = hit.getBlockPos();
-        if (!level.getFluidState(pos).is(FluidTags.WATER)) {
-            return InteractionResultHolder.pass(stack);
-        }
-
-        if (level.isClientSide()) {
-            return InteractionResultHolder.success(stack);
-        }
-
-        // 冰 → 霜（低温支线）；其余水源 → 水
-        BlockState state = level.getBlockState(pos);
-        ElementType collected = state.is(BlockTags.ICE) ? ElementType.FROST : ElementType.WATER;
-        return InteractionResultHolder.success(fill(stack, player, collected));
-    }
-
-    /** 把瓶子换成装着指定元素的版本；一摞就拆一个出来，剩下的留在手上。 */
-    public static ItemStack fill(ItemStack emptyVial, Player player, ElementType type) {
-        ItemStack filled = createStack(type);
-        emptyVial.shrink(1);
-        if (emptyVial.isEmpty()) {
-            return filled;
-        }
-        if (!player.getInventory().add(filled)) {
-            player.drop(filled, false);
-        }
-        return emptyVial;
+        return Gathering.use(level, player, hand);
     }
 }

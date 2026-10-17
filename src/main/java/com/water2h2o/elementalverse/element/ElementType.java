@@ -49,12 +49,12 @@ public enum ElementType implements StringRepresentable {
 
     // ---- 十种衍生元素 ----
     /**
-     * 冰：**不再由衰变产生**，需要单独获取（采集方式待定）。
+     * 冰：**不由衰变产生**，要从冰方块采（见采集系统）。
      *
-     * <p>它的定位是"冷却剂"：放进小包可以消耗掉，换取更慢的变质速度。
-     * 所以它不参与衰变链（{@code decays = false}）。
+     * <p>作者 2026-10-17：**冰作为元素态也会衰变**，所以 {@code decays = true}，
+     * 时长在 {@code EVConfig} 的预设表里单独给（它没有父元素，不能靠继承算）。
      */
-    ICE("ice", null, null, false),
+    ICE("ice", null, null, true),
     /** 霜：水的衍生形态，也是小包里的基础冷却剂。会继续衰变成死寂尘。 */
     FROST("frost", null, null, true),
     /** 风 → 电，独占「瞬时爆发」。 */

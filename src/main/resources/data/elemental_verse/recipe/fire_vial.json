@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "elemental_verse_fire_vial",
+  "ingredients": [
+    {
+      "item": "minecraft:blaze_powder"
+    },
+    {
+      "item": "elemental_verse:element_vial"
+    }
+  ],
+  "result": {
+    "id": "elemental_verse:element_vial",
+    "count": 1,
+    "components": {
+      "elemental_verse:element": "fire"
+    }
+  }
+}

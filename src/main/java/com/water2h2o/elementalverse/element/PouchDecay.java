@@ -41,11 +41,14 @@ public final class PouchDecay {
             changed = true;
         }
 
-        // 每 60 秒烧一个冷却剂 —— 但只在**真的有东西需要保护**时才烧
-        if (level.getGameTime() % PouchContents.COOLANT_BURN_TICKS == 0L
-                && PouchContents.hasProtectedContents(items)) {
-            if (PouchContents.consumeCoolant(items)) {
-                changed = true;
+        // 烧冷却剂：霜 30 秒一个、冰 60 秒一个（作者定：一个霜 = 半个冰）
+        // 只在**真的有东西需要保护**时才烧
+        if (PouchContents.hasProtectedContents(items)) {
+            long period = PouchContents.burnInterval(items);
+            if (period > 0 && level.getGameTime() % period == 0L) {
+                if (PouchContents.consumeCoolant(items)) {
+                    changed = true;
+                }
             }
         }
 

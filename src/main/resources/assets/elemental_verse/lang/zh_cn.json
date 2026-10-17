@@ -62,5 +62,12 @@
   "item.elemental_verse.element_pouch": "元素小包",
   "tooltip.elemental_verse.pouch_count": "装有 %s 件",
   "tooltip.elemental_verse.pouch_cooling": "冷却中 %s（冷却剂 ×%s）",
-  "tooltip.elemental_verse.pouch_idle": "冷却剂 ×%s（包内没东西可保护，不会消耗）"
+  "tooltip.elemental_verse.pouch_idle": "冷却剂 ×%s（包内没东西可保护，不会消耗）",
+  "message.elemental_verse.no_light": "这里没有光可捉",
+  "message.elemental_verse.too_bright": "这里太亮了，抓不住影",
+  "message.elemental_verse.no_wind": "风进不来",
+  "message.elemental_verse.weak_wind": "风太弱了，再高点",
+  "elemental_verse.configuration.windMinY": "采风的最低高度",
+  "elemental_verse.configuration.lightMinSky": "采光所需的天空光",
+  "elemental_verse.configuration.shadowMaxBrightness": "采暗允许的亮度上限"
 }

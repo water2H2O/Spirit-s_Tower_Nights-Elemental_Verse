@@ -30,6 +30,12 @@ public final class EVLang {
     public static final String TOOLTIP_NO_DECAY = "tooltip.elemental_verse.no_decay";
     public static final String TOOLTIP_DEBUG_DISABLED = "tooltip.elemental_verse.decay_disabled";
 
+    // 采集失败的提示（只有"条件不满足"才提示）
+    public static final String MSG_NO_LIGHT = "message.elemental_verse.no_light";
+    public static final String MSG_TOO_BRIGHT = "message.elemental_verse.too_bright";
+    public static final String MSG_NO_WIND = "message.elemental_verse.no_wind";
+    public static final String MSG_WEAK_WIND = "message.elemental_verse.weak_wind";
+
     // 配置界面
     public static final String CONFIG_TITLE = "elemental_verse.configuration.title";
 

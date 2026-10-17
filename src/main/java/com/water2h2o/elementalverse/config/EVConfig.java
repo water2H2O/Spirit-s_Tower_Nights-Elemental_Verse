@@ -96,6 +96,23 @@ public final class EVConfig {
             .translation(EVLang.config("showsExactSeconds"))
             .define("decay.showsExactSeconds", false);
 
+    // ---------------------------------------------------------------- 采集
+
+    public static final ModConfigSpec.IntValue WIND_MIN_Y = BUILDER
+            .comment("采风元素的最低高度（雷雨中不限高度）")
+            .translation(EVLang.config("windMinY"))
+            .defineInRange("gathering.windMinY", 120, -64, 320);
+
+    public static final ModConfigSpec.IntValue LIGHT_MIN_SKY = BUILDER
+            .comment("采光元素所需的天空光下限（阴雨也算，只看天空光）")
+            .translation(EVLang.config("lightMinSky"))
+            .defineInRange("gathering.lightMinSky", 12, 0, 15);
+
+    public static final ModConfigSpec.IntValue SHADOW_MAX_BRIGHTNESS = BUILDER
+            .comment("采暗元素允许的方块亮度上限")
+            .translation(EVLang.config("shadowMaxBrightness"))
+            .defineInRange("gathering.shadowMaxBrightness", 7, 0, 15);
+
     /** 主类在别的包里要用它注册配置，所以必须 public。 */
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -124,6 +141,7 @@ public final class EVConfig {
         observe.put(ElementType.EARTH, seconds(11, 23));
         observe.put(ElementType.LIGHT, seconds(15, 30));
         observe.put(ElementType.SHADOW, seconds(15, 30));
+        observe.put(ElementType.ICE, seconds(10, 0));   // 冰会衰变：10 秒
 
         Map<ElementType, int[]> normal = new EnumMap<>(ElementType.class);
         normal.put(ElementType.EARTH, days(8, 16));
@@ -133,6 +151,7 @@ public final class EVConfig {
         normal.put(ElementType.FIRE, days(2, 4));
         normal.put(ElementType.LIGHT, days(12, 20));
         normal.put(ElementType.SHADOW, days(12, 20));
+        normal.put(ElementType.ICE, days(6, 0));        // 冰会衰变：6 游戏日
 
         Map<Preset, Map<ElementType, int[]>> all = new EnumMap<>(Preset.class);
         all.put(Preset.OBSERVE, observe);
@@ -218,6 +237,30 @@ public final class EVConfig {
             return SHOWS_EXACT_SECONDS.get();
         } catch (IllegalStateException notLoadedYet) {
             return false;
+        }
+    }
+
+    public static int getWindMinY() {
+        try {
+            return WIND_MIN_Y.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return 120;
+        }
+    }
+
+    public static int getLightMinSky() {
+        try {
+            return LIGHT_MIN_SKY.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return 12;
+        }
+    }
+
+    public static int getShadowMaxBrightness() {
+        try {
+            return SHADOW_MAX_BRIGHTNESS.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return 7;
         }
     }
 

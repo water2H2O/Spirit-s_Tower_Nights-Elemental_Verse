@@ -32,8 +32,23 @@ public final class PouchContents {
     /** 总格数 = 9 存放 + 1 燃料。 */
     public static final int SIZE = STORAGE + 1;
 
-    /** 冷却剂的消耗间隔（tick）。60 秒消耗一个。 */
-    public static final int COOLANT_BURN_TICKS = 1200;
+    /** 霜的消耗间隔：30 秒一个（一个霜 = 半个冰）。 */
+    public static final int FROST_BURN_TICKS = 600;
+
+    /** 冰的消耗间隔：60 秒一个。 */
+    public static final int ICE_BURN_TICKS = 1200;
+
+    /** 燃料格里那种冷却剂的消耗间隔（tick）；没有冷却剂返回 0。 */
+    public static int burnInterval(List<ItemStack> items) {
+        ElementType type = ElementVialItem.getElement(items.get(FUEL_SLOT));
+        if (type == ElementType.ICE) {
+            return ICE_BURN_TICKS;
+        }
+        if (type == ElementType.FROST) {
+            return FROST_BURN_TICKS;
+        }
+        return 0;
+    }
 
     private PouchContents() {
     }

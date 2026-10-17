@@ -62,5 +62,12 @@
   "item.elemental_verse.element_pouch": "Element Pouch",
   "tooltip.elemental_verse.pouch_count": "%s item(s) inside",
   "tooltip.elemental_verse.pouch_cooling": "Cooling %s (coolant x%s)",
-  "tooltip.elemental_verse.pouch_idle": "Coolant x%s (nothing to protect, not consumed)"
+  "tooltip.elemental_verse.pouch_idle": "Coolant x%s (nothing to protect, not consumed)",
+  "message.elemental_verse.no_light": "There is no light to catch here",
+  "message.elemental_verse.too_bright": "Too bright here; the shadow slips away",
+  "message.elemental_verse.no_wind": "The wind cannot reach here",
+  "message.elemental_verse.weak_wind": "The wind is too weak; go higher",
+  "elemental_verse.configuration.windMinY": "Minimum Y for gathering wind",
+  "elemental_verse.configuration.lightMinSky": "Minimum sky light for gathering light",
+  "elemental_verse.configuration.shadowMaxBrightness": "Maximum block light for gathering shadow"
 }
