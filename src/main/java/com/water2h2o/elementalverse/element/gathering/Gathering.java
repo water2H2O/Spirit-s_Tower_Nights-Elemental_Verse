@@ -105,7 +105,8 @@ public final class Gathering {
                 return InteractionResultHolder.pass(stack);
             }
             return give(level, player, hand, stack, ElementType.EMBER, 1,
-                    () -> BlockUses.consume(level, pos, state), null);
+                    () -> BlockUses.consume(level, pos, state),
+                    () -> level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.4F, 1.3F));
         }
 
         // ④ 火焰方块：不扣血，1 份，火被扑灭
@@ -124,13 +125,15 @@ public final class Gathering {
         // ⑥ 矿物：按稀有度给 1~3 份（地从矿物取，不从石头取）
         int oreYield = OreYield.of(state);
         if (oreYield > 0) {
-            return give(level, player, hand, stack, ElementType.EARTH, oreYield, null, null);
+            return give(level, player, hand, stack, ElementType.EARTH, oreYield, null,
+                    () -> level.playSound(null, pos, SoundEvents.STONE_HIT, SoundSource.BLOCKS, 0.7F, 1.0F));
         }
 
         // ⑦ 草：草方块变泥土（草会自然蔓延回来 → 可再生）
         if (state.is(Blocks.GRASS_BLOCK)) {
             return give(level, player, hand, stack, ElementType.GRASS, 1,
-                    () -> level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState()), null);
+                    () -> level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState()),
+                    () -> level.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundSource.BLOCKS, 0.6F, 0.9F));
         }
         if (state.is(Blocks.FERN) || state.is(Blocks.LARGE_FERN) || state.is(Blocks.TALL_GRASS)
                 || state.is(Blocks.SHORT_GRASS) || state.is(BlockTags.FLOWERS)) {
@@ -138,12 +141,21 @@ public final class Gathering {
                     () -> level.removeBlock(pos, false), null);
         }
 
-        // ⑧ 木：树苗 / 枯木 / 树叶（作者定 —— 注意**不含原木**，
-        //    否则任何一棵树都能无限刷木元素）
+        // ⑧ 木：原木 / 树苗 / 枯木 / 树叶（作者定）
+        //    原木有 5 次储量，采完变去皮木；去皮木不给（否则一棵树能无限刷）
+        if (state.is(BlockTags.LOGS)) {
+            if (BlockUses.isStripped(state)) {
+                return InteractionResultHolder.pass(stack);
+            }
+            return give(level, player, hand, stack, ElementType.WOOD, 1,
+                    () -> BlockUses.consume(level, pos, state),
+                    () -> level.playSound(null, pos, SoundEvents.WOOD_HIT, SoundSource.BLOCKS, 0.6F, 0.9F));
+        }
         if (state.is(BlockTags.SAPLINGS) || state.is(BlockTags.LEAVES)
                 || state.is(Blocks.DEAD_BUSH)) {
             return give(level, player, hand, stack, ElementType.WOOD, 1,
-                    () -> level.removeBlock(pos, false), null);
+                    () -> level.removeBlock(pos, false),
+                    () -> level.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundSource.BLOCKS, 0.5F, 1.2F));
         }
 
         return InteractionResultHolder.pass(stack);

@@ -10,6 +10,10 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,8 +25,9 @@ import net.minecraft.world.level.saveddata.SavedData;
  * <p>两类方块共用这一份存档数据（键 = 方块种类 + 坐标）：
  *
  * <pre>
- *   冰：蓝冰 ×9 → 浮冰 ×9 → 冰 ×3 → 消失
+ *   冰：  蓝冰 ×9 → 浮冰 ×9 → 冰 ×3 → 消失
  *   营火：能采 5 次，之后熄灭（lit=false）
+ *   原木：能采 5 次，之后变成去皮木；去皮木不给木元素
  * </pre>
  *
  * <p>没记录过的位置按该方块的满次数算，所以不需要初始化；
@@ -36,10 +41,11 @@ public class BlockUses extends SavedData {
     private static final int PACKED_CAPACITY = 9;
     private static final int ICE_CAPACITY = 3;
     private static final int CAMPFIRE_CAPACITY = 5;
+    private static final int LOG_CAPACITY = 5;
 
     /** 方块种类：同一套逻辑，不同的容量与"采空后变成什么"。 */
     public enum Kind {
-        ICE, CAMPFIRE
+        ICE, CAMPFIRE, LOG
     }
 
     private final Map<String, Integer> remaining = new HashMap<>();
@@ -59,6 +65,9 @@ public class BlockUses extends SavedData {
         }
         if (state.getBlock() instanceof CampfireBlock) {
             return Kind.CAMPFIRE;
+        }
+        if (state.is(BlockTags.LOGS) && !isStripped(state)) {
+            return Kind.LOG;
         }
         return null;
     }
@@ -111,6 +120,16 @@ public class BlockUses extends SavedData {
             return;
         }
 
+        if (kind == Kind.LOG) {
+            BlockState stripped = strippedOf(state);
+            if (stripped == null) {
+                level.removeBlock(pos, false);
+            } else {
+                level.setBlockAndUpdate(pos, stripped);
+            }
+            return;
+        }
+
         BlockState next = degradeIce(state);
         if (next == null) {
             level.removeBlock(pos, false);
@@ -125,6 +144,9 @@ public class BlockUses extends SavedData {
         if (kind == Kind.CAMPFIRE) {
             return CAMPFIRE_CAPACITY;
         }
+        if (kind == Kind.LOG) {
+            return LOG_CAPACITY;
+        }
         if (state.is(Blocks.BLUE_ICE)) {
             return BLUE_CAPACITY;
         }
@@ -132,6 +154,29 @@ public class BlockUses extends SavedData {
             return PACKED_CAPACITY;
         }
         return ICE_CAPACITY;
+    }
+
+    /** 去皮木（原木被我们用完之后的样子）不再产出木元素。 */
+    public static boolean isStripped(BlockState state) {
+        var id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        return id != null && id.getPath().startsWith("stripped_");
+    }
+
+    /**
+     * 原木 → 去皮木。
+     *
+     * <p>不去碰 {@code AxeItem.STRIPPABLES}（版本间可见性/字段名不稳），
+     * 而是按注册名找 {@code stripped_<原名>} —— 原版所有木头都符合这个规律。
+     */
+    private static BlockState strippedOf(BlockState state) {
+        var id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        if (id == null || id.getNamespace().equals("elemental_verse")) {
+            return null;
+        }
+        var strippedId = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "stripped_" + id.getPath());
+        Block stripped = BuiltInRegistries.BLOCK.get(strippedId);
+        // 找不到对应去皮木时返回 null，调用方会让方块直接消失，避免无限刷
+        return stripped == null || stripped == state.getBlock() ? null : stripped.defaultBlockState();
     }
 
     private static BlockState degradeIce(BlockState state) {

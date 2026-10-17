@@ -125,5 +125,10 @@ public class PouchMenu extends AbstractContainerMenu {
             items.add(this.container.getItem(i));
         }
         PouchContents.set(pouch, items);
+
+        // 收口的声音（作者要求：大多数行为都给音效）
+        player.level().playSound(null, player.blockPosition(),
+                net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value(),
+                net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.1F);
     }
 }

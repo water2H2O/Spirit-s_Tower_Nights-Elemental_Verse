@@ -28,7 +28,7 @@ public final class EVItems {
      */
     public static final DeferredItem<ElementVialItem> ELEMENT_VIAL = ITEMS.register(
             "element_vial",
-            () -> new ElementVialItem(new Item.Properties().stacksTo(16)));
+            () -> new ElementVialItem(new Item.Properties().stacksTo(64)));
 
     /** 折射棱镜：光的载体（也装晨）。单件即一件法器，不叠。 */
     public static final DeferredItem<ElementVialItem> REFRACTION_PRISM = ITEMS.register(

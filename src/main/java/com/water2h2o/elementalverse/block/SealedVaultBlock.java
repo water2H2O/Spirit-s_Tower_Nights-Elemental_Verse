@@ -9,6 +9,7 @@ import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -20,7 +21,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * 石制密封仓：9 格容器，里面的元素衰变速度 ×0.5。
@@ -38,9 +43,18 @@ public class SealedVaultBlock extends BaseEntityBlock {
     /** 水平朝向。 */
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
+    /** 箱子那类"不到一个方块"的体积（作者要求）。 */
+    private static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
+
     public SealedVaultBlock(Properties properties) {
-        super(properties);
+        // noOcclusion：不是满方块，不能让邻居以为不透光
+        super(properties.noOcclusion());
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     @Override
@@ -86,6 +100,9 @@ public class SealedVaultBlock extends BaseEntityBlock {
         if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SealedVaultBlockEntity vault) {
+                // 石盖被拖开的动静：沉重的石材摩擦 + 一声锁扣
+                level.playSound(null, pos, SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 0.9F, 0.55F);
+                level.playSound(null, pos, SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS, 0.6F, 0.7F);
                 // 把坐标传给客户端，界面那侧才能找到这个方块实体
                 player.openMenu(vault, buffer -> buffer.writeBlockPos(pos));
             }

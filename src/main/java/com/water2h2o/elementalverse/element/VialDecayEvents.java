@@ -71,6 +71,62 @@ public final class VialDecayEvents {
                 player.getInventory().setItem(slot, replacement);
             }
         }
+
+        mergeSameElements(player);
+    }
+
+    /**
+     * 把背包里**同元素、不同剩余时间**的堆叠并起来，时间取加权平均（作者定）。
+     *
+     * <h2>为什么不用物品合并的默认逻辑</h2>
+     * 原版是否合并只看"数据组件是否完全相同"。我们的 {@code decay_timer} 是组件，
+     * 所以剩余时间不同的两叠**永远不会被原版合并**。要按平均时间合并，
+     * 只能自己扫一遍 —— 一秒一次、40 格，开销可以忽略。
+     *
+     * <p>上限取堆叠上限（64），装不下的留在原格。
+     */
+    private static void mergeSameElements(Player player) {
+        var inventory = player.getInventory();
+
+        for (int target = 0; target < inventory.getContainerSize(); target++) {
+            ItemStack into = inventory.getItem(target);
+            if (into.isEmpty() || !ElementCarrier.isCarrier(into) || into.getCount() >= into.getMaxStackSize()) {
+                continue;
+            }
+            ElementType type = ElementVialItem.getElement(into);
+
+            for (int source = target + 1; source < inventory.getContainerSize(); source++) {
+                ItemStack from = inventory.getItem(source);
+                if (from.isEmpty() || from.getItem() != into.getItem()) {
+                    continue;
+                }
+                if (ElementVialItem.getElement(from) != type) {
+                    continue;
+                }
+                if (ElementVialItem.getTimer(from) == ElementVialItem.getTimer(into)) {
+                    // 时间完全一样：交给原版合并逻辑处理，这里不动
+                    continue;
+                }
+
+                int space = into.getMaxStackSize() - into.getCount();
+                if (space <= 0) {
+                    break;
+                }
+                int moved = Math.min(space, from.getCount());
+
+                // 按数量加权平均剩余时间
+                int totalCount = into.getCount() + moved;
+                long weighted = (long) ElementVialItem.getTimer(into) * into.getCount()
+                        + (long) ElementVialItem.getTimer(from) * moved;
+                ElementVialItem.setTimer(into, totalCount == 0 ? 0 : (int) (weighted / totalCount));
+
+                into.grow(moved);
+                from.shrink(moved);
+                if (from.isEmpty()) {
+                    inventory.setItem(source, ItemStack.EMPTY);
+                }
+            }
+        }
     }
 
     /** 掉在地上的元素容器：区块卸载就不再 tick，正好符合"世界停下就停下"。 */
