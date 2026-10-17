@@ -28,8 +28,14 @@ jobs:
 
       # 编译输出同时落一份到文件。理由：GitHub 的「下载任务日志」接口需要管理员权限，
       # 失败时拿不到错误正文；落成 artifact 之后任何人（包括自动化）都能读。
+      #
+      # ⚠️ pipefail 是必须的：`cmd | tee f` 的退出码默认是 tee 的（永远 0），
+      #    没有它会把「Gradle 编译失败」伪装成「构建成功」，而且不产出 jar。
       - name: Build with Gradle
-        run: ./gradlew build 2>&1 | tee build-log.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew build 2>&1 | tee build-log.txt
 
       # 先把 build/ 里到底有什么打出来 —— jar 名字跟预想不一样时能立刻看见。
       - name: List build outputs
