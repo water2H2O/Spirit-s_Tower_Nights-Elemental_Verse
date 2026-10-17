@@ -33,6 +33,10 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
-        graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
+        // 关键：必须显式传纹理尺寸 176x166。
+        // 6 参数版本的 blit 默认按 256x256 采样，会把这张图整体放大、
+        // 于是作者画的槽位和代码里的槽位全部错开（作者在 layout 文件里专门提醒过）。
+        graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight,
+                this.imageWidth, this.imageHeight);
     }
 }
