@@ -2,6 +2,8 @@ package com.water2h2o.elementalverse.block;
 
 import com.mojang.serialization.MapCodec;
 
+import com.water2h2o.elementalverse.registry.EVSounds;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
@@ -100,9 +102,9 @@ public class SealedVaultBlock extends BaseEntityBlock {
         if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SealedVaultBlockEntity vault) {
-                // 石盖被拖开的动静：沉重的石材摩擦 + 一声锁扣
-                level.playSound(null, pos, SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 0.9F, 0.55F);
-                level.playSound(null, pos, SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS, 0.6F, 0.7F);
+                // 作者提供的石盖拖动音效（已转成单声道 Vorbis）
+                // 音量 0.7：素材归一化到 -3 dBFS，这里再压低一点，避免贴着听时炸耳
+                level.playSound(null, pos, EVSounds.VAULT_OPEN.get(), SoundSource.BLOCKS, 0.7F, 1.0F);
                 // 把坐标传给客户端，界面那侧才能找到这个方块实体
                 player.openMenu(vault, buffer -> buffer.writeBlockPos(pos));
             }

@@ -69,5 +69,6 @@
   "message.elemental_verse.weak_wind": "风太弱了，再高点",
   "elemental_verse.configuration.windMinY": "采风的最低高度",
   "elemental_verse.configuration.lightMinSky": "采光所需的天空光",
-  "elemental_verse.configuration.shadowMaxBrightness": "采暗允许的亮度上限"
+  "elemental_verse.configuration.shadowMaxBrightness": "采暗允许的亮度上限",
+  "subtitles.elemental_verse.vault_open": "石盖被拖开"
 }

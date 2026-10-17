@@ -43,7 +43,7 @@ public enum ElementType implements StringRepresentable {
     WATER("water", "frost", null, true),
     WIND("wind", "lightning", null, true),
     FIRE("fire", "ember", null, true),
-    GRASS("grass", "wood", null, true),
+    GRASS("grass", "bud", null, true),
     LIGHT("light", "dawn", null, true),
     SHADOW("shadow", "shadow_essence", null, true),
 
@@ -68,7 +68,7 @@ public enum ElementType implements StringRepresentable {
     /** 地/金 支线，阶段 01 只注册、不参与衰变。 */
     METAL("metal", null, null, false),
     /** 草的高纯支线，阶段 01 只注册、不参与衰变。 */
-    BUD("bud", null, null, false),
+    BUD("bud", "wood", null, true),
     /** 光 → 晨，独占「治疗 / 净化 / 破雾」。 */
     DAWN("dawn", null, null, true),
     /** 暗 → 影，独占「隐匿 / 与晶裔沟通」。 */

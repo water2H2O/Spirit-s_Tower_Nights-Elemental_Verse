@@ -321,13 +321,31 @@ public final class EVConfig {
             return own[1];
         }
 
-        // 衍生元素：找它的父稳定元素，取「阶段① + 阶段②」
-        for (ElementType parent : ElementType.values()) {
-            if (parent.isBaseElement() && parent.stage1() == type) {
-                int[] parentDurations = getStageDurations(parent);
-                if (parentDurations[0] > 0) {
-                    return parentDurations[0] + parentDurations[1];
+        // 衍生元素：在链上定位，累加它之前的所有阶段
+        //
+        // 一条链的位置与阈值（d0 = 阶段①，d1 = 阶段②）：
+        //   第 1 位（稳定元素）      d0
+        //   第 2 位（stage1）        d0 + d1
+        //   第 3 位（stage2）        d0 + 2*d1
+        //   ...
+        // 这样三步链（草 → 芽 → 木 → 尘）也能算，每段长度都是 d1。
+        for (ElementType root : ElementType.values()) {
+            if (!root.isBaseElement()) {
+                continue;
+            }
+            int[] durations = getStageDurations(root);
+            if (durations[0] <= 0) {
+                continue;
+            }
+
+            ElementType cursor = root;
+            int position = 1;
+            while (cursor != null && position <= 8) {
+                if (cursor == type) {
+                    return durations[0] + durations[1] * (position - 1);
                 }
+                cursor = cursor.stage1();
+                position++;
             }
         }
         return 0;

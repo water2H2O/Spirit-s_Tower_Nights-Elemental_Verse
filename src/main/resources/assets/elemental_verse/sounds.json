@@ -1,0 +1,13 @@
+{
+  "vault_open": {
+    "subtitle": "subtitles.elemental_verse.vault_open",
+    "sounds": [
+      {
+        "name": "elemental_verse:vault_open",
+        "volume": 1.0,
+        "pitch": 1.0,
+        "attenuation_distance": 16
+      }
+    ]
+  }
+}

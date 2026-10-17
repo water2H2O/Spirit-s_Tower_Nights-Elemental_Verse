@@ -69,5 +69,6 @@
   "message.elemental_verse.weak_wind": "The wind is too weak; go higher",
   "elemental_verse.configuration.windMinY": "Minimum Y for gathering wind",
   "elemental_verse.configuration.lightMinSky": "Minimum sky light for gathering light",
-  "elemental_verse.configuration.shadowMaxBrightness": "Maximum block light for gathering shadow"
+  "elemental_verse.configuration.shadowMaxBrightness": "Maximum block light for gathering shadow",
+  "subtitles.elemental_verse.vault_open": "Stone lid dragged open"
 }
