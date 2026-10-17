@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.water2h2o.elementalverse.element.ElementType;
 
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.bus.api.IEventBus;
@@ -19,8 +18,16 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  */
 public final class EVDataComponents {
 
+    /**
+     * 数据组件的注册器。
+     *
+     * <p>用 {@code createDataComponents} 而不是 {@code create(Registries.DATA_COMPONENT_TYPE, ...)}：
+     * 后者返回泛型 {@code DeferredRegister<T>}，拿不到 {@code DataComponents} 这个专用子类
+     * （它才有 {@code registerComponentType}）。前者虽被标记弃用，但仍是这里的正解。
+     */
+    @SuppressWarnings("removal")
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
-            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, "elemental_verse");
+            DeferredRegister.createDataComponents("elemental_verse");
 
     /**
      * 瓶子里装的是什么。没这个组件的元素瓶就是空瓶。
@@ -33,7 +40,7 @@ public final class EVDataComponents {
                     "element",
                     builder -> builder
                             .persistent(ElementType.CODEC)
-                            .networkSynchronized(ByteBufCodecs.idMapper(ElementType::byId, ElementType::ordinal)));
+                            .networkSynchronized(ByteBufCodecs.idMapper(ElementType::fromOrdinal, ElementType::ordinal)));
 
     /** 已经过的 tick 数。由统一的慢速 tick 累加，不依赖真实时间。 */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> DECAY_TIMER =

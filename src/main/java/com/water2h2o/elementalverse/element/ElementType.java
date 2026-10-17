@@ -170,4 +170,18 @@ public enum ElementType implements StringRepresentable {
         }
         return EMPTY;
     }
+
+    /**
+     * 按序号找元素 —— 网络同步用。
+     *
+     * <p>越界时返回 {@link #EMPTY} 而不是抛异常：万一以后有人往枚举中间插值，
+     * 老客户端收到未知序号只会显示成空瓶，而不是把连接打断。
+     */
+    public static ElementType fromOrdinal(int ordinal) {
+        ElementType[] all = values();
+        if (ordinal < 0 || ordinal >= all.length) {
+            return EMPTY;
+        }
+        return all[ordinal];
+    }
 }
