@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "elemental_verse:item/vial/shadow_essence"
+    "layer0": "elemental_verse:item/shadow_bottle"
   }
 }

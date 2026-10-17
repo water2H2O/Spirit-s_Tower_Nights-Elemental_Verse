@@ -31,10 +31,13 @@ ELEMENT_TYPE = os.path.join(
 
 NS = "elemental_verse"
 
-# 光与暗用「特殊容器」的贴图，其余用各自的瓶内液体色
+# 光暗与它们的衍生（晨、影）用「特殊容器」的贴图，其余用各自的瓶内液体色。
+# 作者 2026-10-17 的要求：光暗这一支应该一眼看出是"另一种容器"。
 SPECIAL_TEXTURES = {
     "light": f"{NS}:item/refraction_prism",
+    "dawn": f"{NS}:item/refraction_prism",          # 晨来自光
     "shadow": f"{NS}:item/shadow_bottle",
+    "shadow_essence": f"{NS}:item/shadow_bottle",   # 影来自暗
 }
 
 BASE_TEXTURE = f"{NS}:item/element_vial"
