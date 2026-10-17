@@ -15,6 +15,16 @@ import net.minecraft.util.StringRepresentable;
  * 所以这里只描述「是什么」以及「会变成什么」，不碰任何注册。
  *
  * <p>衰变链全部汇到同一个终点（死寂物质）。{@code stage2 == null} 表示已经走到尽头。
+ *
+ * <h2>⚠️ 一个必须守住的约束</h2>
+ * 枚举构造器里**绝对不能**调用 {@code values()} / {@code valueOf()}，也不能构造
+ * {@code EnumMap}。原因：{@code $VALUES} 要等所有常量都构造完才会被赋值，
+ * 构造期间调 {@code values()} 会读到 null 并抛
+ * {@code NullPointerException: ... $VALUES is null}，表现为
+ * {@code ExceptionInInitializerError}，整个模组加载失败。
+ *
+ * <p>所以这里构造器只保存**字符串 id**，真正的解析推迟到 {@link #stage1()} /
+ * {@link #stage2()} 被调用时（那时类已经初始化完毕）。这曾经是一个真实的线上崩溃。
  */
 public enum ElementType implements StringRepresentable {
 
@@ -53,29 +63,25 @@ public enum ElementType implements StringRepresentable {
     /** 暗 → 影，独占「隐匿 / 与晶裔沟通」。 */
     SHADOW_ESSENCE("shadow_essence", null, null, true);
 
-    /** 持久化与网络同步用的编解码器。名字是稳定契约，不要随手改字符串。 */
+    /**
+     * 持久化与网络同步用的编解码器。
+     *
+     * <p>声明在常量之后是**必须的**：此时 {@code $VALUES} 已经赋值，
+     * {@code fromEnum} 立刻建立名字索引也不会踩到空数组。
+     */
     public static final Codec<ElementType> CODEC = StringRepresentable.fromEnum(ElementType::values);
 
     private final String id;
-    private final ElementType stage1;
-    private final ElementType stage2;
+    /** 存 id 而不是枚举引用 —— 构造期间拿不到其他常量。 */
+    private final String stage1Id;
+    private final String stage2Id;
     private final boolean decays;
 
     ElementType(String id, String stage1Id, String stage2Id, boolean decays) {
         this.id = id;
-        this.stage1 = stage1Id == null ? null : resolve(stage1Id);
-        this.stage2 = stage2Id == null ? null : resolve(stage2Id);
+        this.stage1Id = stage1Id;
+        this.stage2Id = stage2Id;
         this.decays = decays;
-    }
-
-    /** 编译期常量池里 enum 还没建好，所以用名字二次解析。只在类初始化时跑一次。 */
-    private static ElementType resolve(String id) {
-        for (ElementType type : values()) {
-            if (type.id.equals(id)) {
-                return type;
-            }
-        }
-        throw new IllegalStateException("衰变链指向了不存在的元素 id: " + id);
     }
 
     /** 数据组件里存的字符串。 */
@@ -89,24 +95,24 @@ public enum ElementType implements StringRepresentable {
         return this == EMPTY;
     }
 
-    /** 这个形态是否会随时间衰变。*/
+    /** 这个形态是否会随时间衰变。 */
     public boolean decays() {
         return decays;
     }
 
-    /** 阶段①的产物；null 表示不会再变。 */
+    /** 阶段①的产物；null 表示不会再变。惰性解析，见类注释。 */
     public ElementType stage1() {
-        return stage1;
+        return resolve(stage1Id);
     }
 
     /** 阶段②的产物；null 表示走到阶段①就到头了。 */
     public ElementType stage2() {
-        return stage2;
+        return resolve(stage2Id);
     }
 
     /** 完整衰变链的终点是不是死寂物质（只剩一个阶段可走）。 */
     public boolean endsInDeadMatter() {
-        return stage1 != null && stage2 == null;
+        return resolve(stage1Id) != null && resolve(stage2Id) == null;
     }
 
     /** 这个形态在总纲里属于哪一段（稳定 / 衍生 / 已死寂）。 */
@@ -114,8 +120,7 @@ public enum ElementType implements StringRepresentable {
         if (this == EMPTY) {
             return DecayStage.EMPTY;
         }
-        if (stage1 == null && stage2 == null) {
-            // 走到头了：已经是衍生元素的下一个形态（死寂物质不是元素，这里只兜底）
+        if (resolve(stage1Id) == null && resolve(stage2Id) == null) {
             return DecayStage.DEAD;
         }
         if (isBaseElement()) {
@@ -152,16 +157,19 @@ public enum ElementType implements StringRepresentable {
 
     /** 给命令补全 / 调试用的名字集合。 */
     public static String[] ids() {
-        ElementType[] values = values();
-        String[] out = new String[values.length];
-        for (int i = 0; i < values.length; i++) {
-            out[i] = values[i].id;
+        ElementType[] all = values();
+        String[] out = new String[all.length];
+        for (int i = 0; i < all.length; i++) {
+            out[i] = all[i].id;
         }
         return out;
     }
 
     /** 按字符串找元素（大小写不敏感），找不到返回 EMPTY。 */
     public static ElementType byId(String id) {
+        if (id == null) {
+            return EMPTY;
+        }
         String needle = id.toLowerCase(Locale.ROOT);
         for (ElementType type : values()) {
             if (type.id.equals(needle)) {
@@ -183,5 +191,18 @@ public enum ElementType implements StringRepresentable {
             return EMPTY;
         }
         return all[ordinal];
+    }
+
+    /** 惰性解析 id → 枚举；null 原样返回 null。只在类初始化完成后调用。 */
+    private static ElementType resolve(String id) {
+        if (id == null) {
+            return null;
+        }
+        for (ElementType type : values()) {
+            if (type.id.equals(id)) {
+                return type;
+            }
+        }
+        throw new IllegalStateException("衰变链指向了不存在的元素 id: " + id);
     }
 }
