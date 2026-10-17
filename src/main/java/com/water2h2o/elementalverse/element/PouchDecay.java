@@ -44,8 +44,9 @@ public final class PouchDecay {
             changed = true;
         }
 
-        // 每 60 秒烧一个冷却剂
-        if (level.getGameTime() % PouchContents.COOLANT_BURN_TICKS == 0L) {
+        // 每 60 秒烧一个冷却剂 —— 但只在**真的有东西需要保护**时才烧
+        if (level.getGameTime() % PouchContents.COOLANT_BURN_TICKS == 0L
+                && PouchContents.hasProtectedContents(items)) {
             if (PouchContents.consumeCoolant(items)) {
                 changed = true;
             }

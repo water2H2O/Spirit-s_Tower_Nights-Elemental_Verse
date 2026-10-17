@@ -106,4 +106,32 @@ public final class PouchContents {
         ElementType type = ElementVialItem.getElement(stack);
         return type == ElementType.FROST || type == ElementType.ICE;
     }
+
+    /** 里面还有多少个冷却剂（霜 + 冰）。 */
+    public static int coolantCount(List<ItemStack> items) {
+        int count = 0;
+        for (ItemStack stack : items) {
+            if (isCoolant(stack)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
+    /**
+     * 里面有没有**需要被保护的东西**（冷却剂以外、且会衰变的元素）。
+     *
+     * <p>用来避免"空包也在烧冷却剂"这种纯浪费：没东西可保就不消耗。
+     */
+    public static boolean hasProtectedContents(List<ItemStack> items) {
+        for (ItemStack stack : items) {
+            if (stack.isEmpty() || isCoolant(stack)) {
+                continue;
+            }
+            if (ElementCarrier.isCarrier(stack) && DecayEngine.decays(ElementVialItem.getElement(stack))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

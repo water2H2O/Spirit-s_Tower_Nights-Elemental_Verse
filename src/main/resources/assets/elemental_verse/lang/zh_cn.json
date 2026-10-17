@@ -61,5 +61,6 @@
   "block.elemental_verse.sealed_vault": "石制密封仓",
   "item.elemental_verse.element_pouch": "元素小包",
   "tooltip.elemental_verse.pouch_count": "装有 %s 件",
-  "tooltip.elemental_verse.pouch_cooling": "冷却中 %s"
+  "tooltip.elemental_verse.pouch_cooling": "冷却中 %s（冷却剂 ×%s）",
+  "tooltip.elemental_verse.pouch_idle": "冷却剂 ×%s（包内没东西可保护，不会消耗）"
 }

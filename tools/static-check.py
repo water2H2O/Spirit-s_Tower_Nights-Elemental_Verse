@@ -528,6 +528,29 @@ def check_dispatch_models() -> None:
     ok(f"三种载体的图标分发与枚举一致（{sum(len(v) for v in expected.values())} 项）")
 
 
+def check_block_item_models() -> None:
+    """方块物品的模型必须 parent 到方块模型。
+
+    抓的这一类：素材包里带一份「平面图标版」的 models/item/<方块>.json，
+    复制进来之后方块在物品栏里变成平面图，跟原版方块（立体渲染）不一致。
+    同样没有任何报错，只有眼睛能发现。
+    """
+    block_names = collect_deferred_names("EVBlocks.java", r'register\(\s*"([a-z_]+)"')
+    for name in sorted(block_names):
+        path = os.path.join(ASSETS, "models", "item", f"{name}.json")
+        model = read_json(path)
+        if not isinstance(model, dict):
+            continue
+        parent = model.get("parent")
+        expected = f"{NS}:block/{name}"
+        if parent != expected:
+            fail(
+                f"models/item/{name}.json 的 parent 是 {parent}，应为 {expected}"
+                f"（方块物品要和原版方块一样立体渲染；素材包常把它盖成平面图标）"
+            )
+    ok(f"方块物品模型指向方块模型（{len(block_names)} 个）")
+
+
 def main() -> int:
     check_json_syntax()
     check_translations()
@@ -538,6 +561,7 @@ def main() -> int:
     check_static_field_visibility()
     check_known_api_misuse()
     check_dispatch_models()
+    check_block_item_models()
 
     print("=" * 68)
     print("静态自查报告")

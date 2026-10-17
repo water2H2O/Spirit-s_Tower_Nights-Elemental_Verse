@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "elemental_verse:item/dead_matter"
-  }
+  "parent": "elemental_verse:block/dead_matter"
 }

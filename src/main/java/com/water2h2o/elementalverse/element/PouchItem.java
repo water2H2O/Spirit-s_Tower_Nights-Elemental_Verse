@@ -43,27 +43,33 @@ public class PouchItem extends Item {
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
-    /** 悬停时显示"装有几件东西"，方便不看界面也知道里面有货。 */
+    /** 悬停显示：装了几件、冷却剂几个、当前冷却倍率。 */
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 java.util.List<Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
 
+        java.util.List<ItemStack> items = PouchContents.get(stack);
         int count = 0;
-        double cooling = 1.0D;
-        for (ItemStack inside : PouchContents.get(stack)) {
+        for (ItemStack inside : items) {
             if (!inside.isEmpty()) {
                 count++;
             }
         }
-        cooling = PouchContents.coolingMultiplier(PouchContents.get(stack));
 
         tooltip.add(Component.translatable(EVLang.TOOLTIP_POUCH_COUNT, count)
                 .withStyle(net.minecraft.ChatFormatting.GRAY));
+
+        int coolant = PouchContents.coolantCount(items);
+        double cooling = PouchContents.coolingMultiplier(items);
         if (cooling < 1.0D) {
             tooltip.add(Component.translatable(EVLang.TOOLTIP_POUCH_COOLING,
-                            String.format(java.util.Locale.ROOT, "×%.2f", cooling))
+                            String.format(java.util.Locale.ROOT, "×%.2f", cooling), coolant)
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
+        } else if (coolant > 0) {
+            // 有冷却剂但里面没东西可保护（不会消耗）
+            tooltip.add(Component.translatable(EVLang.TOOLTIP_POUCH_IDLE, coolant)
+                    .withStyle(net.minecraft.ChatFormatting.DARK_AQUA));
         }
     }
 }

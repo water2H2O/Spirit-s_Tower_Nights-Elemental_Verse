@@ -61,5 +61,6 @@
   "block.elemental_verse.sealed_vault": "Sealed Stone Vault",
   "item.elemental_verse.element_pouch": "Element Pouch",
   "tooltip.elemental_verse.pouch_count": "%s item(s) inside",
-  "tooltip.elemental_verse.pouch_cooling": "Cooling %s"
+  "tooltip.elemental_verse.pouch_cooling": "Cooling %s (coolant x%s)",
+  "tooltip.elemental_verse.pouch_idle": "Coolant x%s (nothing to protect, not consumed)"
 }

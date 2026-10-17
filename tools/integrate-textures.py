@@ -30,6 +30,9 @@ ASSETS = os.path.join(ROOT, "src", "main", "resources", "assets", "elemental_ver
 MODELS = os.path.join(ASSETS, "models", "item")
 CARRIERS = ("element_vial", "refraction_prism", "shadow_bottle")
 
+# 这些方块的物品模型必须 parent 到方块模型（否则物品栏里是平面图标，和原版方块不一致）
+BLOCK_ITEMS = ("dead_matter", "sealed_vault")
+
 NS = "elemental_verse"
 CARRIER_TEXTURE = {
     "element_vial": f"{NS}:item/element_vial",
@@ -79,6 +82,15 @@ def main() -> int:
                 "textures": {"layer0": CARRIER_TEXTURE[carrier]},
             })
             print(f"  {carrier}_base.json 就位")
+
+    # 2.5) 方块物品模型必须指回方块模型（和原版方块一样的立体渲染）
+    #      素材包里常带一份"平面图标版"的 models/item/<方块>.json，会把这里盖掉，
+    #      表现是方块在物品栏里变成一个平面块、跟其它方块不一样。
+    for block in BLOCK_ITEMS:
+        write_json(os.path.join(MODELS, f"{block}.json"), {
+            "parent": f"{NS}:block/{block}",
+        })
+        print(f"  {block}.json 指回方块模型")
 
     # 3) 重新生成分发模型
     subprocess.run([sys.executable, os.path.join(ROOT, "tools", "generate-vial-models.py")], check=True)

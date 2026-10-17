@@ -21,6 +21,7 @@ public final class EVLang {
     public static final String ITEM_POUCH = "item.elemental_verse.element_pouch";
     public static final String TOOLTIP_POUCH_COUNT = "tooltip.elemental_verse.pouch_count";
     public static final String TOOLTIP_POUCH_COOLING = "tooltip.elemental_verse.pouch_cooling";
+    public static final String TOOLTIP_POUCH_IDLE = "tooltip.elemental_verse.pouch_idle";
 
     // tooltip
     public static final String TOOLTIP_EMPTY_VIAL = "tooltip.elemental_verse.empty_vial";
