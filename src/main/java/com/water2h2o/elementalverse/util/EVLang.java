@@ -51,6 +51,7 @@ public final class EVLang {
 
     /** 申明板与仪式台。 */
     public static final String BLOCK_RITUAL_ALTAR = "block.elemental_verse.ritual_altar";
+    public static final String PLATE_STATE = "tooltip.elemental_verse.plate.state";
     public static final String MSG_NOT_ENOUGH = "message.elemental_verse.not_enough";
     public static final String PLATE_WRITTEN = "item.elemental_verse.declaration_plate.written";
     public static final String PLATE_BLANK_HINT = "tooltip.elemental_verse.plate.blank";

@@ -22,15 +22,25 @@ import net.minecraft.network.codec.StreamCodec;
  * @param operation 操作：release（释放）/ gather（聚集）/ shape（塑形）
  * @param form      形态：projectile（发射）/ self（自身）/ touch（交互）
  */
-public record Declaration(ElementType element, int tier, String operation, String form) {
+public record Declaration(ElementType element, int tier, String operation, String form,
+                          ElementType stateElement, int stateTier) {
 
-    public static final Declaration EMPTY = new Declaration(ElementType.EMPTY, 0, "release", "projectile");
+    public static final Declaration EMPTY = new Declaration(
+            ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0);
+
+    /** 兼容旧写法（没有态）。 */
+    public Declaration(ElementType element, int tier, String operation, String form) {
+        this(element, tier, operation, form, ElementType.EMPTY, 0);
+    }
 
     public static final Codec<Declaration> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ElementType.CODEC.fieldOf("element").forGetter(Declaration::element),
             Codec.INT.optionalFieldOf("tier", 1).forGetter(Declaration::tier),
             Codec.STRING.optionalFieldOf("operation", "release").forGetter(Declaration::operation),
-            Codec.STRING.optionalFieldOf("form", "projectile").forGetter(Declaration::form)
+            Codec.STRING.optionalFieldOf("form", "projectile").forGetter(Declaration::form),
+            ElementType.CODEC.optionalFieldOf("state_element", ElementType.EMPTY)
+                    .forGetter(Declaration::stateElement),
+            Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier)
     ).apply(instance, Declaration::new));
 
     public static final StreamCodec<io.netty.buffer.ByteBuf, Declaration> STREAM_CODEC =

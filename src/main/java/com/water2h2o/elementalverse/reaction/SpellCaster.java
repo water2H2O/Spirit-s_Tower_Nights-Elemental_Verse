@@ -77,11 +77,14 @@ public final class SpellCaster {
 
         // 3) 匹配反应
         ElementValue input = declaration.value();
+        // 态：第三个投入口决定"怎么发生"（原理文档五之二）
+        SpellParams params = SpellParams.of(declaration);
+
         Optional<Reaction> matched = ReactionManager.match(input);
         if (matched.isPresent()) {
-            apply(level, player, matched.get().phenomenon());
+            apply(level, player, matched.get().phenomenon(), params);
         } else {
-            applyFallback(level, player, input);
+            applyFallback(level, player, input, params);
         }
 
         // 4) 表现
@@ -97,13 +100,13 @@ public final class SpellCaster {
 
     // ---------------------------------------------------------------- 现象
 
-    private static void apply(Level level, Player player, Phenomenon phenomenon) {
+    private static void apply(Level level, Player player, Phenomenon phenomenon, SpellParams params) {
         HitResult hit = player.pick(RANGE, 1.0F, false);
 
         switch (phenomenon.type()) {
-            case "ignite" -> ignite(level, hit, phenomenon);
-            case "douse" -> douse(level, hit);
-            case "sustained_element_damage" -> strike(level, player, phenomenon);
+            case "ignite" -> ignite(level, hit, phenomenon, params);
+            case "douse" -> douse(level, hit, params);
+            case "sustained_element_damage" -> strike(level, player, phenomenon, params);
             default -> {
                 // 未实现的现象类型：至少给个反馈，别让玩家以为卡住了
                 level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
@@ -113,28 +116,37 @@ public final class SpellCaster {
     }
 
     /** 点燃：命中的实体着火，或者命中方块的面上一格起火。 */
-    private static void ignite(Level level, HitResult hit, Phenomenon phenomenon) {
+    private static void ignite(Level level, HitResult hit, Phenomenon phenomenon, SpellParams params) {
+        int fireTicks = (int) Math.round(params.durationTicks() * params.intensity());
+
         if (hit instanceof EntityHitResult entityHit) {
-            entityHit.getEntity().setRemainingFireTicks(phenomenon.duration());
+            entityHit.getEntity().setRemainingFireTicks(fireTicks);
             return;
         }
         if (hit instanceof BlockHitResult blockHit) {
-            BlockPos place = blockHit.getBlockPos().relative(blockHit.getDirection());
-            if (level.getBlockState(place).isAir()) {
-                level.setBlockAndUpdate(place, BaseFireBlock.getState(level, place));
+            BlockPos center = blockHit.getBlockPos().relative(blockHit.getDirection());
+            int radius = (int) Math.round(params.radius());
+            for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
+                    center.offset(radius, 1, radius))) {
+                BlockPos spot = pos.immutable();
+                if (level.getBlockState(spot).isAir()
+                        && center.distSqr(spot) <= (double) radius * radius + 0.5D) {
+                    level.setBlockAndUpdate(spot, BaseFireBlock.getState(level, spot));
+                }
             }
         }
     }
 
     /** 灭火：把命中点附近的火清掉。 */
-    private static void douse(Level level, HitResult hit) {
+    private static void douse(Level level, HitResult hit, SpellParams params) {
         if (hit instanceof EntityHitResult entityHit && entityHit.getEntity() instanceof LivingEntity living) {
             living.clearFire();
             return;
         }
         if (hit instanceof BlockHitResult blockHit) {
             BlockPos center = blockHit.getBlockPos();
-            for (BlockPos pos : BlockPos.betweenClosed(center.offset(-2, -2, -2), center.offset(2, 2, 2))) {
+            int r = Math.max(1, (int) Math.round(params.radius()));
+            for (BlockPos pos : BlockPos.betweenClosed(center.offset(-r, -r, -r), center.offset(r, r, r))) {
                 if (level.getBlockState(pos).getBlock() == Blocks.FIRE) {
                     level.removeBlock(pos.immutable(), false);
                 }
@@ -148,13 +160,14 @@ public final class SpellCaster {
      * <p>本期简化为**一次结算**（duration 用来说明"持续感"，还没有逐 tick 结算）。
      * 逐段结算等有了持续型法术框架再补 —— 现在先把闭环跑通。
      */
-    private static void strike(Level level, Player player, Phenomenon phenomenon) {
+    private static void strike(Level level, Player player, Phenomenon phenomenon, SpellParams params) {
         HitResult hit = player.pick(RANGE, 1.0F, false);
         if (hit instanceof EntityHitResult entityHit) {
             Entity target = entityHit.getEntity();
             if (target instanceof LivingEntity living) {
-                living.hurt(level.damageSources().magic(), (float) phenomenon.amount());
-                living.setRemainingFireTicks(phenomenon.duration());
+                living.hurt(level.damageSources().magic(),
+                        (float) (phenomenon.amount() * params.intensity()));
+                living.setRemainingFireTicks(params.durationTicks());
             }
         } else if (hit instanceof BlockHitResult blockHit) {
             BlockPos place = blockHit.getBlockPos().relative(blockHit.getDirection());
@@ -165,7 +178,7 @@ public final class SpellCaster {
     }
 
     /** 没有精确配方 → 按主成分律给一个通用现象（保证"扔一堆火"总有反应）。 */
-    private static void applyFallback(Level level, Player player, ElementValue input) {
+    private static void applyFallback(Level level, Player player, ElementValue input, SpellParams params) {
         var axis = input.dominant();
         if (axis == null) {
             return;
@@ -173,8 +186,8 @@ public final class SpellCaster {
         // 通用兜底：正的火 → 点燃；正的水 → 灭火；其余暂时只给粒子提示
         switch (axis) {
             case FIRE -> ignite(level, player.pick(RANGE, 1.0F, false),
-                    new Phenomenon("ignite", axis, 1.0, 40, 0.0));
-            case WATER -> douse(level, player.pick(RANGE, 1.0F, false));
+                    new Phenomenon("ignite", axis, 1.0, 40, 0.0), params);
+            case WATER -> douse(level, player.pick(RANGE, 1.0F, false), params);
             default -> level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
                     SoundSource.PLAYERS, 0.6F, 1.4F);
         }

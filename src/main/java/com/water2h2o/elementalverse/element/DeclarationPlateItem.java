@@ -46,10 +46,16 @@ public class DeclarationPlateItem extends Item {
         }
     }
 
-    /** 造一块写好的板子。 */
+    /** 造一块写好的板子（不带态）。 */
     public static ItemStack written(ElementType element, int tier) {
+        return written(element, tier, ElementType.EMPTY, 0);
+    }
+
+    /** 造一块写好的板子：主料 + 态。 */
+    public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier) {
         ItemStack stack = new ItemStack(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get());
-        setDeclaration(stack, new Declaration(element, tier, "release", "projectile"));
+        setDeclaration(stack, new Declaration(element, tier, "release", "projectile",
+                stateElement == null ? ElementType.EMPTY : stateElement, stateTier));
         return stack;
     }
 
@@ -106,5 +112,11 @@ public class DeclarationPlateItem extends Item {
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable(EVLang.PLATE_OPERATION)
                 .withStyle(ChatFormatting.DARK_GRAY));
+
+        if (declaration.stateElement() != null && !declaration.stateElement().isEmpty()) {
+            tooltip.add(Component.translatable(EVLang.PLATE_STATE,
+                            declaration.stateElement().displayName(), declaration.stateTier())
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
     }
 }
