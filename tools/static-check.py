@@ -599,6 +599,40 @@ def check_block_item_models() -> None:
     ok(f"方块物品模型指向方块模型（{len(block_names)} 个）")
 
 
+
+
+def check_menu_screens() -> None:
+    """每个菜单类型都必须在客户端注册了界面工厂。
+
+    抓的就是刚踩过的坑：服务端 openMenu 成功，客户端没有 Screen 工厂，
+    界面打不开，而且**日志里一句报错都没有**。
+    """
+    menus_path = os.path.join(JAVA, "com", "water2h2o", "elementalverse", "registry", "EVMenus.java")
+    client_path = os.path.join(JAVA, "com", "water2h2o", "elementalverse",
+                               "SpiritsTowerNightsElementalVerseClient.java")
+    if not (os.path.exists(menus_path) and os.path.exists(client_path)):
+        return
+
+    with open(menus_path, "r", encoding="utf-8") as handle:
+        menus_text = handle.read()
+    with open(client_path, "r", encoding="utf-8") as handle:
+        client_text = handle.read()
+
+    # 常量名 = 后面紧跟 MENUS.register( 的那个标识符
+    constants = re.findall(r"([A-Z_]+)\s*=\s*\n?\s*MENUS\.register\(", menus_text)
+
+    if not constants:
+        return
+
+    missing = [name for name in constants if f"EVMenus.{name}.get()" not in client_text]
+    for name in missing:
+        fail(f"菜单 {name} 没在客户端注册界面（SpiritsTowerNightsElementalVerseClient 里缺 "
+             f"event.register(EVMenus.{name}.get(), ...Screen::new)）—— 右键会打不开界面且无报错")
+
+    if not missing:
+        ok(f"菜单类型都有对应的界面工厂（{len(constants)} 个）")
+
+
 def main() -> int:
     check_json_syntax()
     check_translations()
@@ -610,6 +644,7 @@ def main() -> int:
     check_known_api_misuse()
     check_dispatch_models()
     check_block_item_models()
+    check_menu_screens()
 
     print("=" * 68)
     print("静态自查报告")
