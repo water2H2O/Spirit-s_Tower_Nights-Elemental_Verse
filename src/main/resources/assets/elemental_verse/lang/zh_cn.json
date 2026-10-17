@@ -77,5 +77,6 @@
   "tooltip.elemental_verse.plate.blank": "还是一片空白 —— 拿到仪式台上写",
   "tooltip.elemental_verse.plate.element": "料：%s",
   "tooltip.elemental_verse.plate.tier": "浓度：%s 档",
-  "tooltip.elemental_verse.plate.operation": "形：释放 · 发射"
+  "tooltip.elemental_verse.plate.operation": "形：释放 · 发射",
+  "message.elemental_verse.not_enough": "%s 不够了"
 }

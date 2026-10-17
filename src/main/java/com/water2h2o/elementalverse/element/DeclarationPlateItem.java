@@ -48,6 +48,26 @@ public class DeclarationPlateItem extends Item {
         return stack;
     }
 
+    /**
+     * 直接释放：拿着写好的板子右键。
+     *
+     * <p>空板右键**什么都不做**（它还没写东西）；写好的板子按档位扣材料再触发反应。
+     */
+    @Override
+    public net.minecraft.world.InteractionResultHolder<ItemStack> use(
+            net.minecraft.world.level.Level level,
+            net.minecraft.world.entity.player.Player player,
+            net.minecraft.world.InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!getDeclaration(stack).isDefined()) {
+            return net.minecraft.world.InteractionResultHolder.pass(stack);
+        }
+        boolean cast = com.water2h2o.elementalverse.reaction.SpellCaster.cast(level, player, stack);
+        return cast
+                ? net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide())
+                : net.minecraft.world.InteractionResultHolder.fail(stack);
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         Declaration declaration = getDeclaration(stack);

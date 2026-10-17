@@ -77,5 +77,6 @@
   "tooltip.elemental_verse.plate.blank": "Still blank - write it at a ritual altar",
   "tooltip.elemental_verse.plate.element": "Matter: %s",
   "tooltip.elemental_verse.plate.tier": "Concentration: tier %s",
-  "tooltip.elemental_verse.plate.operation": "Form: release / projectile"
+  "tooltip.elemental_verse.plate.operation": "Form: release / projectile",
+  "message.elemental_verse.not_enough": "Not enough %s"
 }
