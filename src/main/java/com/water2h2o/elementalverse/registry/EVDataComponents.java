@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.water2h2o.elementalverse.element.ElementType;
 
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.bus.api.IEventBus;
@@ -19,7 +20,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class EVDataComponents {
 
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
-            DeferredRegister.createDataComponents("elemental_verse");
+            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, "elemental_verse");
 
     /**
      * 瓶子里装的是什么。没这个组件的元素瓶就是空瓶。

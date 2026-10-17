@@ -96,7 +96,8 @@ public final class EVConfig {
             .translation(EVLang.config("showsExactSeconds"))
             .define("decay.showsExactSeconds", false);
 
-    static final ModConfigSpec SPEC = BUILDER.build();
+    /** 主类在别的包里要用它注册配置，所以必须 public。 */
+    public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ---------------------------------------------------------------- 时长表
 
@@ -106,8 +107,8 @@ public final class EVConfig {
     /** 当前生效的时长表，配置加载/重载时刷新。 */
     private static Map<ElementType, int[]> durations = PRESET_DURATIONS.get(Preset.OBSERVE);
 
-    /** 秒级预设：1 秒 = 20 tick。水元素最短，专门留给作者观察。 */
-    private static Map<ElementType, int[]> buildPresets() {
+    /** 两套预设的完整时长表。 */
+    private static Map<Preset, Map<ElementType, int[]>> buildPresets() {
         Map<ElementType, int[]> observe = new EnumMap<>(ElementType.class);
         observe.put(ElementType.WATER, seconds(20, 40));   // 全程 1 分钟
         observe.put(ElementType.GRASS, seconds(25, 50));

@@ -135,13 +135,13 @@ public class ElementVialItem extends Item {
         }
 
         if (level.isClientSide()) {
-            return InteractionResultHolder.succeed(stack);
+            return InteractionResultHolder.success(stack);
         }
 
         // 冰 → 霜（低温支线）；其余水源 → 水
         BlockState state = level.getBlockState(pos);
         ElementType collected = state.is(BlockTags.ICE) ? ElementType.FROST : ElementType.WATER;
-        return InteractionResultHolder.succeed(fill(stack, player, collected));
+        return InteractionResultHolder.success(fill(stack, player, collected));
     }
 
     /** 把瓶子换成装着指定元素的版本；一摞就拆一个出来，剩下的留在手上。 */

@@ -308,6 +308,112 @@ def check_misc() -> None:
             fail(f"gradle.properties 的 mod_id={match.group(1)} 与命名空间 {NS} 不一致")
 
 
+# ----------------------------------------------------------------- 8. 跨包访问非 public 静态字段
+#
+# 抓的这一类：`modContainer.registerConfig(..., EVConfig.SPEC)` 而 SPEC 是包私有的。
+# 这种错误本地不编译就发现不了，CI 一跑就是一条 error。
+
+STATIC_FIELD = re.compile(
+    r"^\s*(?:@\w+(?:\([^)]*\))?\s*)*"
+    r"(?:(public|protected|private)\s+)?"
+    r"(?:static\s+final|static|final\s+static)\s+[\w<>\[\], .?]+\s+(\w+)\s*=",
+)
+
+
+def java_packages() -> dict[str, str]:
+    """文件路径 -> 包名。"""
+    out: dict[str, str] = {}
+    for path in java_files():
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                if line.startswith("package "):
+                    out[path] = line.strip()[len("package "):].rstrip(";")
+                    break
+    return out
+
+
+def public_static_fields() -> set[str]:
+    """收集所有 public 静态字段的名字。"""
+    names: set[str] = set()
+    for path in java_files():
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                match = STATIC_FIELD.match(line)
+                if match and match.group(1) == "public":
+                    names.add(match.group(2))
+    return names
+
+
+def all_static_fields() -> set[str]:
+    names: set[str] = set()
+    for path in java_files():
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                match = STATIC_FIELD.match(line)
+                if match:
+                    names.add(match.group(2))
+    return names
+
+
+def check_static_field_visibility() -> None:
+    exported = public_static_fields()
+    candidates = all_static_fields() - exported
+
+    if not candidates:
+        ok("跨包静态字段可见性：无需检查")
+        return
+
+    used: set[str] = set()
+    for path in java_files():
+        with open(path, "r", encoding="utf-8") as handle:
+            text = handle.read()
+        # 只看「类名.字段」这种跨对象访问
+        for match in re.finditer(r"\b([A-Z]\w+)\.(\w+)\b", text):
+            field = match.group(2)
+            if field in candidates:
+                used.add(field)
+
+    if used:
+        for field in sorted(used):
+            fail(f"静态字段 {field} 不是 public，却被别的类用「类名.{field}」访问 —— 会编译不过")
+    else:
+        ok(f"跨包静态字段可见性正常（检查了 {len(candidates)} 个非 public 字段）")
+
+
+# ----------------------------------------------------------------- 9. 常见 API 误用
+#
+# 抓的这一类：`InteractionResultHolder.succeed(...)` —— 1.21 里只有 success/consume/pass/fail。
+# 名字凭记忆写错，本地不编译发现不了。这里维护一份「已知方法名 -> 正确签名」的表。
+
+KNOWN_API = {
+    # 方法名: (允许出现的方法名集合, 说明)
+    "InteractionResultHolder": (
+        {"success", "consume", "pass", "fail", "sidedSuccess", "getResult", "getObject"},
+        "InteractionResultHolder 的静态工厂只有 success / consume / pass / fail",
+    ),
+}
+
+
+def check_known_api_misuse() -> None:
+    for path in java_files():
+        with open(path, "r", encoding="utf-8") as handle:
+            text = handle.read()
+        for owner, (allowed, note) in KNOWN_API.items():
+            for match in re.finditer(rf"\b{owner}\.(\w+)\s*\(", text):
+                method = match.group(1)
+                if method not in allowed:
+                    fail(f"{os.path.relpath(path, ROOT)} 用了 {owner}.{method}() —— {note}")
+    ok("已知 API 方法名检查通过")
+
+
+# ----------------------------------------------------------------- 10. 关于「泛型返回类型」
+#
+# 这一类（`Map<A, int[]> f()` 里 `return Map<B, Map<A,int[]>>`）**故意不做机器检查**：
+# 试过按「方法体里最后一个 return」匹配，但一个类里有多个 Map 方法时会张冠李戴，
+# 抓到的全是误报。噪声比漏报更糟 —— 宁可留给编译器和 CI。
+# 这条写在这里，是为了下次想加这个检查的人（包括未来的我）别再踩一遍。
+
+
 def main() -> int:
     check_json_syntax()
     check_translations()
@@ -315,6 +421,8 @@ def main() -> int:
     check_registry_names()
     check_java_balance()
     check_misc()
+    check_static_field_visibility()
+    check_known_api_misuse()
 
     print("=" * 68)
     print("静态自查报告")
