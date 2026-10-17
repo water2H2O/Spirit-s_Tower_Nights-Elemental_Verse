@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "elemental_verse_prism",
+  "pattern": [
+    "GGG",
+    "QGQ",
+    " I "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "I": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:refraction_prism",
+    "count": 1
+  }
+}

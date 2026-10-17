@@ -80,9 +80,9 @@ public class ElementVialItem extends Item {
         }
     }
 
-    /** 造一个指定形态的瓶子（创造物品栏与衰变换形态都用它）。 */
+    /** 造一个指定形态的容器（创造物品栏与衰变换形态都用它）。载体由元素决定。 */
     public static ItemStack createStack(ElementType type) {
-        ItemStack stack = new ItemStack(EVItems.ELEMENT_VIAL.get());
+        ItemStack stack = new ItemStack(type.carrier().item());
         setElement(stack, type, 0);
         return stack;
     }
@@ -94,13 +94,26 @@ public class ElementVialItem extends Item {
 
     // ------------------------------------------------------------ 显示
 
+    /**
+     * 名字。
+     *
+     * <p>空的时候用**物品自己的名字**（元素瓶 / 折射棱镜 / 聚影瓶），
+     * 装了东西之后：
+     * <ul>
+     *   <li>元素瓶 → 「水元素瓶」（专门的键）</li>
+     *   <li>棱镜 / 聚影瓶 → 直接叫元素名（「光元素」），容器由外形区分</li>
+     * </ul>
+     */
     @Override
     public Component getName(ItemStack stack) {
         ElementType type = getElement(stack);
         if (type.isEmpty()) {
-            return Component.translatable(EVLang.ITEM_VIAL);
+            return Component.translatable(getDescriptionId());
         }
-        return Component.translatable(EVLang.vial(type));
+        if (this == EVItems.ELEMENT_VIAL.get()) {
+            return Component.translatable(EVLang.vial(type));
+        }
+        return type.displayName();
     }
 
     /**

@@ -34,7 +34,13 @@ public enum ElementType implements StringRepresentable {
 
     // ---- 七种稳定元素 ----
     EARTH("earth", "sand", null, true),
-    WATER("water", "ice", null, true),
+    /**
+     * 水 → **霜**（不是冰）。
+     *
+     * <p>作者 2026-10-17 改的口径：普通水元素演变成霜，**冰要单独获取**，
+     * 这样"冰"才有稀缺性（它以后是小包里的高级冷却剂）。
+     */
+    WATER("water", "frost", null, true),
     WIND("wind", "lightning", null, true),
     FIRE("fire", "ember", null, true),
     GRASS("grass", "wood", null, true),
@@ -43,15 +49,14 @@ public enum ElementType implements StringRepresentable {
 
     // ---- 十种衍生元素 ----
     /**
-     * 水 → 冰，独占「延缓衰变（冷链）」。
+     * 冰：**不再由衰变产生**，需要单独获取（采集方式待定）。
      *
-     * <p>{@code stage1 == null} 表示**冰的下一个形态是死寂物质** ——
-     * 衍生元素一律如此（衰变链是 稳定 → 衍生 → 死寂物质）。
-     * 早先这里写成 {@code "frost"}，导致冰永远到不了死寂物质。
+     * <p>它的定位是"冷却剂"：放进小包可以消耗掉，换取更慢的变质速度。
+     * 所以它不参与衰变链（{@code decays = false}）。
      */
-    ICE("ice", null, null, true),
-    /** 水元素的低温支线，阶段 01 只注册、不参与衰变。 */
-    FROST("frost", null, null, false),
+    ICE("ice", null, null, false),
+    /** 霜：水的衍生形态，也是小包里的基础冷却剂。会继续衰变成死寂尘。 */
+    FROST("frost", null, null, true),
     /** 风 → 电，独占「瞬时爆发」。 */
     LIGHTNING("lightning", null, null, true),
     /** 草 → 木，独占「再生建材 / 催熟」。 */
@@ -146,11 +151,25 @@ public enum ElementType implements StringRepresentable {
     /**
      * 创造物品栏与模型分发用的序号。
      *
-     * <p>{@code +1} 是为了给「空瓶」留出 0：0 对应基础模型，1..N 对应各元素。
+     * <p>{@code +1} 是为了给「空」留出 0：0 对应基础模型，1..N 对应各元素。
      * 这个值会写进 {@code custom_model_data} 组件，由物品模型的 overrides 读取。
      */
     public int modelIndex() {
         return ordinal() + 1;
+    }
+
+    /**
+     * 这个元素住在**哪个载体**里。
+     *
+     * <p>作者 2026-10-17 决定：光/晨用折射棱镜，暗/影用聚影瓶，其余用元素瓶。
+     * 三条载体共用同一套数据组件与衰变逻辑，区别只在物品本身。
+     */
+    public ElementCarrier carrier() {
+        return switch (this) {
+            case LIGHT, DAWN -> ElementCarrier.REFRACTION_PRISM;
+            case SHADOW, SHADOW_ESSENCE -> ElementCarrier.SHADOW_BOTTLE;
+            default -> ElementCarrier.ELEMENT_VIAL;
+        };
     }
 
     /** 「土元素瓶」里的「土元素」部分。 */

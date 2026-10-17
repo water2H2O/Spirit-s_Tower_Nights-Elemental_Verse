@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "elemental_verse_shadow_bottle",
+  "pattern": [
+    "A A",
+    " P ",
+    "G G"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "P": {
+      "item": "elemental_verse:refraction_prism"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:shadow_bottle",
+    "count": 1
+  }
+}

@@ -56,7 +56,7 @@ public final class VialDecayEvents {
 
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
-            if (stack.isEmpty() || !stack.is(EVItems.ELEMENT_VIAL.get())) {
+            if (!ElementCarrier.isCarrier(stack)) {
                 continue;
             }
             ItemStack replacement = advance(stack, level, pos, interval);
@@ -66,10 +66,10 @@ public final class VialDecayEvents {
         }
     }
 
-    /** 掉在地上的元素瓶：区块卸载就不再 tick，正好符合"世界停下就停下"。 */
+    /** 掉在地上的元素容器：区块卸载就不再 tick，正好符合"世界停下就停下"。 */
     private static void tickItemEntity(ItemEntity itemEntity, int interval) {
         ItemStack stack = itemEntity.getItem();
-        if (stack.isEmpty() || !stack.is(EVItems.ELEMENT_VIAL.get())) {
+        if (!ElementCarrier.isCarrier(stack)) {
             return;
         }
 
@@ -110,8 +110,8 @@ public final class VialDecayEvents {
         int timer = ElementVialItem.getTimer(stack);
 
         if (next == null) {
-            // 走到尽头：瓶子消失，留下一块死寂物质（物品类型变了，只能替换）
-            return new ItemStack(EVItems.DEAD_MATTER.get(), count);
+            // 走到尽头：容器消失，留下**死寂尘**（作者决定：先给尘，4 尘压 1 块）
+            return new ItemStack(EVItems.DEAD_DUST.get(), count);
         }
 
         // 只换组件：就地改，保留计时器（绝对口径，见 DecayEngine 注释）

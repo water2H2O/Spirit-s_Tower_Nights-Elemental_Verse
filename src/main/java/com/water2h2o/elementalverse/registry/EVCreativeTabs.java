@@ -1,7 +1,8 @@
 package com.water2h2o.elementalverse.registry;
 
-import com.water2h2o.elementalverse.element.ElementVialItem;
+import com.water2h2o.elementalverse.element.ElementCarrier;
 import com.water2h2o.elementalverse.element.ElementType;
+import com.water2h2o.elementalverse.element.ElementVialItem;
 import com.water2h2o.elementalverse.util.EVLang;
 
 import net.minecraft.core.registries.Registries;
@@ -15,8 +16,12 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 /**
  * 创造模式物品栏。
  *
- * <p>排布刻意按「载体 → 稳定元素 → 衍生元素 → 尽头」分组，
- * 这样测试衰变时可以从这里直接拖出任何一个形态，不必先解决采集。
+ * <p>按**三种载体**分组（作者 2026-10-17 定的排布）：
+ * 空元素瓶 + 13 种瓶装元素 / 折射棱镜 + 光·晨 / 聚影瓶 + 暗·影，
+ * 最后是死寂尘与死寂物质方块。
+ *
+ * <p>分组完全由 {@link ElementType#carrier()} 驱动 —— 以后挪动某个元素的载体，
+ * 这里不用改。
  */
 public final class EVCreativeTabs {
 
@@ -29,24 +34,34 @@ public final class EVCreativeTabs {
                     .title(Component.translatable(EVLang.CREATIVE_TAB))
                     .icon(() -> ElementVialItem.createStack(ElementType.WATER))
                     .displayItems((parameters, output) -> {
-                        // 载体
+                        // ① 元素瓶
                         output.accept(ElementVialItem.emptyVial());
-                        ItemStack prism = new ItemStack(EVItems.REFRACTION_PRISM.get());
-                        output.accept(prism);
+                        acceptCarrier(output, ElementCarrier.ELEMENT_VIAL);
+
+                        // ② 折射棱镜（光 · 晨）
+                        output.accept(new ItemStack(EVItems.REFRACTION_PRISM.get()));
+                        acceptCarrier(output, ElementCarrier.REFRACTION_PRISM);
+
+                        // ③ 聚影瓶（暗 · 影）
                         output.accept(new ItemStack(EVItems.SHADOW_BOTTLE.get()));
+                        acceptCarrier(output, ElementCarrier.SHADOW_BOTTLE);
 
-                        // 全部元素形态（跳过 EMPTY，它已经作为空瓶加过了）
-                        for (ElementType type : ElementType.values()) {
-                            if (type.isEmpty()) {
-                                continue;
-                            }
-                            output.accept(ElementVialItem.createStack(type));
-                        }
-
-                        // 尽头
+                        // ④ 衰变的终点
+                        output.accept(new ItemStack(EVItems.DEAD_DUST.get()));
                         output.accept(new ItemStack(EVItems.DEAD_MATTER.get()));
                     })
                     .build());
+
+    /** 按载体过滤元素形态，保持枚举顺序。 */
+    private static void acceptCarrier(net.minecraft.world.item.CreativeModeTab.Output output,
+                                      ElementCarrier carrier) {
+        for (ElementType type : ElementType.values()) {
+            if (type.isEmpty() || type.carrier() != carrier) {
+                continue;
+            }
+            output.accept(ElementVialItem.createStack(type));
+        }
+    }
 
     public static void register(IEventBus modEventBus) {
         CREATIVE_MODE_TABS.register(modEventBus);

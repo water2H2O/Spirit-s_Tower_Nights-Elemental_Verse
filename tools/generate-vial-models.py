@@ -1,20 +1,19 @@
-"""生成元素瓶的「一物多图标」分发模型。
+"""生成三种元素载体的「一物多图标」分发模型。
 
-为什么用脚本：图标要按 `ElementType` 的**枚举序号**分发，而序号在 Java 里。
-手写一遍 JSON 迟早会跟枚举错位（错位表现是"图标张冠李戴"，很难查）。
-所以这里直接解析 `ElementType.java`，序号唯一来源就是代码。
+为什么用脚本：图标按 `ElementType` 的**枚举序号**分发，而序号在 Java 里。
+手写 JSON 迟早会跟枚举错位（表现是"图标张冠李戴"，很难查）。
+所以这里解析 `ElementType.java`，序号唯一来源是代码。
 
-贴图与单元素模型由作者提供（见 `docs/textures/v4`）：
-    models/item/element_vial.json            空瓶（基础模型）
-    models/item/element_vial_<id>.json       每个元素一个薄模型
-    textures/item/element_vial_<id>.png      对应贴图
+三种载体（作者 2026-10-17 定的归属）：
+    element_vial      地/水/风/火/草 + 砂/冰/电/木/烬/霜/金/芽
+    refraction_prism  光 / 晨
+    shadow_bottle     暗 / 影
 
-本脚本**只写一个文件**：覆盖 `models/item/element_vial.json`，
-在作者给的基础模型上追加 `overrides` 分发段。
+每个载体写一个 `models/item/<载体>.json`：作者给的基础模型 + overrides 分发段。
+填充态的图标沿用作者按元素画的 `element_vial_<id>` 模型。
 
 分发机制（1.21.1）：物品带 `custom_model_data` 组件，值 = 枚举序号 + 1，
-物品模型的 `overrides` 用 `predicate: {custom_model_data: N}` 选模型。
-值为 0 / 不存在 → 基础模型（空瓶）。**不需要任何客户端代码。**
+overrides 用 `predicate: {custom_model_data: N}` 选模型。0 / 缺失 = 基底态。
 
 用法：
     python tools/generate-vial-models.py
@@ -34,7 +33,21 @@ ELEMENT_TYPE = os.path.join(
 )
 
 NS = "elemental_verse"
-BASE_TEXTURE = f"{NS}:item/element_vial"
+
+# 载体 -> 未装东西时的贴图（作者的稿）
+CARRIER_BASE = {
+    "element_vial": f"{NS}:item/element_vial",
+    "refraction_prism": f"{NS}:item/refraction_prism",
+    "shadow_bottle": f"{NS}:item/shadow_bottle",
+}
+
+# 与 ElementType.carrier() 保持一致
+CARRIER_OF = {
+    "light": "refraction_prism",
+    "dawn": "refraction_prism",
+    "shadow": "shadow_bottle",
+    "shadow_essence": "shadow_bottle",
+}
 
 
 def parse_enum_order() -> list[str]:
@@ -51,6 +64,10 @@ def parse_enum_order() -> list[str]:
     return ids
 
 
+def carrier_of(element_id: str) -> str:
+    return CARRIER_OF.get(element_id, "element_vial")
+
+
 def main() -> None:
     order = parse_enum_order()
     if not order or order[0] != "empty":
@@ -58,42 +75,39 @@ def main() -> None:
 
     print(f"枚举：{len(order)} 个形态（{order[0]} 为基态）")
 
-    overrides = []
-    missing = []
+    overrides: dict[str, list] = {carrier: [] for carrier in CARRIER_BASE}
+    missing: list[str] = []
 
     for position, element_id in enumerate(order):
         if element_id == "empty":
             continue
 
+        carrier = carrier_of(element_id)
         model_index = position + 1  # 与 ElementType.modelIndex() 保持一致
-        model_name = f"{NS}:item/element_vial_{element_id}"
 
-        # 作者的模型必须存在，否则游戏里会退化成空瓶图标（静默失败）
         model_file = os.path.join(MODELS, f"element_vial_{element_id}.json")
         if not os.path.exists(model_file):
             missing.append(os.path.basename(model_file))
 
-        overrides.append({
+        overrides[carrier].append({
             "predicate": {"custom_model_data": model_index},
-            "model": model_name,
+            "model": f"{NS}:item/element_vial_{element_id}",
         })
 
     if missing:
         raise SystemExit("缺少元素模型（请先放入作者的 assets）：" + ", ".join(missing))
 
-    payload = {
-        "parent": "minecraft:item/generated",
-        "textures": {"layer0": BASE_TEXTURE},
-        "overrides": overrides,
-    }
-
-    target = os.path.join(MODELS, "element_vial.json")
-    with open(target, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
-        handle.write("\n")
-
-    print(f"  wrote {os.path.relpath(target, ROOT)}")
-    print(f"共 {len(overrides)} 个图标分发项")
+    for carrier, base_texture in CARRIER_BASE.items():
+        payload = {
+            "parent": "minecraft:item/generated",
+            "textures": {"layer0": base_texture},
+            "overrides": overrides[carrier],
+        }
+        target = os.path.join(MODELS, f"{carrier}.json")
+        with open(target, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+        print(f"  {carrier}: {len(overrides[carrier])} 个分发项 -> {os.path.relpath(target, ROOT)}")
 
 
 if __name__ == "__main__":

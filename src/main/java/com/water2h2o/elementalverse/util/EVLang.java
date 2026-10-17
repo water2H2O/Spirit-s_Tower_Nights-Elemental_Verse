@@ -16,6 +16,7 @@ public final class EVLang {
     public static final String ITEM_VIAL = "item.elemental_verse.element_vial";
     public static final String ITEM_REFRACTION_PRISM = "item.elemental_verse.refraction_prism";
     public static final String ITEM_SHADOW_BOTTLE = "item.elemental_verse.shadow_bottle";
+    public static final String ITEM_DEAD_DUST = "item.elemental_verse.dead_dust";
     public static final String BLOCK_DEAD_MATTER = "block.elemental_verse.dead_matter";
 
     // tooltip

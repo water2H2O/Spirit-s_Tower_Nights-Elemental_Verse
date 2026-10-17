@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "elemental_verse_dead_matter",
+  "pattern": [
+    "DD",
+    "DD"
+  ],
+  "key": {
+    "D": {
+      "item": "elemental_verse:dead_dust"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:dead_matter",
+    "count": 1
+  }
+}
