@@ -58,9 +58,18 @@ public class DecayBarDecorator implements IItemDecorator {
                 : progress < 80 ? COLOR_WARNING
                 : COLOR_CRITICAL;
 
+        // 两道保险，缺一条都可能被物品贴图盖住：
+        // ① 先把已经攒进批次的"物品贴图"画完，否则后画的物品会压掉先画的条
+        graphics.flush();
+        // ② 再把本条推到更靠前的 Z 层，保证它压在静态贴图之上
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 200.0F);
+
         // 描黑底 + 彩色填充，和原版耐久条同样的像素位置
         graphics.fill(x + BAR_LEFT, y + BAR_TOP, x + BAR_RIGHT, y + BAR_BOTTOM, COLOR_BACKGROUND);
         graphics.fill(x + BAR_LEFT, y + BAR_TOP + 1, x + BAR_LEFT + filled, y + BAR_BOTTOM, color);
+
+        graphics.pose().popPose();
 
         return true;
     }
