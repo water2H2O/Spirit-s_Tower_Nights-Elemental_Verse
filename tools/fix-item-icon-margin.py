@@ -1,17 +1,22 @@
-"""修元素瓶贴图的顶部贴边问题。
+"""元素瓶贴图的两处修正：顶部留白 + 瓶塞。
 
-现象：作者的元素瓶贴图第 0 行就有像素（瓶口顶到格子最上沿），
-在物品栏里看起来"顶着边框"，和原版物品留白不一致。
+作者原稿的问题（2026-10-17 反馈）：
+    1. 第 0 行就是瓶颈 → 物品栏里"顶着边框"，和原版物品的留白不一致
+    2. 瓶口是敞开的 → 看着诡异
 
-做法：整张图**下移 1 像素**，第 0 行留空。
-不改任何形状/颜色，只挪位置，所以美术原稿完整保留。
-（棱镜、聚影瓶本来就从第 2 行开始，不需要动。）
+几何关系（已核对原稿）：
+    原稿内容占 **0–14 行**，第 15 行本来就是空的；瓶颈最窄 2px、第 2 行拓宽到 4px。
 
-另附：生成一份"加瓶塞"的对比预览（**不写入模组**，仅供作者挑选）。
+做法（不用缩放、不改颜色，只重排 + 补 8 个像素的塞子）：
+    原图 2–14 行  →  画布 3–15 行     （顶部空出 0–2 行）
+    画布 1–2 行   ←  4px 宽的软木塞   （正好对上原第 2 行的瓶颈宽度）
+    画布 0 行     ←  空                （不再顶边框）
+
+结果：顶部 1 行留白、底部 1 行留白、瓶口有塞子。
 
 用法：
-    python tools/fix-item-icon-margin.py          # 只修边
-    python tools/fix-item-icon-margin.py --cork-preview   # 另出对比图
+    python tools/fix-item-icon-margin.py              # 修正（可重复执行）
+    python tools/fix-item-icon-margin.py --preview    # 另出对比图
 """
 
 from __future__ import annotations
@@ -24,80 +29,96 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ITEM = os.path.join(ROOT, "src", "main", "resources", "assets", "elemental_verse", "textures", "item")
 
-# 元素瓶这一族（空瓶 + 17 种元素）
 VIAL_PREFIX = "element_vial"
 
-# 瓶塞配色（取自原版软木的暖灰调，避免抢玻璃的冷色）
+# 软木塞配色：暖灰调，和玻璃的冷青灰拉开
 CORK_MAIN = (126, 100, 74, 255)
 CORK_DARK = (96, 74, 54, 255)
 CORK_LIGHT = (150, 122, 92, 255)
 
-
-def shift_down(image: Image.Image, pixels: int = 1) -> Image.Image:
-    out = Image.new("RGBA", image.size, (0, 0, 0, 0))
-    out.paste(image, (0, pixels))
-    return out
+TRANSPARENT = (0, 0, 0, 0)
 
 
-def add_cork(image: Image.Image) -> Image.Image:
-    """在最上面画一个 4×2 的软木塞（只用于预览）。"""
-    out = image.copy()
-    px = out.load()
-    # 找到瓶口所在的列范围（第 0 行非透明像素）
-    cols = [x for x in range(16) if px[x, 0][3] > 0]
+def is_fixed(image: Image.Image) -> bool:
+    """第 0 行空 + 第 1 行有颜色 → 已经修过。"""
+    px = image.load()
+    return all(px[x, 0][3] == 0 for x in range(16)) and any(px[x, 1][3] > 0 for x in range(16))
+
+
+def fix_one(image: Image.Image) -> Image.Image:
+    """按上面的方案重排并加塞。"""
+    out = Image.new("RGBA", (16, 16), TRANSPARENT)
+
+    # 原图 2–14 行 -> 新图 3–15 行
+    out.paste(image.crop((0, 2, 16, 15)), (0, 3))
+
+    # 瓶颈中心：取原图第 2 行（拓宽的那行）的列范围
+    px = image.load()
+    cols = [x for x in range(16) if px[x, 2][3] > 0]
     if not cols:
-        return out
+        cols = [7, 8]
     center = (min(cols) + max(cols)) // 2
-    left, right = center - 2, center + 1
-    for x in range(left, right + 1):
-        px[x, 0] = CORK_LIGHT if x == left else CORK_MAIN
-        px[x, 1] = CORK_DARK if x == left else CORK_MAIN
+    left = center - 1  # 4px 宽：left..left+3
+
+    out_px = out.load()
+    for x in range(left, left + 4):
+        out_px[x, 1] = CORK_LIGHT if x == left else CORK_MAIN
+        out_px[x, 2] = CORK_DARK if x == left else CORK_MAIN
+
     return out
 
 
 def fix_all() -> int:
     changed = 0
     for name in sorted(os.listdir(ITEM)):
-        if not name.startswith(VIAL_PREFIX) or not name.endswith(".png"):
+        if not (name.startswith(VIAL_PREFIX) and name.endswith(".png")):
             continue
         path = os.path.join(ITEM, name)
         image = Image.open(path).convert("RGBA")
-        px = image.load()
-        if any(px[x, 0][3] > 0 for x in range(16)):
-            shift_down(image).save(path)
+        if is_fixed(image):
+            # 幂等：已经修过就不再叠一次
+            out = image
+        else:
+            out = fix_one(image)
             changed += 1
-            print(f"  下移 1px: {name}")
+        out.save(path)
     return changed
 
 
-def cork_preview(count: int = 6) -> None:
-    """把前几张瓶图拼一张对比图（上排原样，下排加瓶塞），放大 6 倍。"""
-    names = [n for n in sorted(os.listdir(ITEM)) if n.startswith(VIAL_PREFIX) and n.endswith(".png")][:count]
+def preview() -> None:
+    names = [n for n in sorted(os.listdir(ITEM))
+             if n.startswith(VIAL_PREFIX) and n.endswith(".png")][:6]
     if not names:
         return
+
     scale, pad = 6, 4
     cell = 16 * scale
     width = len(names) * (cell + pad) + pad
     height = 2 * (cell + pad) + pad
-    canvas = Image.new("RGBA", (width, height), (60, 60, 60, 255))
+    canvas = Image.new("RGBA", (width, height), (58, 58, 62, 255))
 
+    source = os.path.join(ROOT, "docs", "textures", "v7", "assets", "elemental_verse", "textures", "item")
     for column, name in enumerate(names):
-        image = Image.open(os.path.join(ITEM, name)).convert("RGBA")
         x = pad + column * (cell + pad)
-        canvas.alpha_composite(image.resize((cell, cell), Image.NEAREST), (x, pad))
-        with_cork = add_cork(shift_down(image, 1))
-        canvas.alpha_composite(with_cork.resize((cell, cell), Image.NEAREST), (x, pad + cell + pad))
+        original_path = os.path.join(source, name)
+        if os.path.exists(original_path):
+            original = Image.open(original_path).convert("RGBA")
+        else:
+            original = Image.open(os.path.join(ITEM, name)).convert("RGBA")
+        canvas.alpha_composite(original.resize((cell, cell), Image.NEAREST), (x, pad))
+        fixed = fix_one(original)
+        canvas.alpha_composite(fixed.resize((cell, cell), Image.NEAREST), (x, pad + cell + pad))
 
     out = os.path.join(ROOT, "docs", "vial-cork-preview.png")
     canvas.save(out)
-    print("对比图（上：现状  下：加瓶塞）->", os.path.relpath(out, ROOT))
+    print("对比图（上：作者原稿  下：留白+瓶塞）->", os.path.relpath(out, ROOT))
 
 
 def main() -> int:
     changed = fix_all()
-    print(f"共下移 {changed} 张")
-    if "--cork-preview" in sys.argv:
-        cork_preview()
+    print(f"本次处理 {changed} 张（已是目标的会跳过）")
+    if "--preview" in sys.argv:
+        preview()
     return 0
 
 

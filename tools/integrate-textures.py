@@ -1,18 +1,21 @@
-"""把作者发来的素材包接入模组（一步到位，避免踩重复的坑）。
+"""把作者发来的素材包接入模组（一步到位）。
 
-踩过的坑：素材包里也带 `models/item/element_vial.json` 这类文件，
-直接复制会把我们生成的 `overrides` 分发段覆盖掉 ——
-表现是**所有元素瓶图标变成一个**，而且没有任何报错。
+踩过的坑，全部固化进这个流程：
+    1. 素材包里也带 `models/item/element_vial.json`，直接复制会覆盖我们生成的
+       `overrides` 分发段 → 所有元素瓶图标退化成一个，且**没有任何报错**。
+    2. 素材包里常带"平面图标版"的 `models/item/<方块>.json`，会把方块的立体渲染
+       盖成平面图 → 物品栏里跟别的方块不一样。
+    3. 元素瓶原稿顶部贴边、瓶口没塞子 → 每次接入后都要重新应用修图，
+       不然新素材一来，之前修的就白做了。
 
-所以接入要按这个顺序做：
-    1. 解压
-    2. 把 `assets/elemental_verse/**` 复制进模组
-    3. 把三个**载体模型**改名成 `<载体>_base.json`（作者的稿归它们）
-    4. 重跑 generate-vial-models.py，重新生成带 overrides 的分发模型
-    5. 归档整包到 docs/textures/<版本>/
+固定顺序：
+    解压 → 复制资源 → 载体模型落成 <载体>_base → 重新生成分发
+         → 方块物品模型指回方块模型 → 修元素瓶贴图 → 归档整包
 
 用法：
-    python tools/integrate-textures.py "C:/Users/.../elemental_verse_textures_v8.zip" v8
+    python tools/integrate-textures.py "<素材包.zip>" v8
+    python tools/integrate-textures.py "<素材包.zip>" v8 --keep-art
+        （--keep-art：作者已自己画好留白与瓶塞时，跳过修图）
 """
 
 from __future__ import annotations
@@ -28,17 +31,18 @@ import zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, "src", "main", "resources", "assets", "elemental_verse")
 MODELS = os.path.join(ASSETS, "models", "item")
-CARRIERS = ("element_vial", "refraction_prism", "shadow_bottle")
-
-# 这些方块的物品模型必须 parent 到方块模型（否则物品栏里是平面图标，和原版方块不一致）
-BLOCK_ITEMS = ("dead_matter", "sealed_vault")
 
 NS = "elemental_verse"
-CARRIER_TEXTURE = {
+
+# 三种元素载体：作者的模型会被保存成 <载体>_base.json
+CARRIERS = {
     "element_vial": f"{NS}:item/element_vial",
     "refraction_prism": f"{NS}:item/refraction_prism",
     "shadow_bottle": f"{NS}:item/shadow_bottle",
 }
+
+# 这些方块的物品模型必须 parent 到方块模型（否则物品栏里是平面图标）
+BLOCK_ITEMS = ("dead_matter", "sealed_vault")
 
 
 def write_json(path: str, payload: dict) -> None:
@@ -47,12 +51,26 @@ def write_json(path: str, payload: dict) -> None:
         handle.write("\n")
 
 
+def run_tool(script: str) -> int:
+    # encoding 必须显式给：Windows 上默认是 GBK，读子进程的 UTF-8 中文输出会崩
+    result = subprocess.run([sys.executable, os.path.join(ROOT, "tools", script)],
+                            capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
+    if (result.stdout or "").strip():
+        print(result.stdout.strip())
+    if result.returncode != 0:
+        print((result.stderr or "").strip())
+    return result.returncode
+
+
 def main() -> int:
-    if len(sys.argv) < 3:
+    keep_art = "--keep-art" in sys.argv
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if len(args) < 2:
         print(__doc__)
         return 1
 
-    zip_path, version = sys.argv[1], sys.argv[2]
+    zip_path, version = args[0], args[1]
     if not os.path.exists(zip_path):
         print("找不到 zip:", zip_path)
         return 1
@@ -61,48 +79,53 @@ def main() -> int:
     with zipfile.ZipFile(zip_path) as archive:
         archive.extractall(work)
 
-    # 包里通常套一层目录
-    roots = [entry for entry in os.listdir(work) if os.path.isdir(os.path.join(work, entry))]
+    roots = [e for e in os.listdir(work) if os.path.isdir(os.path.join(work, e))]
     pack_root = os.path.join(work, roots[0]) if len(roots) == 1 else work
     pack_assets = os.path.join(pack_root, "assets", "elemental_verse")
     if not os.path.isdir(pack_assets):
         print("这个包里没有 assets/elemental_verse")
         return 1
 
-    # 1) 复制资源（会覆盖同名文件）
+    # ① 复制资源（覆盖同名文件）
     shutil.copytree(pack_assets, ASSETS, dirs_exist_ok=True)
-    print("已复制 assets")
+    print("① 资源已复制")
 
-    # 2) 作者的载体模型 -> <载体>_base.json（保住它们，不被分发覆盖）
-    for carrier in CARRIERS:
-        source = os.path.join(MODELS, f"{carrier}.json")
-        if os.path.exists(source):
-            write_json(os.path.join(MODELS, f"{carrier}_base.json"), {
-                "parent": "minecraft:item/generated",
-                "textures": {"layer0": CARRIER_TEXTURE[carrier]},
-            })
-            print(f"  {carrier}_base.json 就位")
-
-    # 2.5) 方块物品模型必须指回方块模型（和原版方块一样的立体渲染）
-    #      素材包里常带一份"平面图标版"的 models/item/<方块>.json，会把这里盖掉，
-    #      表现是方块在物品栏里变成一个平面块、跟其它方块不一样。
-    for block in BLOCK_ITEMS:
-        write_json(os.path.join(MODELS, f"{block}.json"), {
-            "parent": f"{NS}:block/{block}",
+    # ② 作者的载体模型 -> <载体>_base.json
+    for carrier, texture in CARRIERS.items():
+        write_json(os.path.join(MODELS, f"{carrier}_base.json"), {
+            "parent": "minecraft:item/generated",
+            "textures": {"layer0": texture},
         })
-        print(f"  {block}.json 指回方块模型")
+    print("② 载体基底模型已就位")
 
-    # 3) 重新生成分发模型
-    subprocess.run([sys.executable, os.path.join(ROOT, "tools", "generate-vial-models.py")], check=True)
+    # ③ 重建带 overrides 的分发模型
+    if run_tool("generate-vial-models.py") != 0:
+        print("生成分发模型失败")
+        return 1
+    print("③ 分发模型已重建")
 
-    # 4) 归档整包
+    # ④ 方块物品模型指回方块模型
+    for block in BLOCK_ITEMS:
+        write_json(os.path.join(MODELS, f"{block}.json"), {"parent": f"{NS}:block/{block}"})
+    print("④ 方块物品模型已指回方块模型")
+
+    # ⑤ 元素瓶贴图：顶部留白 + 瓶塞
+    if keep_art:
+        print("⑤ 跳过贴图修正（--keep-art）")
+    elif run_tool("fix-item-icon-margin.py") != 0:
+        print("贴图修正失败")
+        return 1
+    else:
+        print("⑤ 元素瓶贴图已修正")
+
+    # ⑥ 归档整包
     archive_dir = os.path.join(ROOT, "docs", "textures", version)
     if os.path.isdir(archive_dir):
         shutil.rmtree(archive_dir)
     shutil.copytree(pack_root, archive_dir)
-    print(f"已归档到 docs/textures/{version}")
+    print(f"⑥ 已归档到 docs/textures/{version}")
 
-    print("\n接入完成。下一步：python tools/static-check.py 然后 dev.cmd build")
+    print("\n接入完成。下一步：python tools/static-check.py，然后 dev.cmd build")
     return 0
 
 
