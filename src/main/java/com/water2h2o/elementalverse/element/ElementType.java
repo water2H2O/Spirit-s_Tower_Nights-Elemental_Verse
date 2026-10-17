@@ -241,4 +241,68 @@ public enum ElementType implements StringRepresentable {
         }
         throw new IllegalStateException("衰变链指向了不存在的元素 id: " + id);
     }
+
+    // ---------------------------------------------------------------- 元素值
+
+    /**
+     * 每种元素对应的元素值（六维向量）。
+     *
+     * <p>用**静态表按 id 查**而不是加枚举参数，原因有两个：
+     * <ul>
+     *   <li>枚举构造时不能调用 {@code values()}（踩过静态初始化崩溃的坑）</li>
+     *   <li>二级元素的式子以后还会调，改数据不动构造函数签名</li>
+     * </ul>
+     *
+     * <p>数值口径见 `docs/魔法体系原理.md` 第四节。
+     */
+    private static final java.util.Map<String, ElementValue> VALUES = new java.util.HashMap<>();
+
+    static {
+        VALUES.put("fire", ElementValue.of(ElementAxis.FIRE, 1));
+        VALUES.put("water", ElementValue.of(ElementAxis.WATER, 1));
+        VALUES.put("earth", ElementValue.of(ElementAxis.EARTH, 1));
+        VALUES.put("wind", ElementValue.of(ElementAxis.WIND, 1));
+        VALUES.put("grass", ElementValue.of(ElementAxis.GRASS, 1));
+        VALUES.put("light", ElementValue.of(ElementAxis.LIGHT, 1));
+
+        // 暗 = 负的光（不是第七条第轴）
+        VALUES.put("shadow", ElementValue.of(ElementAxis.LIGHT, -1));
+
+        // 二级元素 = 分子：组合式决定它为什么有那种效果
+        VALUES.put("frost", ElementValue.of(java.util.Map.of(
+                ElementAxis.WATER, 1.0, ElementAxis.FIRE, -0.5)));
+        VALUES.put("ice", ElementValue.of(java.util.Map.of(
+                ElementAxis.WATER, 1.0, ElementAxis.FIRE, -1.0)));
+        VALUES.put("sand", ElementValue.of(java.util.Map.of(
+                ElementAxis.EARTH, 1.0, ElementAxis.WATER, -0.5)));
+        VALUES.put("lightning", ElementValue.of(java.util.Map.of(
+                ElementAxis.WIND, 1.0, ElementAxis.LIGHT, 0.5)));
+        VALUES.put("ember", ElementValue.of(java.util.Map.of(
+                ElementAxis.FIRE, 1.0, ElementAxis.LIGHT, -0.5)));
+        VALUES.put("bud", ElementValue.of(java.util.Map.of(
+                ElementAxis.GRASS, 1.0, ElementAxis.WATER, 0.5)));
+        VALUES.put("wood", ElementValue.of(ElementAxis.GRASS, 2));
+        VALUES.put("dawn", ElementValue.of(java.util.Map.of(
+                ElementAxis.LIGHT, 1.0, ElementAxis.FIRE, 0.5)));
+        VALUES.put("shadow_essence", ElementValue.of(java.util.Map.of(
+                ElementAxis.LIGHT, -1.0, ElementAxis.GRASS, -0.5)));
+        VALUES.put("metal", ElementValue.of(java.util.Map.of(
+                ElementAxis.EARTH, 2.0, ElementAxis.FIRE, 1.0)));
+    }
+
+    /** 这种元素的元素值（空元素返回零向量）。 */
+    public ElementValue value() {
+        ElementValue value = VALUES.get(id);
+        return value == null ? ElementValue.ZERO : value;
+    }
+
+    /** 按 id 找形态（命令与调试用）。 */
+    public static ElementType byName(String name) {
+        for (ElementType type : values()) {
+            if (type.id.equals(name)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

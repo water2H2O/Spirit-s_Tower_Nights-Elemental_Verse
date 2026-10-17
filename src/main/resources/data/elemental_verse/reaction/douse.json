@@ -1,0 +1,12 @@
+{
+  "consume": {
+    "water": 1
+  },
+  "phenomenon": {
+    "type": "douse",
+    "element": "water",
+    "amount": 1.0,
+    "duration": 20,
+    "cost": 1.0
+  }
+}

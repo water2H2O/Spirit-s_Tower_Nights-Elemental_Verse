@@ -1,0 +1,12 @@
+{
+  "consume": {
+    "fire": 1
+  },
+  "phenomenon": {
+    "type": "ignite",
+    "element": "fire",
+    "amount": 1.0,
+    "duration": 20,
+    "cost": 1.0
+  }
+}
