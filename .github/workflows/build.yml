@@ -26,5 +26,16 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      # 编译输出同时落一份到文件。理由：GitHub 的「下载任务日志」接口需要管理员权限，
+      # 失败时拿不到错误正文；落成 artifact 之后任何人（包括自动化）都能读。
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build 2>&1 | tee build-log.txt
+
+      # 只在失败时上传，避免把日志当产物发出去。
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build-log.txt
+          if-no-files-found: warn
