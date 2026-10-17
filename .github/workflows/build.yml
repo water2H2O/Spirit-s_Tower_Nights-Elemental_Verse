@@ -21,37 +21,33 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # This is needed to be able to run ./gradlew below
+      # Needed so ./gradlew can be executed directly.
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Show toolchain
-        run: |
-          java -version
-          ./gradlew --version
-
-      # 用 --no-configuration-cache：常见 CI 玄学失败的来源之一。
-      # 不加管道，避免退出码被吞。
+      # `set -o pipefail` is required: without it `./gradlew build | tee log`
+      # reports tee's exit code (always 0), which hides a failing build AND
+      # leaves no jar behind.
       - name: Build with Gradle
-        id: gradle_build
-        run: ./gradlew build --no-configuration-cache --console=plain --stacktrace
-
-      # 主构建失败时，只编译 Java 并把错误原样打出来 —— 用来区分
-      # 「代码编译不过」和「构建流程别的地方出问题」。
-      - name: Diagnose (compile only)
-        if: failure()
+        shell: bash
         run: |
-          echo "=== 主构建失败了，单独跑 compileJava 看真实错误 ==="
-          ./gradlew compileJava --no-configuration-cache --console=plain 2>&1 || true
-          echo "=== build 目录 ==="
-          ls -la build 2>/dev/null || echo "(build 目录不存在)"
-          echo "=== 所有 jar ==="
-          find . -name '*.jar' -path '*/build/*' 2>/dev/null | head -20 || true
+          set -o pipefail
+          ./gradlew build --console=plain 2>&1 | tee build-log.txt
+
+      # GitHub requires admin rights to download job logs through the API,
+      # so the log is published as an artifact instead.
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build-log.txt
+          if-no-files-found: ignore
 
       - name: Upload mod jar
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: elemental_verse-jar
-          path: build/libs/*.jar
-          if-no-files-found: warn
+          path: build/libs/elemental_verse-*.jar
+          if-no-files-found: error
