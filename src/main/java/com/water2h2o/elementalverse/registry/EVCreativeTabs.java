@@ -46,6 +46,10 @@ public final class EVCreativeTabs {
                         output.accept(new ItemStack(EVItems.SHADOW_BOTTLE.get()));
                         acceptCarrier(output, ElementCarrier.SHADOW_BOTTLE);
 
+                        // ③.5 申明板与仪式台
+                        output.accept(new ItemStack(EVItems.DECLARATION_PLATE.get()));
+                        output.accept(new ItemStack(EVItems.RITUAL_ALTAR.get()));
+
                         // ④ 仓储方块（作者反馈：创造栏里找不到密封仓）
                         output.accept(new ItemStack(EVItems.SEALED_VAULT.get()));
 

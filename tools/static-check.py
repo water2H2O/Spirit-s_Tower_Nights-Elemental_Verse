@@ -277,6 +277,43 @@ def check_registry_names() -> None:
 
 # ----------------------------------------------------------------- 7. Java 基本配平
 
+
+def _strip_java_literals(text: str) -> str:
+    """把字符串/字符字面量和注释剥掉，再做括号配平。
+
+    不剥的话，`"{"`、`'}'` 这种字面量会被当成真括号，报假警。
+    """
+    out = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < n else ""
+        if ch == "/" and nxt == "/":
+            while i < n and text[i] != "\n":
+                i += 1
+        elif ch == "/" and nxt == "*":
+            i += 2
+            while i + 1 < n and not (text[i] == "*" and text[i + 1] == "/"):
+                i += 1
+            i += 2
+        elif ch in ("\"", "'"):
+            quote = ch
+            i += 1
+            while i < n:
+                if text[i] == "\\":
+                    i += 2
+                    continue
+                if text[i] == quote:
+                    i += 1
+                    break
+                i += 1
+        else:
+            out.append(ch)
+            i += 1
+    return "".join(out)
+
+
 def check_java_balance() -> None:
     for path in java_files():
         with open(path, "r", encoding="utf-8") as handle:
@@ -284,6 +321,8 @@ def check_java_balance() -> None:
         # 去掉字符串字面量与注释再数括号，避免误报
         stripped = re.sub(r'"""[\s\S]*?"""', '""', text)
         stripped = re.sub(r'"(\\.|[^"\\])*"', '""', stripped)
+        # 字符字面量也要剥：builder.append('}') 这种会被数成真括号
+        stripped = re.sub(r"'(?:\\.|[^'\\])'", "''", stripped)
         stripped = re.sub(r"//[^\n]*", "", stripped)
         stripped = re.sub(r"/\*[\s\S]*?\*/", "", stripped)
         if stripped.count("{") != stripped.count("}"):

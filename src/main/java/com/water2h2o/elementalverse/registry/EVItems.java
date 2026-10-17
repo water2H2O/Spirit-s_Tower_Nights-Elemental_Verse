@@ -65,6 +65,17 @@ public final class EVItems {
      *
      * <p>作者 2026-10-17：把几种元素装在一起随身带，方便现场做东西。
      */
+    /** 申明板：模组心脏，写"料 + 形"。 */
+    public static final DeferredItem<com.water2h2o.elementalverse.element.DeclarationPlateItem> DECLARATION_PLATE =
+            ITEMS.register("declaration_plate",
+                    () -> new com.water2h2o.elementalverse.element.DeclarationPlateItem(
+                            new Item.Properties().stacksTo(16)));
+
+    /** 仪式台的方块物品（没有它，方块放不下来也拿不到）。 */
+    public static final DeferredItem<BlockItem> RITUAL_ALTAR = ITEMS.register(
+            "ritual_altar",
+            () -> new BlockItem(EVBlocks.RITUAL_ALTAR.get(), new Item.Properties()));
+
     public static final DeferredItem<PouchItem> ELEMENT_POUCH = ITEMS.register(
             "element_pouch",
             () -> new PouchItem(new Item.Properties().stacksTo(1)));

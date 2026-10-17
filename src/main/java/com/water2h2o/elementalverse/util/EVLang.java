@@ -49,6 +49,14 @@ public final class EVLang {
         return "item.elemental_verse.element_vial." + type.id();
     }
 
+    /** 申明板与仪式台。 */
+    public static final String BLOCK_RITUAL_ALTAR = "block.elemental_verse.ritual_altar";
+    public static final String PLATE_WRITTEN = "item.elemental_verse.declaration_plate.written";
+    public static final String PLATE_BLANK_HINT = "tooltip.elemental_verse.plate.blank";
+    public static final String PLATE_ELEMENT = "tooltip.elemental_verse.plate.element";
+    public static final String PLATE_TIER = "tooltip.elemental_verse.plate.tier";
+    public static final String PLATE_OPERATION = "tooltip.elemental_verse.plate.operation";
+
     public static String config(String option) {
         return "elemental_verse.configuration." + option;
     }

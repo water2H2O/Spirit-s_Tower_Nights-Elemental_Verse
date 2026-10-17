@@ -20,6 +20,13 @@ public final class EVBlockEntities {
                             .of(SealedVaultBlockEntity::new, EVBlocks.SEALED_VAULT.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.water2h2o.elementalverse.block.RitualAltarBlockEntity>> RITUAL_ALTAR =
+            BLOCK_ENTITIES.register("ritual_altar",
+                    () -> BlockEntityType.Builder
+                            .of(com.water2h2o.elementalverse.block.RitualAltarBlockEntity::new,
+                                    EVBlocks.RITUAL_ALTAR.get())
+                            .build(null));
+
     public static void register(IEventBus modEventBus) {
         BLOCK_ENTITIES.register(modEventBus);
     }

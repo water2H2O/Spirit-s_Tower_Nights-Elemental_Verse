@@ -24,6 +24,11 @@ public final class EVMenus {
     /** 元素小包界面。 */
     public static final DeferredHolder<MenuType<?>, MenuType<PouchMenu>> POUCH =
             MENUS.register("pouch", () -> IMenuTypeExtension.create(PouchMenu::new));
+    /** 仪式台界面。 */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.water2h2o.elementalverse.menu.RitualAltarMenu>> RITUAL_ALTAR =
+            MENUS.register("ritual_altar",
+                    () -> IMenuTypeExtension.create(com.water2h2o.elementalverse.menu.RitualAltarMenu::new));
+
     public static void register(IEventBus modEventBus) {
         MENUS.register(modEventBus);
     }

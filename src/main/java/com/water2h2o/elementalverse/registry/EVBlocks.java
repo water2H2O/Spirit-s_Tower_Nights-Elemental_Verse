@@ -43,6 +43,16 @@ public final class EVBlocks {
      *
      * <p>同样**不加** {@code requiresCorrectToolForDrops()}，先保证徒手能挖下来。
      */
+    /** 基础仪式台：把元素写成申明板。 */
+    public static final DeferredBlock<com.water2h2o.elementalverse.block.RitualAltarBlock> RITUAL_ALTAR =
+            BLOCKS.register("ritual_altar",
+                    () -> new com.water2h2o.elementalverse.block.RitualAltarBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.STONE)
+                                    .strength(3.5F, 6.0F)
+                                    .sound(SoundType.STONE)
+                                    .noOcclusion()));
+
     public static final DeferredBlock<Block> SEALED_VAULT = BLOCKS.register(
             "sealed_vault",
             () -> new SealedVaultBlock(BlockBehaviour.Properties.of()

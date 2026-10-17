@@ -74,6 +74,14 @@ public final class EVDataComponents {
                             .persistent(Codec.INT)
                             .networkSynchronized(ByteBufCodecs.VAR_INT));
 
+    /** 申明板上写的东西（料 + 形）。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<com.water2h2o.elementalverse.element.Declaration>> DECLARATION =
+            DATA_COMPONENTS.registerComponentType(
+                    "declaration",
+                    builder -> builder
+                            .persistent(com.water2h2o.elementalverse.element.Declaration.CODEC)
+                            .networkSynchronized(com.water2h2o.elementalverse.element.Declaration.STREAM_CODEC));
+
     /** 小包内容的编解码器（持久化与网络共用）。**必须声明在使用它的字段之前**。 */
     public static final Codec<List<ItemStack>> POUCH_CODEC = ItemStack.OPTIONAL_CODEC.listOf();
 

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SDS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "tag": "minecraft:stone_crafting_materials"
+    },
+    "D": {
+      "item": "elemental_verse:dead_dust"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:ritual_altar",
+    "count": 1
+  }
+}

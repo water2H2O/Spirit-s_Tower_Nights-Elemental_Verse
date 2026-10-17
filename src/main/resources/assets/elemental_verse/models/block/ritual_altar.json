@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "elemental_verse:block/dead_matter_top",
+    "side": "minecraft:block/polished_deepslate",
+    "bottom": "minecraft:block/deepslate_tiles"
+  }
+}
