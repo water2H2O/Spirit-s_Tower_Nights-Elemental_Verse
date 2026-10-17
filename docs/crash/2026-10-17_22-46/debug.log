@@ -1,0 +1,26 @@
+[1710月2026 22:45:46.268] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--username, water2H2O, --version, 1.21.1-NeoForge_21.1.262, --gameDir, D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262, --assetsDir, D:\vibe_coding\mod\assets, --assetIndex, 17, --uuid, 6019f51b91b8425a9d9c74c954c7da6d, --accessToken, ❄❄❄❄❄❄❄❄, --clientId, ${clientid}, --xuid, ${auth_xuid}, --userType, msa, --versionType, PCL, --width, 854, --height, 480, --fml.neoForgeVersion, 21.1.262, --fml.fmlVersion, 4.0.45, --fml.mcVersion, 1.21.1, --fml.neoFormVersion, 20240808.144430, --launchTarget, forgeclient]
+[1710月2026 22:45:46.277] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Microsoft OpenJDK 64-Bit Server VM 21.0.7+6-LTS
+[1710月2026 22:45:46.280] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 11.0.5+main.901c6ea8 starting: java version 21.0.7 by Microsoft; OS Windows 11 arch amd64 version 10.0
+[1710月2026 22:45:46.382] [main/DEBUG] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Found launch services [minecraft,forgeclient,forgedatauserdev,testharness,forgeserverdev,forgeserveruserdev,forgejunitdev,forgeclientdev,forgeclientuserdev,forgeserver,forgejunituserdev,forgedatadev]
+[1710月2026 22:45:46.444] [main/DEBUG] [cpw.mods.modlauncher.LaunchPluginHandler/MODLAUNCHER]: Found launch plugins: [mixin,slf4jfixer,runtime_enum_extender,accesstransformer,runtimedistcleaner]
+[1710月2026 22:45:46.466] [main/DEBUG] [cpw.mods.modlauncher.TransformationServicesHandler/MODLAUNCHER]: Discovering transformation services
+[1710月2026 22:45:46.476] [main/DEBUG] [net.neoforged.fml.loading.FMLPaths/CORE]: Path GAMEDIR is D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262
+[1710月2026 22:45:46.477] [main/DEBUG] [net.neoforged.fml.loading.FMLPaths/CORE]: Path MODSDIR is D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262\mods
+[1710月2026 22:45:46.477] [main/DEBUG] [net.neoforged.fml.loading.FMLPaths/CORE]: Path CONFIGDIR is D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262\config
+[1710月2026 22:45:46.477] [main/DEBUG] [net.neoforged.fml.loading.FMLPaths/CORE]: Path FMLCONFIG is D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262\config\fml.toml
+[1710月2026 22:45:46.592] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: Loaded FML config from D:\vibe_coding\mod\versions\1.21.1-NeoForge_21.1.262\config\fml.toml
+[1710月2026 22:45:46.592] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig disableConfigWatcher is false
+[1710月2026 22:45:46.592] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowControl is true
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig maxThreads is 32
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig versionCheck is true
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig defaultConfigPath is defaultconfigs
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig disableOptimizedDFU is true
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowProvider is fmlearlywindow
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowWidth is 854
+[1710月2026 22:45:46.593] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowHeight is 480
+[1710月2026 22:45:46.594] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowFBScale is 1
+[1710月2026 22:45:46.594] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowMaximized is false
+[1710月2026 22:45:46.594] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowSkipGLVersions is []
+[1710月2026 22:45:46.594] [main/TRACE] [net.neoforged.fml.loading.FMLConfig/CORE]: FMLConfig earlyWindowSquir is false
+[1710月2026 22:45:46.644] [main/DEBUG] [cpw.mods.modlauncher.TransformationServicesHandler/MODLAUNCHER]: Found additional transformation services from discovery services: 
+[1710月2026 22:45:46.667] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Loading ImmediateWindowProvider fmlearlywindow
