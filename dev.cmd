@@ -76,4 +76,16 @@ echo [dev.cmd] task             = %TASK%
 echo.
 
 call gradlew.bat %TASK% %1 %2 %3 %4 %5 %6 %7 %8 %9
-exit /b %ERRORLEVEL%
+set "RC=%ERRORLEVEL%"
+
+rem ---------- 5) publish the jar to a single known place ----------
+rem  build\libs is deep and easy to lose; dist\ is the one place to look.
+if "%RC%"=="0" if exist "%PROJ%build\libs" (
+  if not exist "%PROJ%dist" mkdir "%PROJ%dist" >nul 2>&1
+  copy /y "%PROJ%build\libs\*.jar" "%PROJ%dist\" >nul 2>&1
+  echo.
+  echo [dev.cmd] jar published to dist\ :
+  dir /b "%PROJ%dist\*.jar"
+)
+
+exit /b %RC%
