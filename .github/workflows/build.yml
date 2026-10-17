@@ -39,3 +39,13 @@ jobs:
           name: build-log
           path: build-log.txt
           if-no-files-found: warn
+
+      # 成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
+      # 注意 build 目录里还有 -sources 这类 jar，这里只挑主产物。
+      - name: Upload mod jar (on success)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: elemental_verse-jar
+          path: build/libs/elemental_verse-*.jar
+          if-no-files-found: error
