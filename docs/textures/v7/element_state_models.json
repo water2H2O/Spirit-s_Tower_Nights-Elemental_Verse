@@ -1,0 +1,25 @@
+{
+  "item": "elemental_verse:element_vial",
+  "component": "elemental_verse:element",
+  "note": "此表仅列出资源映射。实际按组件选择模型需要根据目标 Minecraft 版本在模组客户端实现。",
+  "states": {
+    "empty": "elemental_verse:item/element_vial",
+    "earth": "elemental_verse:item/element_vial_earth",
+    "water": "elemental_verse:item/element_vial_water",
+    "wind": "elemental_verse:item/element_vial_wind",
+    "fire": "elemental_verse:item/element_vial_fire",
+    "grass": "elemental_verse:item/element_vial_grass",
+    "light": "elemental_verse:item/element_vial_light",
+    "shadow": "elemental_verse:item/element_vial_shadow",
+    "ice": "elemental_verse:item/element_vial_ice",
+    "frost": "elemental_verse:item/element_vial_frost",
+    "lightning": "elemental_verse:item/element_vial_lightning",
+    "wood": "elemental_verse:item/element_vial_wood",
+    "metal": "elemental_verse:item/element_vial_metal",
+    "ember": "elemental_verse:item/element_vial_ember",
+    "sand": "elemental_verse:item/element_vial_sand",
+    "bud": "elemental_verse:item/element_vial_bud",
+    "dawn": "elemental_verse:item/element_vial_dawn",
+    "shadow_essence": "elemental_verse:item/element_vial_shadow_essence"
+  }
+}

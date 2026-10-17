@@ -1,6 +1,5 @@
 {
   "itemGroup.elemental_verse.main": "元素之诗",
-
   "item.elemental_verse.element_vial": "空元素瓶",
   "item.elemental_verse.element_vial.empty": "空元素瓶",
   "item.elemental_verse.element_vial.earth": "土元素瓶",
@@ -20,12 +19,10 @@
   "item.elemental_verse.element_vial.bud": "芽元素瓶",
   "item.elemental_verse.element_vial.dawn": "晨元素瓶",
   "item.elemental_verse.element_vial.shadow_essence": "影元素瓶",
-
   "item.elemental_verse.dead_dust": "死寂尘",
   "item.elemental_verse.refraction_prism": "折射棱镜",
   "item.elemental_verse.shadow_bottle": "聚影瓶",
   "block.elemental_verse.dead_matter": "死寂物质",
-
   "element.elemental_verse.empty": "空",
   "element.elemental_verse.earth": "土元素",
   "element.elemental_verse.water": "水元素",
@@ -44,7 +41,6 @@
   "element.elemental_verse.bud": "芽元素",
   "element.elemental_verse.dawn": "晨元素",
   "element.elemental_verse.shadow_essence": "影元素",
-
   "tooltip.elemental_verse.empty_vial": "一个空瓶子。去装点什么吧。",
   "tooltip.elemental_verse.stage.stable": "尚有余韵",
   "tooltip.elemental_verse.stage.derived": "渐趋沉寂",
@@ -53,7 +49,6 @@
   "tooltip.elemental_verse.no_decay": "这个形态不会再变了。",
   "tooltip.elemental_verse.decay_disabled": "（衰变已在配置里关闭）",
   "tooltip.elemental_verse.exact_seconds": "调试：还剩 %s 秒",
-
   "elemental_verse.configuration.title": "元素之诗 · 配置",
   "elemental_verse.configuration.decayPreset": "时长预设",
   "elemental_verse.configuration.decayEnabled": "启用衰变",
@@ -62,5 +57,6 @@
   "elemental_verse.configuration.decayMaxContainers": "每秒检查容器上限",
   "elemental_verse.configuration.lightDarknessMultiplier": "光暗的明暗倍率",
   "elemental_verse.configuration.darknessSpeedsShadow": "暗在亮处加速",
-  "elemental_verse.configuration.showsExactSeconds": "显示精确秒数（调试）"
+  "elemental_verse.configuration.showsExactSeconds": "显示精确秒数（调试）",
+  "block.elemental_verse.sealed_vault": "石制密封仓"
 }

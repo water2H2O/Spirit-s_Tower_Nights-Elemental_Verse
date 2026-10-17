@@ -222,11 +222,23 @@ def check_registry_names() -> None:
     for name in sorted(block_names):
         for rel in (("blockstates", f"{name}.json"),
                     ("models", "block", f"{name}.json"),
-                    ("models", "item", f"{name}.json"),
-                    ("textures", "block", f"{name}.png")):
+                    ("models", "item", f"{name}.json")):
             target = os.path.join(ASSETS, *rel)
             if not os.path.exists(target):
                 fail(f"方块 {name} 缺资源：assets/{'/'.join(rel)}")
+
+        # 只有方块模型引用了**本模组**的贴图时，才要求本地有 png。
+        # 复用原版贴图的方块（比如密封仓暂用深板岩）不该被要求画一张自己的图。
+        block_model = read_json(os.path.join(ASSETS, "models", "block", f"{name}.json"))
+        if isinstance(block_model, dict):
+            for texture in (block_model.get("textures") or {}).values():
+                if isinstance(texture, str) and texture.startswith(NS + ":"):
+                    rel = texture.split(":", 1)[1]
+                    target = os.path.join(ASSETS, "textures", *rel.split("/")) + ".png"
+                    if not os.path.exists(target):
+                        fail(f"方块 {name} 的模型引用了不存在的贴图：{texture}")
+                    break
+
         loot = os.path.join(DATA, "loot_table", "blocks", f"{name}.json")
         if not os.path.exists(loot):
             fail(f"方块 {name} 缺掉落表：data/{NS}/loot_table/blocks/{name}.json")

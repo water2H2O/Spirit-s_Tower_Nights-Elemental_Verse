@@ -77,9 +77,9 @@ public final class EVConfig {
             .defineInRange("decay.tickInterval", 20, 1, 200);
 
     public static final ModConfigSpec.IntValue DECAY_MAX_CONTAINERS_PER_TICK = BUILDER
-            .comment("每秒最多检查多少个容器（性能兜底，防止有人造一万个箱子）")
+            .comment("每次扫描最多处理多少个已加载区块（容器里的元素也会衰变，这是性能兜底）")
             .translation(EVLang.config("decayMaxContainers"))
-            .defineInRange("decay.maxContainersPerTick", 64, 1, 100000);
+            .defineInRange("decay.chunksPerSweep", 64, 1, 100000);
 
     public static final ModConfigSpec.DoubleValue LIGHT_DARKNESS_MULTIPLIER = BUILDER
             .comment("光在暗处 / 暗在亮处的加速倍率。亮处对光也会按这个倍率减速")
@@ -198,6 +198,11 @@ public final class EVConfig {
         } catch (IllegalStateException notLoadedYet) {
             return 64;
         }
+    }
+
+    /** 每次扫描最多处理多少个已加载区块（容器衰变用的预算）。 */
+    public static int getChunksPerSweep() {
+        return getMaxContainersPerTick();
     }
 
     public static double getLightDarknessMultiplier() {

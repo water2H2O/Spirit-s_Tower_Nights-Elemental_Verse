@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "elemental_verse_sealed_vault",
+  "pattern": [
+    "DID",
+    "SVS",
+    "SSS"
+  ],
+  "key": {
+    "D": {
+      "item": "elemental_verse:dead_dust"
+    },
+    "I": {
+      "item": "minecraft:gold_ingot"
+    },
+    "S": {
+      "tag": "minecraft:stone_crafting_materials"
+    },
+    "V": {
+      "item": "elemental_verse:element_vial"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:sealed_vault",
+    "count": 1
+  }
+}

@@ -1,0 +1,25 @@
+﻿中文名,类型,元素组件,贴图路径,尺寸,设计
+空元素瓶,item,empty,assets/elemental_verse/textures/item/element_vial.png,16x16,锥形瓶：短直颈、直斜肩、宽平底，三色玻璃
+土元素瓶,item,earth,assets/elemental_verse/textures/item/element_vial_earth.png,16x16,赭色棱角土团、沉积暗底
+水元素瓶,item,water,assets/elemental_verse/textures/item/element_vial_water.png,16x16,原蓝色波面与色阶，向锥形瓶底两侧延展
+风元素瓶,item,wind,assets/elemental_verse/textures/item/element_vial_wind.png,16x16,薄荷白色、留有负空间的气旋
+火元素瓶,item,fire,assets/elemental_verse/textures/item/element_vial_fire.png,16x16,向上收尖的橙红火舌与浅黄火心
+草元素瓶,item,grass,assets/elemental_verse/textures/item/element_vial_grass.png,16x16,两簇方向不同的青绿叶片
+光元素瓶,item,light,assets/elemental_verse/textures/item/element_vial_light.png,16x16,象牙金色光核与短光芒
+暗元素瓶,item,shadow,assets/elemental_verse/textures/item/element_vial_shadow.png,16x16,紫色空心卷雾，中心保留负空间
+冰元素瓶,item,ice,assets/elemental_verse/textures/item/element_vial_ice.png,16x16,蓝青色透明冰块、两组不同方向的切面
+霜元素瓶,item,frost,assets/elemental_verse/textures/item/element_vial_frost.png,16x16,淡蓝白色分叉结晶与霜点
+电元素瓶,item,lightning,assets/elemental_verse/textures/item/element_vial_lightning.png,16x16,金黄色折线电弧、紫灰余辉
+木元素瓶,item,wood,assets/elemental_verse/textures/item/element_vial_wood.png,16x16,斜置短木段、浅色切端与深色纹理
+金元素瓶,item,metal,assets/elemental_verse/textures/item/element_vial_metal.png,16x16,冷灰金属块、大面积平直反光
+烬元素瓶,item,ember,assets/elemental_verse/textures/item/element_vial_ember.png,16x16,灰黑炭块，局部橙色灼缝
+砂元素瓶,item,sand,assets/elemental_verse/textures/item/element_vial_sand.png,16x16,淡赭色尖顶砂堆和少量落砂
+芽元素瓶,item,bud,assets/elemental_verse/textures/item/element_vial_bud.png,16x16,单枝嫩芽、粉色芽尖与浅色种子
+晨元素瓶,item,dawn,assets/elemental_verse/textures/item/element_vial_dawn.png,16x16,桃色霞层与浅金初阳，延展至锥形瓶底
+影元素瓶,item,shadow_essence,assets/elemental_verse/textures/item/element_vial_shadow_essence.png,16x16,蓝灰凝影，贴合锥形瓶宽底沉积
+折射棱镜,item,,assets/elemental_verse/textures/item/refraction_prism.png,16x16,三角棱镜、象牙白前面、蓝紫侧面与克制的折光色带
+聚影瓶,item,,assets/elemental_verse/textures/item/shadow_bottle.png,16x16,矮宽紫晶遮光玻璃、灰银瓶塞、低亮度深色瓶腹
+死寂物质,item,,assets/elemental_verse/textures/item/dead_matter.png,16x16,层叠灰渣：三片不规则薄片错开叠放、破碎断边、五种哑灰色
+死寂物质 · 侧面,block,,assets/elemental_verse/textures/block/dead_matter.png,16x16,低饱和、无发光、可平铺的凝固层理
+死寂物质 · 顶面,block,,assets/elemental_verse/textures/block/dead_matter_top.png,16x16,低饱和、无发光、可平铺的凝固层理
+死寂物质 · 底面,block,,assets/elemental_verse/textures/block/dead_matter_bottom.png,16x16,低饱和、无发光、可平铺的凝固层理

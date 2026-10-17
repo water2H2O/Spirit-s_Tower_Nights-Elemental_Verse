@@ -1,0 +1,317 @@
+{
+  "namespace": "elemental_verse",
+  "frame_size": [
+    16,
+    16
+  ],
+  "item_texture_count": 21,
+  "block_texture_count": 3,
+  "textures": [
+    {
+      "name": "element_vial",
+      "label": "空元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "empty",
+      "texture": "assets/elemental_verse/textures/item/element_vial.png",
+      "model": "elemental_verse:item/element_vial",
+      "design": "锥形瓶：短直颈、直斜肩、宽平底，三色玻璃"
+    },
+    {
+      "name": "element_vial_earth",
+      "label": "土元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "earth",
+      "texture": "assets/elemental_verse/textures/item/element_vial_earth.png",
+      "model": "elemental_verse:item/element_vial_earth",
+      "design": "赭色棱角土团、沉积暗底"
+    },
+    {
+      "name": "element_vial_water",
+      "label": "水元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "water",
+      "texture": "assets/elemental_verse/textures/item/element_vial_water.png",
+      "model": "elemental_verse:item/element_vial_water",
+      "design": "原蓝色波面与色阶，向锥形瓶底两侧延展"
+    },
+    {
+      "name": "element_vial_wind",
+      "label": "风元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "wind",
+      "texture": "assets/elemental_verse/textures/item/element_vial_wind.png",
+      "model": "elemental_verse:item/element_vial_wind",
+      "design": "薄荷白色、留有负空间的气旋"
+    },
+    {
+      "name": "element_vial_fire",
+      "label": "火元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "fire",
+      "texture": "assets/elemental_verse/textures/item/element_vial_fire.png",
+      "model": "elemental_verse:item/element_vial_fire",
+      "design": "向上收尖的橙红火舌与浅黄火心"
+    },
+    {
+      "name": "element_vial_grass",
+      "label": "草元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "grass",
+      "texture": "assets/elemental_verse/textures/item/element_vial_grass.png",
+      "model": "elemental_verse:item/element_vial_grass",
+      "design": "两簇方向不同的青绿叶片"
+    },
+    {
+      "name": "element_vial_light",
+      "label": "光元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "light",
+      "texture": "assets/elemental_verse/textures/item/element_vial_light.png",
+      "model": "elemental_verse:item/element_vial_light",
+      "design": "象牙金色光核与短光芒"
+    },
+    {
+      "name": "element_vial_shadow",
+      "label": "暗元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "shadow",
+      "texture": "assets/elemental_verse/textures/item/element_vial_shadow.png",
+      "model": "elemental_verse:item/element_vial_shadow",
+      "design": "紫色空心卷雾，中心保留负空间"
+    },
+    {
+      "name": "element_vial_ice",
+      "label": "冰元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "ice",
+      "texture": "assets/elemental_verse/textures/item/element_vial_ice.png",
+      "model": "elemental_verse:item/element_vial_ice",
+      "design": "蓝青色透明冰块、两组不同方向的切面"
+    },
+    {
+      "name": "element_vial_frost",
+      "label": "霜元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "frost",
+      "texture": "assets/elemental_verse/textures/item/element_vial_frost.png",
+      "model": "elemental_verse:item/element_vial_frost",
+      "design": "淡蓝白色分叉结晶与霜点"
+    },
+    {
+      "name": "element_vial_lightning",
+      "label": "电元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "lightning",
+      "texture": "assets/elemental_verse/textures/item/element_vial_lightning.png",
+      "model": "elemental_verse:item/element_vial_lightning",
+      "design": "金黄色折线电弧、紫灰余辉"
+    },
+    {
+      "name": "element_vial_wood",
+      "label": "木元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "wood",
+      "texture": "assets/elemental_verse/textures/item/element_vial_wood.png",
+      "model": "elemental_verse:item/element_vial_wood",
+      "design": "斜置短木段、浅色切端与深色纹理"
+    },
+    {
+      "name": "element_vial_metal",
+      "label": "金元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "metal",
+      "texture": "assets/elemental_verse/textures/item/element_vial_metal.png",
+      "model": "elemental_verse:item/element_vial_metal",
+      "design": "冷灰金属块、大面积平直反光"
+    },
+    {
+      "name": "element_vial_ember",
+      "label": "烬元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "ember",
+      "texture": "assets/elemental_verse/textures/item/element_vial_ember.png",
+      "model": "elemental_verse:item/element_vial_ember",
+      "design": "灰黑炭块，局部橙色灼缝"
+    },
+    {
+      "name": "element_vial_sand",
+      "label": "砂元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "sand",
+      "texture": "assets/elemental_verse/textures/item/element_vial_sand.png",
+      "model": "elemental_verse:item/element_vial_sand",
+      "design": "淡赭色尖顶砂堆和少量落砂"
+    },
+    {
+      "name": "element_vial_bud",
+      "label": "芽元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "bud",
+      "texture": "assets/elemental_verse/textures/item/element_vial_bud.png",
+      "model": "elemental_verse:item/element_vial_bud",
+      "design": "单枝嫩芽、粉色芽尖与浅色种子"
+    },
+    {
+      "name": "element_vial_dawn",
+      "label": "晨元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "dawn",
+      "texture": "assets/elemental_verse/textures/item/element_vial_dawn.png",
+      "model": "elemental_verse:item/element_vial_dawn",
+      "design": "桃色霞层与浅金初阳，延展至锥形瓶底"
+    },
+    {
+      "name": "element_vial_shadow_essence",
+      "label": "影元素瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": "shadow_essence",
+      "texture": "assets/elemental_verse/textures/item/element_vial_shadow_essence.png",
+      "model": "elemental_verse:item/element_vial_shadow_essence",
+      "design": "蓝灰凝影，贴合锥形瓶宽底沉积"
+    },
+    {
+      "name": "refraction_prism",
+      "label": "折射棱镜",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": null,
+      "texture": "assets/elemental_verse/textures/item/refraction_prism.png",
+      "model": "elemental_verse:item/refraction_prism",
+      "design": "三角棱镜、象牙白前面、蓝紫侧面与克制的折光色带"
+    },
+    {
+      "name": "shadow_bottle",
+      "label": "聚影瓶",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": null,
+      "texture": "assets/elemental_verse/textures/item/shadow_bottle.png",
+      "model": "elemental_verse:item/shadow_bottle",
+      "design": "矮宽紫晶遮光玻璃、灰银瓶塞、低亮度深色瓶腹"
+    },
+    {
+      "name": "dead_matter",
+      "label": "死寂物质",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "component": null,
+      "texture": "assets/elemental_verse/textures/item/dead_matter.png",
+      "model": "elemental_verse:item/dead_matter",
+      "design": "层叠灰渣：三片不规则薄片错开叠放、破碎断边、五种哑灰色"
+    },
+    {
+      "name": "dead_matter",
+      "label": "死寂物质 · 侧面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/dead_matter.png",
+      "design": "低饱和、无发光、可平铺的凝固层理"
+    },
+    {
+      "name": "dead_matter_top",
+      "label": "死寂物质 · 顶面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/dead_matter_top.png",
+      "design": "低饱和、无发光、可平铺的凝固层理"
+    },
+    {
+      "name": "dead_matter_bottom",
+      "label": "死寂物质 · 底面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/dead_matter_bottom.png",
+      "design": "低饱和、无发光、可平铺的凝固层理"
+    }
+  ]
+}

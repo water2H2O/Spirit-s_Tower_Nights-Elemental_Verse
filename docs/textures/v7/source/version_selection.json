@@ -1,0 +1,32 @@
+{
+  "element_vial_glass_shape": "conical_erlenmeyer",
+  "element_vial_glass_version": 7,
+  "element_contents_style": 1,
+  "refraction_prism_version": 1,
+  "shadow_bottle_version": 1,
+  "dead_matter_item_version": 7,
+  "dead_matter_item_direction": "三片灰渣：错层薄片、破碎断边",
+  "dead_matter_block_version": 1,
+  "changed_from_v6": [
+    "item/dead_matter.png",
+    "item/element_vial.png",
+    "item/element_vial_bud.png",
+    "item/element_vial_dawn.png",
+    "item/element_vial_earth.png",
+    "item/element_vial_ember.png",
+    "item/element_vial_fire.png",
+    "item/element_vial_frost.png",
+    "item/element_vial_grass.png",
+    "item/element_vial_ice.png",
+    "item/element_vial_light.png",
+    "item/element_vial_lightning.png",
+    "item/element_vial_metal.png",
+    "item/element_vial_sand.png",
+    "item/element_vial_shadow.png",
+    "item/element_vial_shadow_essence.png",
+    "item/element_vial_water.png",
+    "item/element_vial_wind.png",
+    "item/element_vial_wood.png"
+  ],
+  "other_5_textures_match_v6_exactly": true
+}

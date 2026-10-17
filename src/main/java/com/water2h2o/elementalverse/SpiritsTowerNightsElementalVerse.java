@@ -6,10 +6,12 @@ import com.mojang.logging.LogUtils;
 import com.water2h2o.elementalverse.config.EVConfig;
 import com.water2h2o.elementalverse.element.ElementType;
 import com.water2h2o.elementalverse.element.VialDecayEvents;
+import com.water2h2o.elementalverse.registry.EVBlockEntities;
 import com.water2h2o.elementalverse.registry.EVBlocks;
 import com.water2h2o.elementalverse.registry.EVCreativeTabs;
 import com.water2h2o.elementalverse.registry.EVDataComponents;
 import com.water2h2o.elementalverse.registry.EVItems;
+import com.water2h2o.elementalverse.registry.EVMenus;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -39,6 +41,8 @@ public class SpiritsTowerNightsElementalVerse {
         EVDataComponents.register(modEventBus);
         EVBlocks.register(modEventBus);
         EVItems.register(modEventBus);
+        EVBlockEntities.register(modEventBus);
+        EVMenus.register(modEventBus);
         EVCreativeTabs.register(modEventBus);
 
         // 衰变需要监听游戏事件（玩家背包、掉落物），挂到 NeoForge 事件总线

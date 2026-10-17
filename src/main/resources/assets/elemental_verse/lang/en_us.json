@@ -1,6 +1,5 @@
 {
   "itemGroup.elemental_verse.main": "Elemental Verse",
-
   "item.elemental_verse.element_vial": "Empty Elemental Vial",
   "item.elemental_verse.element_vial.empty": "Empty Elemental Vial",
   "item.elemental_verse.element_vial.earth": "Vial of Earth",
@@ -20,12 +19,10 @@
   "item.elemental_verse.element_vial.bud": "Vial of Bud",
   "item.elemental_verse.element_vial.dawn": "Vial of Dawn",
   "item.elemental_verse.element_vial.shadow_essence": "Vial of Shadow Essence",
-
   "item.elemental_verse.dead_dust": "Dead Dust",
   "item.elemental_verse.refraction_prism": "Refraction Prism",
   "item.elemental_verse.shadow_bottle": "Shadow Bottle",
   "block.elemental_verse.dead_matter": "Dead Matter",
-
   "element.elemental_verse.empty": "Empty",
   "element.elemental_verse.earth": "Earth",
   "element.elemental_verse.water": "Water",
@@ -44,7 +41,6 @@
   "element.elemental_verse.bud": "Bud",
   "element.elemental_verse.dawn": "Dawn",
   "element.elemental_verse.shadow_essence": "Shadow Essence",
-
   "tooltip.elemental_verse.empty_vial": "An empty bottle. Go fill it with something.",
   "tooltip.elemental_verse.stage.stable": "Still humming with power",
   "tooltip.elemental_verse.stage.derived": "Fading into stillness",
@@ -53,7 +49,6 @@
   "tooltip.elemental_verse.no_decay": "This form will not change any further.",
   "tooltip.elemental_verse.decay_disabled": "(decay is disabled in the config)",
   "tooltip.elemental_verse.exact_seconds": "Debug: %s seconds remaining",
-
   "elemental_verse.configuration.title": "Elemental Verse Configs",
   "elemental_verse.configuration.decayPreset": "Duration Preset",
   "elemental_verse.configuration.decayEnabled": "Enable Decay",
@@ -62,5 +57,6 @@
   "elemental_verse.configuration.decayMaxContainers": "Max Containers Per Second",
   "elemental_verse.configuration.lightDarknessMultiplier": "Light/Shadow Environment Multiplier",
   "elemental_verse.configuration.darknessSpeedsShadow": "Shadow Decays Faster In Bright Light",
-  "elemental_verse.configuration.showsExactSeconds": "Show Exact Seconds (debug)"
+  "elemental_verse.configuration.showsExactSeconds": "Show Exact Seconds (debug)",
+  "block.elemental_verse.sealed_vault": "Sealed Stone Vault"
 }

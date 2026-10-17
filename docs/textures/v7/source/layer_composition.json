@@ -1,0 +1,130 @@
+{
+  "frame_size": [
+    16,
+    16
+  ],
+  "glass_shape": "conical_erlenmeyer",
+  "operation": "contents.alpha_composite(glass)",
+  "contents_style": "version_1_with_liquids_fitted_to_conical_base",
+  "layers": [
+    {
+      "element": "earth",
+      "contents": "layers/contents_earth.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_earth.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "water",
+      "contents": "layers/contents_water.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_water.png",
+      "fitted_to_wide_base": true
+    },
+    {
+      "element": "wind",
+      "contents": "layers/contents_wind.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_wind.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "fire",
+      "contents": "layers/contents_fire.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_fire.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "grass",
+      "contents": "layers/contents_grass.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_grass.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "light",
+      "contents": "layers/contents_light.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_light.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "shadow",
+      "contents": "layers/contents_shadow.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_shadow.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "ice",
+      "contents": "layers/contents_ice.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_ice.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "frost",
+      "contents": "layers/contents_frost.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_frost.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "lightning",
+      "contents": "layers/contents_lightning.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_lightning.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "wood",
+      "contents": "layers/contents_wood.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_wood.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "metal",
+      "contents": "layers/contents_metal.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_metal.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "ember",
+      "contents": "layers/contents_ember.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_ember.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "sand",
+      "contents": "layers/contents_sand.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_sand.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "bud",
+      "contents": "layers/contents_bud.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_bud.png",
+      "fitted_to_wide_base": false
+    },
+    {
+      "element": "dawn",
+      "contents": "layers/contents_dawn.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_dawn.png",
+      "fitted_to_wide_base": true
+    },
+    {
+      "element": "shadow_essence",
+      "contents": "layers/contents_shadow_essence.png",
+      "glass": "layers/element_vial_glass_conical.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_shadow_essence.png",
+      "fitted_to_wide_base": true
+    }
+  ]
+}

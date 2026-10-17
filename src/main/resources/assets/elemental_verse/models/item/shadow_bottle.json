@@ -2,19 +2,5 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "elemental_verse:item/shadow_bottle"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "custom_model_data": 8
-      },
-      "model": "elemental_verse:item/element_vial_shadow"
-    },
-    {
-      "predicate": {
-        "custom_model_data": 18
-      },
-      "model": "elemental_verse:item/element_vial_shadow_essence"
-    }
-  ]
+  }
 }

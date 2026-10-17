@@ -2,19 +2,5 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "elemental_verse:item/refraction_prism"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "custom_model_data": 7
-      },
-      "model": "elemental_verse:item/element_vial_light"
-    },
-    {
-      "predicate": {
-        "custom_model_data": 17
-      },
-      "model": "elemental_verse:item/element_vial_dawn"
-    }
-  ]
+  }
 }

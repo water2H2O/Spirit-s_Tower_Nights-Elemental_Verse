@@ -1,0 +1,378 @@
+{
+  "native_size": true,
+  "binary_alpha": true,
+  "source_roundtrip": true,
+  "all_local_model_textures_resolve": true,
+  "item_textures": 21,
+  "block_textures": 3,
+  "in_game_checked": false,
+  "files": [
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 3,
+      "sha256": "5590be066a6b21cf12cd754e42c642b8f0d626ce5639dd042268a0b872ea8021",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_earth.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 9,
+      "sha256": "3bd86fde9ee92953930835e611ca4ba3e1c7ac74c1f5855e804e200229b4cb24",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_water.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "bcc3e5373cb476396c212ab873a185360438145c5c49906c1ce2595c8f884c9e",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_wind.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 7,
+      "sha256": "198596f05a3bc3be150f33a63a6a64fe09e52f68119b7057060b7b08a5d46ef7",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_fire.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 7,
+      "sha256": "7a5dd56d4030b95f0ffda7d2c617e5e5acf735281e287222d06e3f9a0e52b558",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_grass.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "3a8beabc11efa3fba5557617609cc2b628c9bc07bed8996698d7421fdca63087",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_light.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 7,
+      "sha256": "807d921ffe6d1e3faa57552d10a21f5aebf37d2063c55f7d361099710b19c4f7",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_shadow.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 7,
+      "sha256": "890f3b25204a8f6f0bc342ea98dcb61258fece28d7c5e88ed11cecd21856e913",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_ice.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 9,
+      "sha256": "150d7c82b1f61694dd5936b468fba52b2b5c952cc580af58a3e30f4fee5f7292",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_frost.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 10,
+      "sha256": "fe1a44edc2bc661c5f3167cac1c73f352b90a5a5c8eeb2acfb78535eb99f0b8c",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_lightning.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "8b8954637e0fd2574f57ccb427b331d6e50bd9e91b9fae29dee583d5bfc2ccce",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_wood.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 10,
+      "sha256": "9ed433cc34b32380ccd1bc43a7d108acca4f1f2b21964eaedb8de2f1827bf226",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_metal.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "a9a78b0f0cc54bd9767d25cebdba6fbddada15dbc5e1bf94d474b93ab31d5b5a",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_ember.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 9,
+      "sha256": "b9d262831bf01d962afe39dd0304122b4528547fc5343046c70509ca8d67a9fe",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_sand.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "39d872f3c413ed1fd7bbf4512a3bb5f3f95be17a91fede7706ec702281184b59",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_bud.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 8,
+      "sha256": "0e4b6b67954b82c05d054509e25dcdcfa3538e4223f0a1ed8687931cf5ea7f56",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_dawn.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 9,
+      "sha256": "6fe8a978fbc33bca23db172f054e02e228f059c405a75d11bf8d31250e86af7d",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/element_vial_shadow_essence.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 7,
+      "sha256": "4b815cd26d441d8af70cb1673b083b74773476c2a94257a838f997d9358c823e",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/refraction_prism.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 11,
+      "sha256": "4ecdebd90c9f6652cc4d78201b91f224fe96f748fbf6e00d08fbac0e94ac5584",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/shadow_bottle.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 13,
+      "sha256": "35830744e8296f849ad40416cfbbaa1a3f914df147b574d1f5772d6870c08838",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/item/dead_matter.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "opaque_colors": 5,
+      "sha256": "78964c7dd0dfcaf72b79b29384b9ba661a31e3ff938e18a291a71eff64f42284",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/block/dead_matter.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "opaque_colors": 14,
+      "sha256": "bbcad7661db57b8c8bff90d7b1d0724c1aeca15702d524c74c89e12070e46742",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/block/dead_matter_top.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "opaque_colors": 14,
+      "sha256": "b66fed9f4fc7a7af1cf65d31b94a6985ef08404791f29ef211fb8faf7e5b8e43",
+      "source_roundtrip": true
+    },
+    {
+      "file": "assets/elemental_verse/textures/block/dead_matter_bottom.png",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "opaque_colors": 14,
+      "sha256": "f26031dbb2a5338ddd74a7c1d39ef2fa8ad9eb1089166ab6212630c75908c36d",
+      "source_roundtrip": true
+    }
+  ],
+  "editable_source_export_preserves_sha256": true,
+  "skill_verifier_passed": true,
+  "conical_shape_all_18_states": true,
+  "all_17_layer_compositions_match": true,
+  "contents_stay_within_conical_silhouette": true,
+  "changed_from_v6": [
+    "item/dead_matter.png",
+    "item/element_vial.png",
+    "item/element_vial_bud.png",
+    "item/element_vial_dawn.png",
+    "item/element_vial_earth.png",
+    "item/element_vial_ember.png",
+    "item/element_vial_fire.png",
+    "item/element_vial_frost.png",
+    "item/element_vial_grass.png",
+    "item/element_vial_ice.png",
+    "item/element_vial_light.png",
+    "item/element_vial_lightning.png",
+    "item/element_vial_metal.png",
+    "item/element_vial_sand.png",
+    "item/element_vial_shadow.png",
+    "item/element_vial_shadow_essence.png",
+    "item/element_vial_water.png",
+    "item/element_vial_wind.png",
+    "item/element_vial_wood.png"
+  ],
+  "other_5_textures_match_v6_exactly": true,
+  "dead_matter_item_palette_size": 5,
+  "visual_review": {
+    "conical_flasks_and_ash": true,
+    "native_scale": true,
+    "overview": true,
+    "nearest_neighbor_enlargement": true
+  }
+}

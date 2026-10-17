@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "elemental_verse:block/sealed_vault"
+    }
+  }
+}

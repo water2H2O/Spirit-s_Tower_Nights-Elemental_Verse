@@ -54,6 +54,11 @@ public final class EVItems {
             "dead_matter",
             () -> new BlockItem(EVBlocks.DEAD_MATTER.get(), new Item.Properties()));
 
+    /** 石制密封仓的方块物品（没有它，方块放不下来也拿不到）。 */
+    public static final DeferredItem<BlockItem> SEALED_VAULT = ITEMS.register(
+            "sealed_vault",
+            () -> new BlockItem(EVBlocks.SEALED_VAULT.get(), new Item.Properties()));
+
     public static void register(IEventBus modEventBus) {
         ITEMS.register(modEventBus);
     }

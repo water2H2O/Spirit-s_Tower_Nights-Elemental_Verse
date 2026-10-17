@@ -1,0 +1,122 @@
+[
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\Unlicense\\末影接口\\assets\\enderio\\textures\\item\\soul_vial.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\Unlicense\\末影接口\\assets\\enderio\\textures\\item\\soul_vial_filled.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\LGPLv3\\GTM\\assets\\gtceu\\textures\\item\\glass_vial\\base.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\农夫乐事\\assets\\farmersdelight\\textures\\item\\milk_bottle.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\匠魂\\assets\\tconstruct\\textures\\item\\bottle\\bottle_reversed.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\item\\polished_rose_quartz.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\item\\shadow_steel.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\block\\palettes\\stone_types\\small_brick\\deepslate_cut_small_brick.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  }
+]
