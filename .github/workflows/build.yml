@@ -26,46 +26,15 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      # 编译输出同时落一份到文件。理由：GitHub 的「下载任务日志」接口需要管理员权限，
-      # 失败时拿不到错误正文；落成 artifact 之后任何人（包括自动化）都能读。
-      #
-      # ⚠️ pipefail 是必须的：`cmd | tee f` 的退出码默认是 tee 的（永远 0），
-      #    没有它会把「Gradle 编译失败」伪装成「构建成功」，而且不产出 jar。
+      # 先老老实实跑，不加管道 —— 之前 `| tee` 吞掉退出码，把失败伪装成成功。
       - name: Build with Gradle
-        shell: bash
-        run: |
-          set -o pipefail
-          ./gradlew build 2>&1 | tee build-log.txt
+        run: ./gradlew build --stacktrace --console=plain
 
-      # 先把 build/ 里到底有什么打出来 —— jar 名字跟预想不一样时能立刻看见。
-      - name: List build outputs
-        if: always()
-        run: |
-          echo "=== build 顶层 ==="
-          ls -la build || true
-          echo "=== 所有 jar（任意深度）==="
-          find build -name '*.jar' -type f 2>/dev/null | head -50 || true
-          echo "=== build/libs ==="
-          ls -la build/libs || true
-
-      # 日志总是上传（包括成功时）。原因：GitHub 的「下载任务日志」接口需要管理员权限，
-      # 而构建产物一旦失败就得能自证原因。日志体积很小，常开没负担。
-      - name: Upload build log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build-log.txt
-          if-no-files-found: ignore
-
-      # 成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
-      # 用任意深度匹配：ModDevGradle 可能把产物放到 build/libs/<archivesName>/ 之类的位置。
-      - name: Upload mod jar (on success)
+      # 构建成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
+      - name: Upload mod jar
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: elemental_verse-jar
-          path: |
-            build/libs/**/*.jar
-            build/libs/*.jar
+          path: build/libs/*.jar
           if-no-files-found: warn
