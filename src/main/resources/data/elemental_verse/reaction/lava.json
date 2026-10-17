@@ -1,0 +1,13 @@
+{
+  "consume": {
+    "fire": 1,
+    "earth": 1
+  },
+  "phenomenon": {
+    "type": "lava",
+    "element": "fire",
+    "amount": 2.0,
+    "duration": 100,
+    "cost": 2.0
+  }
+}

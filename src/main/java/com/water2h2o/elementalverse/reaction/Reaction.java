@@ -30,6 +30,21 @@ public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue
      *
      * <p>比的是 {@code cost} 而不是伤害数值 —— 伤害是玩法参数，元素值才是守恒的东西。
      */
+    /**
+     * 条件匹配：投入的向量是否**至少**包含这条反应要求的分量。
+     *
+     * <p>不是等值匹配 —— 这样 `1草+1火`、`2草+1火`、`1草+3火` 会命中同一条，
+     * 只是强度不同。**一条配方覆盖一整类组合**，这是数量不爆炸的关键。
+     */
+    public boolean accepts(ElementValue input) {
+        for (var entry : consume.asMap().entrySet()) {
+            if (input.get(entry.getKey()) + ElementValue.EPSILON < entry.getValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean isBalanced() {
         return phenomenon.cost() <= consume.magnitude() + ElementValue.EPSILON;
     }

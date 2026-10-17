@@ -116,7 +116,21 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             }
         }
 
-        return DeclarationPlateItem.written(element, tier, stateElement, stateTier);
+        // 第二个口 = 辅料（与主料一起构成反应的输入向量）
+        ElementType reagentElement = ElementType.EMPTY;
+        int reagentTier = 0;
+        ItemStack reagentStack = items.getItem(SLOT_ELEMENT_B);
+        if (!reagentStack.isEmpty() && ElementCarrier.isCarrier(reagentStack)) {
+            ElementType candidate = ElementVialItem.getElement(reagentStack);
+            int candidateTier = Declaration.tierOf(reagentStack.getCount());
+            if (!candidate.isEmpty() && candidateTier > 0) {
+                reagentElement = candidate;
+                reagentTier = candidateTier;
+            }
+        }
+
+        return DeclarationPlateItem.written(element, tier, stateElement, stateTier,
+                reagentElement, reagentTier);
     }
 
     /** 玩家把产出拿走时，按档位扣材料。 */

@@ -23,14 +23,35 @@ import net.minecraft.network.codec.StreamCodec;
  * @param form      形态：projectile（发射）/ self（自身）/ touch（交互）
  */
 public record Declaration(ElementType element, int tier, String operation, String form,
-                          ElementType stateElement, int stateTier) {
+                          ElementType stateElement, int stateTier,
+                          ElementType reagentElement, int reagentTier) {
 
     public static final Declaration EMPTY = new Declaration(
-            ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0);
+            ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0,
+            ElementType.EMPTY, 0);
 
     /** 兼容旧写法（没有态）。 */
     public Declaration(ElementType element, int tier, String operation, String form) {
-        this(element, tier, operation, form, ElementType.EMPTY, 0);
+        this(element, tier, operation, form, ElementType.EMPTY, 0, ElementType.EMPTY, 0);
+    }
+
+    /** 兼容"没辅料"的写法。 */
+    public Declaration(ElementType element, int tier, String operation, String form,
+                       ElementType stateElement, int stateTier) {
+        this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0);
+    }
+
+    /**
+     * 投入的元素值 = 主料 + 辅料（态不参与，它只定参数）。
+     *
+     * <p>这是"化学"的核心：反应只看**加起来的结果**，不看哪个格子放了什么。
+     */
+    public ElementValue inputValue() {
+        ElementValue value = value();
+        if (reagentElement != null && !reagentElement.isEmpty() && reagentTier > 0) {
+            value = value.plus(reagentElement.value().scale(reagentTier));
+        }
+        return value;
     }
 
     public static final Codec<Declaration> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -40,7 +61,10 @@ public record Declaration(ElementType element, int tier, String operation, Strin
             Codec.STRING.optionalFieldOf("form", "projectile").forGetter(Declaration::form),
             ElementType.CODEC.optionalFieldOf("state_element", ElementType.EMPTY)
                     .forGetter(Declaration::stateElement),
-            Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier)
+            Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier),
+            ElementType.CODEC.optionalFieldOf("reagent_element", ElementType.EMPTY)
+                    .forGetter(Declaration::reagentElement),
+            Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier)
     ).apply(instance, Declaration::new));
 
     public static final StreamCodec<io.netty.buffer.ByteBuf, Declaration> STREAM_CODEC =

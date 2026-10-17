@@ -1,0 +1,13 @@
+{
+  "consume": {
+    "fire": 1,
+    "water": 1
+  },
+  "phenomenon": {
+    "type": "steam",
+    "element": "water",
+    "amount": 2.0,
+    "duration": 20,
+    "cost": 1.5
+  }
+}

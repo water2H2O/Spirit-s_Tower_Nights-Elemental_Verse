@@ -76,7 +76,7 @@ public final class SpellCaster {
         consumeVials(player, declaration.element(), needed);
 
         // 3) 匹配反应
-        ElementValue input = declaration.value();
+        ElementValue input = declaration.inputValue();
         // 态：第三个投入口决定"怎么发生"（原理文档五之二）
         SpellParams params = SpellParams.of(declaration);
 
@@ -107,6 +107,9 @@ public final class SpellCaster {
             case "ignite" -> ignite(level, hit, phenomenon, params);
             case "douse" -> douse(level, hit, params);
             case "sustained_element_damage" -> strike(level, player, phenomenon, params);
+            case "steam" -> steam(level, hit, params);
+            case "lava" -> lava(level, hit, params);
+            case "fire_resistance" -> fireResistance(player, params);
             default -> {
                 // 未实现的现象类型：至少给个反馈，别让玩家以为卡住了
                 level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
@@ -135,6 +138,40 @@ public final class SpellCaster {
                 }
             }
         }
+    }
+
+    /** 蒸汽：小而烫的伤害 + 击退。 */
+    private static void steam(Level level, HitResult hit, SpellParams params) {
+        if (hit instanceof EntityHitResult entityHit) {
+            Entity target = entityHit.getEntity();
+            if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.hurt(level.damageSources().magic(), (float) (2.0D * params.intensity()));
+                living.knockback(0.6D, -living.getLookAngle().x, -living.getLookAngle().z);
+            }
+        }
+    }
+
+    /** 熔岩：在命中面放岩浆，并给附近的实体减速。 */
+    private static void lava(Level level, HitResult hit, SpellParams params) {
+        if (hit instanceof BlockHitResult blockHit) {
+            BlockPos place = blockHit.getBlockPos().relative(blockHit.getDirection());
+            if (level.getBlockState(place).isAir()) {
+                level.setBlockAndUpdate(place, Blocks.LAVA.defaultBlockState());
+            }
+            return;
+        }
+        if (hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.setRemainingFireTicks(params.durationTicks());
+            living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, params.durationTicks(), 0));
+        }
+    }
+
+    /** 火焰保护：给自己一个抗火。 */
+    private static void fireResistance(Player player, SpellParams params) {
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, params.durationTicks(), 0));
     }
 
     /** 灭火：把命中点附近的火清掉。 */

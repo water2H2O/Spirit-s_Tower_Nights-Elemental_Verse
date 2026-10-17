@@ -1,0 +1,13 @@
+{
+  "consume": {
+    "fire": 1,
+    "light": 1
+  },
+  "phenomenon": {
+    "type": "fire_resistance",
+    "element": "light",
+    "amount": 1.0,
+    "duration": 200,
+    "cost": 1.0
+  }
+}

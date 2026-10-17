@@ -1,7 +1,7 @@
 {
   "consume": {
-    "grass": 1,
-    "fire": 1
+    "fire": 1,
+    "grass": 1
   },
   "phenomenon": {
     "type": "sustained_element_damage",

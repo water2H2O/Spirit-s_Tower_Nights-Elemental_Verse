@@ -67,14 +67,23 @@ public final class ReactionManager {
         SpiritsTowerNightsElementalVerse.LOGGER.info("[元素之诗] 反应表就绪：{} 条", reactions.size());
     }
 
-    /** 精确配方匹配。 */
+    /**
+     * 条件匹配：优先命中"要求更多分量"的那条（更特殊的配方优先）。
+     */
     public static Optional<Reaction> match(ElementValue input) {
+        Reaction best = null;
+        double bestSize = -1;
         for (Reaction reaction : reactions) {
-            if (reaction.consume().matches(input)) {
-                return Optional.of(reaction);
+            if (!reaction.accepts(input)) {
+                continue;
+            }
+            double size = reaction.consume().magnitude();
+            if (size > bestSize) {
+                bestSize = size;
+                best = reaction;
             }
         }
-        return Optional.empty();
+        return Optional.ofNullable(best);
     }
 
     public static List<Reaction> all() {

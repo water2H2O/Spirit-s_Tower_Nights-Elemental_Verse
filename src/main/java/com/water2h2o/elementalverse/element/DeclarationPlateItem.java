@@ -53,9 +53,16 @@ public class DeclarationPlateItem extends Item {
 
     /** 造一块写好的板子：主料 + 态。 */
     public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier) {
+        return written(element, tier, stateElement, stateTier, ElementType.EMPTY, 0);
+    }
+
+    /** 造一块写好的板子：主料 + 态 + 辅料。 */
+    public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier,
+                                    ElementType reagentElement, int reagentTier) {
         ItemStack stack = new ItemStack(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get());
         setDeclaration(stack, new Declaration(element, tier, "release", "projectile",
-                stateElement == null ? ElementType.EMPTY : stateElement, stateTier));
+                stateElement == null ? ElementType.EMPTY : stateElement, stateTier,
+                reagentElement == null ? ElementType.EMPTY : reagentElement, reagentTier));
         return stack;
     }
 
