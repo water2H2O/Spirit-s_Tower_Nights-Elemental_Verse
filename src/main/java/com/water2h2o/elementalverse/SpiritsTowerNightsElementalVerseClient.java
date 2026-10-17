@@ -39,6 +39,8 @@ public class SpiritsTowerNightsElementalVerseClient {
     static void onRegisterScreens(RegisterMenuScreensEvent event) {
         event.register(EVMenus.SEALED_VAULT.get(), SealedVaultScreen::new);
         event.register(EVMenus.POUCH.get(), PouchScreen::new);
+        event.register(EVMenus.RITUAL_ALTAR.get(),
+                com.water2h2o.elementalverse.client.RitualAltarScreen::new);
     }
 
     /** 给三种元素容器加"衰变期"横条（外观同耐久条，但不碰原版耐久系统）。 */
