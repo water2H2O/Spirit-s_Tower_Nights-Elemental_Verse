@@ -426,6 +426,108 @@ def check_known_api_misuse() -> None:
 # 这条写在这里，是为了下次想加这个检查的人（包括未来的我）别再踩一遍。
 
 
+# ----------------------------------------------------------------- 11. 模型分发（overrides）与枚举是否一致
+#
+# 抓的这一类：作者发来新素材包 → 覆盖了 element_vial/refraction_prism/shadow_bottle
+# 三个模型文件 → 我们生成的 overrides 段被一起盖掉 → 所有元素瓶都退化成一个图标。
+# 这个故障**没有任何报错**，只有玩家眼睛能发现。所以必须机器检查。
+
+CARRIER_MODEL = {
+    "ELEMENT_VIAL": "element_vial",
+    "REFRACTION_PRISM": "refraction_prism",
+    "SHADOW_BOTTLE": "shadow_bottle",
+}
+
+
+def element_constants() -> list[tuple[str, str]]:
+    """按源码顺序返回 [(枚举常量名, 元素 id)]。"""
+    path = os.path.join(JAVA, "com", "water2h2o", "elementalverse", "element", "ElementType.java")
+    if not os.path.exists(path):
+        return []
+    out: list[tuple[str, str]] = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if stripped.startswith("//") or stripped.startswith("*") or stripped.startswith("/*"):
+                continue
+            match = re.match(r'^([A-Z_]+)\(\s*"([a-z_]+)"', stripped)
+            if match:
+                out.append((match.group(1), match.group(2)))
+    return out
+
+
+def element_carriers() -> dict[str, str]:
+    """从 ElementType.carrier() 的 switch 里读出「常量名 -> 载体枚举名」。"""
+    path = os.path.join(JAVA, "com", "water2h2o", "elementalverse", "element", "ElementType.java")
+    if not os.path.exists(path):
+        return {}
+    mapping: dict[str, str] = {}
+    with open(path, "r", encoding="utf-8") as handle:
+        text = handle.read()
+    for match in re.finditer(r"case\s+([A-Z_,\s]+?)\s*->\s*ElementCarrier\.([A-Z_]+)\s*;", text):
+        for name in match.group(1).split(","):
+            name = name.strip()
+            if name:
+                mapping[name] = match.group(2)
+    return mapping
+
+
+def check_dispatch_models() -> None:
+    constants = element_constants()
+    if not constants:
+        fail("解析不到 ElementType 的枚举常量，分发检查跳过")
+        return
+
+    carriers = element_carriers()
+    expected: dict[str, dict[int, str]] = {model: {} for model in CARRIER_MODEL.values()}
+
+    for position, (constant, element_id) in enumerate(constants):
+        if element_id == "empty":
+            continue
+        model_index = position + 1
+        carrier = CARRIER_MODEL.get(carriers.get(constant, "ELEMENT_VIAL"), "element_vial")
+        expected[carrier][model_index] = f"{NS}:item/element_vial_{element_id}"
+
+    for carrier, wanted in expected.items():
+        path = os.path.join(ASSETS, "models", "item", f"{carrier}.json")
+        model = read_json(path)
+        if not isinstance(model, dict):
+            fail(f"模型不存在或非法：assets/{NS}/models/item/{carrier}.json")
+            continue
+
+        actual: dict[int, str] = {}
+        for entry in model.get("overrides") or []:
+            predicate = (entry or {}).get("predicate") or {}
+            value = predicate.get("custom_model_data")
+            if isinstance(value, (int, float)):
+                actual[int(value)] = entry.get("model")
+
+        if actual != wanted:
+            missing = sorted(set(wanted) - set(actual))
+            extra = sorted(set(actual) - set(wanted))
+            wrong = sorted(k for k in set(wanted) & set(actual) if wanted[k] != actual[k])
+            detail = []
+            if missing:
+                detail.append(f"缺 {missing}")
+            if extra:
+                detail.append(f"多 {extra}")
+            if wrong:
+                detail.append(f"指向不对 {wrong}")
+            fail(
+                f"{carrier}.json 的图标分发与 ElementType 不一致（{'；'.join(detail) or '内容不同'}）。"
+                f"多半是素材包覆盖了这个文件 —— 跑 python tools/generate-vial-models.py 重新生成"
+            )
+            continue
+
+        for model_index, model_name in wanted.items():
+            rel = model_name.split(":", 1)[1]
+            target = os.path.join(ASSETS, "models", *rel.split("/")) + ".json"
+            if not os.path.exists(target):
+                fail(f"{carrier}.json 的分发项 {model_index} 指向不存在的模型：{model_name}")
+
+    ok(f"三种载体的图标分发与枚举一致（{sum(len(v) for v in expected.values())} 项）")
+
+
 def main() -> int:
     check_json_syntax()
     check_translations()
@@ -435,6 +537,7 @@ def main() -> int:
     check_misc()
     check_static_field_visibility()
     check_known_api_misuse()
+    check_dispatch_models()
 
     print("=" * 68)
     print("静态自查报告")

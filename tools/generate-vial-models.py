@@ -98,9 +98,27 @@ def main() -> None:
         raise SystemExit("缺少元素模型（请先放入作者的 assets）：" + ", ".join(missing))
 
     for carrier, base_texture in CARRIER_BASE.items():
+        # 关键：生成的模型 parent 指向 <载体>_base.json（作者的稿），
+        # 而不是把贴图内联进来。这样以后新素材包覆盖 <载体>.json 时，
+        # 我们只要重跑本脚本就能恢复分发，作者的美术也永远在 _base 里不被搅动。
+        base_model = os.path.join(MODELS, f"{carrier}_base.json")
+        if not os.path.exists(base_model):
+            # 首次运行：把作者的模型落成 _base
+            with open(base_model, "w", encoding="utf-8") as handle:
+                json.dump(
+                    {
+                        "parent": "minecraft:item/generated",
+                        "textures": {"layer0": base_texture},
+                    },
+                    handle,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                handle.write("\n")
+            print(f"  建立基底模型 {os.path.relpath(base_model, ROOT)}")
+
         payload = {
-            "parent": "minecraft:item/generated",
-            "textures": {"layer0": base_texture},
+            "parent": f"{NS}:item/{carrier}_base",
             "overrides": overrides[carrier],
         }
         target = os.path.join(MODELS, f"{carrier}.json")
