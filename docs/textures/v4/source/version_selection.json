@@ -1,0 +1,13 @@
+{
+  "element_vial_glass_version": 2,
+  "element_contents_version": 1,
+  "flask_textures_match_previous_combination": 18,
+  "restored_original_textures": [
+    "assets/elemental_verse/textures/item/refraction_prism.png",
+    "assets/elemental_verse/textures/item/shadow_bottle.png",
+    "assets/elemental_verse/textures/item/dead_matter.png",
+    "assets/elemental_verse/textures/block/dead_matter.png",
+    "assets/elemental_verse/textures/block/dead_matter_top.png",
+    "assets/elemental_verse/textures/block/dead_matter_bottom.png"
+  ]
+}

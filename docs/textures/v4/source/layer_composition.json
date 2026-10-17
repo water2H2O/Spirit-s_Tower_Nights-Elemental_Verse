@@ -1,0 +1,113 @@
+{
+  "frame_size": [
+    16,
+    16
+  ],
+  "glass_version": 2,
+  "contents_version": 1,
+  "operation": "contents.alpha_composite(glass)",
+  "layers": [
+    {
+      "element": "earth",
+      "contents": "layers/contents_v1_earth.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_earth.png"
+    },
+    {
+      "element": "water",
+      "contents": "layers/contents_v1_water.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_water.png"
+    },
+    {
+      "element": "wind",
+      "contents": "layers/contents_v1_wind.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_wind.png"
+    },
+    {
+      "element": "fire",
+      "contents": "layers/contents_v1_fire.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_fire.png"
+    },
+    {
+      "element": "grass",
+      "contents": "layers/contents_v1_grass.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_grass.png"
+    },
+    {
+      "element": "light",
+      "contents": "layers/contents_v1_light.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_light.png"
+    },
+    {
+      "element": "shadow",
+      "contents": "layers/contents_v1_shadow.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_shadow.png"
+    },
+    {
+      "element": "ice",
+      "contents": "layers/contents_v1_ice.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_ice.png"
+    },
+    {
+      "element": "frost",
+      "contents": "layers/contents_v1_frost.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_frost.png"
+    },
+    {
+      "element": "lightning",
+      "contents": "layers/contents_v1_lightning.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_lightning.png"
+    },
+    {
+      "element": "wood",
+      "contents": "layers/contents_v1_wood.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_wood.png"
+    },
+    {
+      "element": "metal",
+      "contents": "layers/contents_v1_metal.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_metal.png"
+    },
+    {
+      "element": "ember",
+      "contents": "layers/contents_v1_ember.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_ember.png"
+    },
+    {
+      "element": "sand",
+      "contents": "layers/contents_v1_sand.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_sand.png"
+    },
+    {
+      "element": "bud",
+      "contents": "layers/contents_v1_bud.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_bud.png"
+    },
+    {
+      "element": "dawn",
+      "contents": "layers/contents_v1_dawn.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_dawn.png"
+    },
+    {
+      "element": "shadow_essence",
+      "contents": "layers/contents_v1_shadow_essence.png",
+      "glass": "layers/element_vial_glass_v2.png",
+      "output": "assets/elemental_verse/textures/item/element_vial_shadow_essence.png"
+    }
+  ]
+}

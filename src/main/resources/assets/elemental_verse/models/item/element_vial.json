@@ -8,103 +8,103 @@
       "predicate": {
         "custom_model_data": 2
       },
-      "model": "elemental_verse:item/vial/earth"
+      "model": "elemental_verse:item/element_vial_earth"
     },
     {
       "predicate": {
         "custom_model_data": 3
       },
-      "model": "elemental_verse:item/vial/water"
+      "model": "elemental_verse:item/element_vial_water"
     },
     {
       "predicate": {
         "custom_model_data": 4
       },
-      "model": "elemental_verse:item/vial/wind"
+      "model": "elemental_verse:item/element_vial_wind"
     },
     {
       "predicate": {
         "custom_model_data": 5
       },
-      "model": "elemental_verse:item/vial/fire"
+      "model": "elemental_verse:item/element_vial_fire"
     },
     {
       "predicate": {
         "custom_model_data": 6
       },
-      "model": "elemental_verse:item/vial/grass"
+      "model": "elemental_verse:item/element_vial_grass"
     },
     {
       "predicate": {
         "custom_model_data": 7
       },
-      "model": "elemental_verse:item/vial/light"
+      "model": "elemental_verse:item/element_vial_light"
     },
     {
       "predicate": {
         "custom_model_data": 8
       },
-      "model": "elemental_verse:item/vial/shadow"
+      "model": "elemental_verse:item/element_vial_shadow"
     },
     {
       "predicate": {
         "custom_model_data": 9
       },
-      "model": "elemental_verse:item/vial/ice"
+      "model": "elemental_verse:item/element_vial_ice"
     },
     {
       "predicate": {
         "custom_model_data": 10
       },
-      "model": "elemental_verse:item/vial/frost"
+      "model": "elemental_verse:item/element_vial_frost"
     },
     {
       "predicate": {
         "custom_model_data": 11
       },
-      "model": "elemental_verse:item/vial/lightning"
+      "model": "elemental_verse:item/element_vial_lightning"
     },
     {
       "predicate": {
         "custom_model_data": 12
       },
-      "model": "elemental_verse:item/vial/wood"
+      "model": "elemental_verse:item/element_vial_wood"
     },
     {
       "predicate": {
         "custom_model_data": 13
       },
-      "model": "elemental_verse:item/vial/sand"
+      "model": "elemental_verse:item/element_vial_sand"
     },
     {
       "predicate": {
         "custom_model_data": 14
       },
-      "model": "elemental_verse:item/vial/ember"
+      "model": "elemental_verse:item/element_vial_ember"
     },
     {
       "predicate": {
         "custom_model_data": 15
       },
-      "model": "elemental_verse:item/vial/metal"
+      "model": "elemental_verse:item/element_vial_metal"
     },
     {
       "predicate": {
         "custom_model_data": 16
       },
-      "model": "elemental_verse:item/vial/bud"
+      "model": "elemental_verse:item/element_vial_bud"
     },
     {
       "predicate": {
         "custom_model_data": 17
       },
-      "model": "elemental_verse:item/vial/dawn"
+      "model": "elemental_verse:item/element_vial_dawn"
     },
     {
       "predicate": {
         "custom_model_data": 18
       },
-      "model": "elemental_verse:item/vial/shadow_essence"
+      "model": "elemental_verse:item/element_vial_shadow_essence"
     }
   ]
 }
