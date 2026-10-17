@@ -1,0 +1,115 @@
+{
+  "texture_count": 6,
+  "native_sizes": true,
+  "binary_alpha": true,
+  "gui_size": [
+    176,
+    166
+  ],
+  "gui_slot_count": 41,
+  "audio_included": false,
+  "in_game_checked": false,
+  "repository_integration_checked": false,
+  "files": [
+    {
+      "texture": "item/declaration_plate",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 10,
+      "sha256": "c6da9b80d3c5332d25ad373149b2a3873069d566f20e2954ec08592e45dd2a7b"
+    },
+    {
+      "texture": "item/declaration_plate_written",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 15,
+      "sha256": "4dbf0c038673c0fa6b86ee7ceb08673cc5c8e4c7f5f096e8dd60b80ff0bf2545"
+    },
+    {
+      "texture": "block/ritual_altar_side",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 9,
+      "sha256": "b68d195ff59e9c40df964879deb9d5158d973cfd15ddb49b21806f47bf968365"
+    },
+    {
+      "texture": "block/ritual_altar_top",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 11,
+      "sha256": "e7490aa77c911165265c7e485ab726987d2d2bb2afb8511035fd403dea84db0b"
+    },
+    {
+      "texture": "block/ritual_altar_front",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 9,
+      "sha256": "97022575193772507530980cf0027a12ef99bce4cd2c168f95556c516fb6f8ac"
+    },
+    {
+      "texture": "gui/ritual_altar",
+      "size": [
+        176,
+        166
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 26,
+      "sha256": "af93b36b5ee02f081d3353e5483b8fa6ea90fa5a8b58cccbc83ad792a026bc03"
+    }
+  ],
+  "source_generator_roundtrip": true,
+  "editable_pixel_source_roundtrip": true,
+  "all_41_slots_exact_and_nonoverlapping": true,
+  "slot_frames_18x18_exact": true,
+  "all_slot_interiors_empty_16x16": true,
+  "text_regions_blank_and_clear_of_slots": true,
+  "declared_176x166_texture_size": true,
+  "plates_share_alpha_silhouette": true,
+  "tint_mask_16_neutral_pixels": true,
+  "tint_leaves_stone_pixels_unchanged": true,
+  "top_has_three_pits_and_one_plate_recess": true,
+  "top_regions_do_not_overlap": true,
+  "visual_review": {
+    "overview": true,
+    "plate_tint_examples": true,
+    "altar_faces": true,
+    "projected_block": true,
+    "gui_native": true,
+    "gui_enlarged": true,
+    "gui_populated_example": true,
+    "before_after_comparison": true
+  },
+  "all_six_textures_refined": true,
+  "alpha_silhouettes_unchanged": true,
+  "tint_gui_and_top_layout_contracts_identical_to_v8": true
+}

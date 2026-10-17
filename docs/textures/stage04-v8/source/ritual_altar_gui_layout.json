@@ -1,0 +1,780 @@
+{
+  "texture": "elemental_verse:gui/ritual_altar",
+  "texture_size": [
+    176,
+    166
+  ],
+  "screen_size": [
+    176,
+    166
+  ],
+  "uv_source_xy": [
+    0,
+    0
+  ],
+  "coordinates": "zero-based GUI-relative [x,y]; slot coordinates are 16x16 CONTENT origins",
+  "slots": [
+    {
+      "kind": "element",
+      "index": 0,
+      "content_xy": [
+        62,
+        17
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        16,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "element",
+      "index": 1,
+      "content_xy": [
+        80,
+        17
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        79,
+        16,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "element",
+      "index": 2,
+      "content_xy": [
+        98,
+        17
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        16,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "declaration",
+      "index": 0,
+      "content_xy": [
+        62,
+        35
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        34,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "output",
+      "index": 0,
+      "content_xy": [
+        98,
+        35
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        34,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 0,
+      "content_xy": [
+        8,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        7,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 1,
+      "content_xy": [
+        26,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        25,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 2,
+      "content_xy": [
+        44,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        43,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 3,
+      "content_xy": [
+        62,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 4,
+      "content_xy": [
+        80,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        79,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 5,
+      "content_xy": [
+        98,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 6,
+      "content_xy": [
+        116,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        115,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 7,
+      "content_xy": [
+        134,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        133,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 8,
+      "content_xy": [
+        152,
+        84
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        151,
+        83,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 9,
+      "content_xy": [
+        8,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        7,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 10,
+      "content_xy": [
+        26,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        25,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 11,
+      "content_xy": [
+        44,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        43,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 12,
+      "content_xy": [
+        62,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 13,
+      "content_xy": [
+        80,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        79,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 14,
+      "content_xy": [
+        98,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 15,
+      "content_xy": [
+        116,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        115,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 16,
+      "content_xy": [
+        134,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        133,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 17,
+      "content_xy": [
+        152,
+        102
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        151,
+        101,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 18,
+      "content_xy": [
+        8,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        7,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 19,
+      "content_xy": [
+        26,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        25,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 20,
+      "content_xy": [
+        44,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        43,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 21,
+      "content_xy": [
+        62,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 22,
+      "content_xy": [
+        80,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        79,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 23,
+      "content_xy": [
+        98,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 24,
+      "content_xy": [
+        116,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        115,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 25,
+      "content_xy": [
+        134,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        133,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "player_inventory",
+      "index": 26,
+      "content_xy": [
+        152,
+        120
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        151,
+        119,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 0,
+      "content_xy": [
+        8,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        7,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 1,
+      "content_xy": [
+        26,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        25,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 2,
+      "content_xy": [
+        44,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        43,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 3,
+      "content_xy": [
+        62,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        61,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 4,
+      "content_xy": [
+        80,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        79,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 5,
+      "content_xy": [
+        98,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        97,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 6,
+      "content_xy": [
+        116,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        115,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 7,
+      "content_xy": [
+        134,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        133,
+        141,
+        18,
+        18
+      ]
+    },
+    {
+      "kind": "hotbar",
+      "index": 8,
+      "content_xy": [
+        152,
+        142
+      ],
+      "content_size": [
+        16,
+        16
+      ],
+      "frame_xywh": [
+        151,
+        141,
+        18,
+        18
+      ]
+    }
+  ],
+  "blank_text_regions_xywh": {
+    "title": [
+      8,
+      5,
+      160,
+      9
+    ],
+    "shape_text": [
+      8,
+      58,
+      160,
+      12
+    ],
+    "inventory_label": [
+      8,
+      72,
+      160,
+      9
+    ]
+  },
+  "recommended_text_color": "#404b44",
+  "text_baked_into_texture": false,
+  "player_inventory_assumption": "27 slots start at (8,84), 18px spacing; hotbar starts at (8,142)",
+  "note": "原生图集尺寸是 176×166。blit/绘制时纹理尺寸参数也需传 176,166，不能继续默认 256,256。"
+}

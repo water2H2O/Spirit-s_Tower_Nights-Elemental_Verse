@@ -1,0 +1,74 @@
+{
+  "namespace": "elemental_verse",
+  "version_label": "v8",
+  "texture_count": 6,
+  "audio_included": false,
+  "textures": [
+    {
+      "name": "declaration_plate",
+      "kind": "item",
+      "label": "空申明板",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/declaration_plate.png",
+      "design": "切角石板、加厚底边、两层倒角与大块石质层理，无刻字"
+    },
+    {
+      "name": "declaration_plate_written",
+      "kind": "item",
+      "label": "已写申明板",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/declaration_plate_written.png",
+      "design": "沿用空板轮廓，刻纹加深与高光槽唇，中央仍为 4×4 中性染色区"
+    },
+    {
+      "name": "ritual_altar_side",
+      "kind": "block",
+      "label": "仪式台 · 侧面",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/ritual_altar_side.png",
+      "design": "厚台边、铜角片与铆钉、内凹浮雕、柱脚及分层底座"
+    },
+    {
+      "name": "ritual_altar_top",
+      "kind": "block",
+      "label": "仪式台 · 顶面",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/ritual_altar_top.png",
+      "design": "中央深凹板槽、三处带倒角的投入口，铜质导槽与少量大块石面层次"
+    },
+    {
+      "name": "ritual_altar_front",
+      "kind": "block",
+      "label": "仪式台 · 正面",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/ritual_altar_front.png",
+      "design": "双立柱、凹入石龛、刻纹石板标记、铜托片与接触阴影"
+    },
+    {
+      "name": "ritual_altar",
+      "kind": "gui",
+      "label": "仪式台界面",
+      "size": [
+        176,
+        166
+      ],
+      "texture": "assets/elemental_verse/textures/gui/ritual_altar.png",
+      "design": "176×166；内凹工作面、角片与分隔压线；槽位及文字留白坐标不变"
+    }
+  ]
+}

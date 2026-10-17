@@ -1,0 +1,7 @@
+﻿中文名,类型,路径,尺寸,设计
+空申明板,item,assets/elemental_verse/textures/item/declaration_plate.png,16x16,切角石板、加厚底边、两层倒角与大块石质层理，无刻字
+已写申明板,item,assets/elemental_verse/textures/item/declaration_plate_written.png,16x16,沿用空板轮廓，刻纹加深与高光槽唇，中央仍为 4×4 中性染色区
+仪式台 · 侧面,block,assets/elemental_verse/textures/block/ritual_altar_side.png,16x16,厚台边、铜角片与铆钉、内凹浮雕、柱脚及分层底座
+仪式台 · 顶面,block,assets/elemental_verse/textures/block/ritual_altar_top.png,16x16,中央深凹板槽、三处带倒角的投入口，铜质导槽与少量大块石面层次
+仪式台 · 正面,block,assets/elemental_verse/textures/block/ritual_altar_front.png,16x16,双立柱、凹入石龛、刻纹石板标记、铜托片与接触阴影
+仪式台界面,gui,assets/elemental_verse/textures/gui/ritual_altar.png,176x166,176×166；内凹工作面、角片与分隔压线；槽位及文字留白坐标不变

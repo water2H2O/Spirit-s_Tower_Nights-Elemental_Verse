@@ -1,8 +1,9 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "minecraft:block/orientable_with_bottom",
   "textures": {
-    "top": "elemental_verse:block/dead_matter_top",
-    "side": "minecraft:block/polished_deepslate",
-    "bottom": "minecraft:block/deepslate_tiles"
+    "front": "elemental_verse:block/ritual_altar_front",
+    "side": "elemental_verse:block/ritual_altar_side",
+    "top": "elemental_verse:block/ritual_altar_top",
+    "bottom": "elemental_verse:block/ritual_altar_top"
   }
 }

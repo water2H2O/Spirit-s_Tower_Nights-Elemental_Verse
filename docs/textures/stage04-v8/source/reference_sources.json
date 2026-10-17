@@ -1,0 +1,92 @@
+[
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\农夫乐事\\assets\\farmersdelight\\textures\\gui\\cooking_pot.png",
+    "image_size": [
+      256,
+      256
+    ],
+    "displayed_box": [
+      0,
+      0,
+      256,
+      256
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "C:\\Users\\orito\\Documents\\Codex\\2026-10-17\\mc\\outputs\\elemental_verse_supplement_bottle_states\\assets\\elemental_verse\\textures\\block\\sealed_vault_top.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "C:\\Users\\orito\\Documents\\Codex\\2026-10-17\\mc\\outputs\\elemental_verse_supplement_bottle_states\\assets\\elemental_verse\\textures\\block\\rune_cabinet_front.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "C:\\Users\\orito\\Documents\\Codex\\2026-10-17\\mc\\work\\pixel-skill\\assets\\ars\\originals\\enchanting_apparatus.png",
+    "image_size": [
+      32,
+      32
+    ],
+    "displayed_box": [
+      0,
+      0,
+      32,
+      32
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "C:\\Users\\orito\\Documents\\Codex\\2026-10-17\\mc\\work\\pixel-skill\\assets\\ars\\originals\\arcane_core.png",
+    "image_size": [
+      64,
+      64
+    ],
+    "displayed_box": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\通用机械-已包括其它小包\\assets\\mekanism\\textures\\item\\energy_tablet.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  }
+]

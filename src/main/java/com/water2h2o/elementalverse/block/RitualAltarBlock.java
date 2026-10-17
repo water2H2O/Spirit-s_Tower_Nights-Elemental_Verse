@@ -25,8 +25,42 @@ public class RitualAltarBlock extends BaseEntityBlock {
 
     public static final MapCodec<RitualAltarBlock> CODEC = simpleCodec(RitualAltarBlock::new);
 
+    /** 水平朝向：正面朝向玩家（作者的 front 贴图就是这一面）。 */
+    public static final net.minecraft.world.level.block.state.properties.DirectionProperty FACING =
+            net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
+
     public RitualAltarBlock(Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any()
+                .setValue(FACING, net.minecraft.core.Direction.NORTH));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(
+            net.minecraft.world.level.block.state.StateDefinition.Builder<net.minecraft.world.level.block.Block,
+                    net.minecraft.world.level.block.state.BlockState> builder) {
+        builder.add(FACING);
+    }
+
+    @Override
+    public net.minecraft.world.level.block.state.BlockState getStateForPlacement(
+            net.minecraft.world.item.context.BlockPlaceContext context) {
+        return defaultBlockState()
+                .setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected net.minecraft.world.level.block.state.BlockState rotate(
+            net.minecraft.world.level.block.state.BlockState state,
+            net.minecraft.world.level.block.Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected net.minecraft.world.level.block.state.BlockState mirror(
+            net.minecraft.world.level.block.state.BlockState state,
+            net.minecraft.world.level.block.Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override

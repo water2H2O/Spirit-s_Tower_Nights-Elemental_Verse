@@ -36,8 +36,13 @@ public class DeclarationPlateItem extends Item {
     public static void setDeclaration(ItemStack stack, Declaration declaration) {
         if (declaration == null || !declaration.isDefined()) {
             stack.remove(EVDataComponents.DECLARATION.get());
+            // 回到"空板"图标
+            stack.remove(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA);
         } else {
             stack.set(EVDataComponents.DECLARATION.get(), declaration);
+            // 切到"已写"图标（值 1 = 写好的那张）
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
+                    new net.minecraft.world.item.component.CustomModelData(1));
         }
     }
 

@@ -17,7 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/gui/container/dispenser.png");
+            ResourceLocation.fromNamespaceAndPath("elemental_verse", "textures/gui/ritual_altar.png");
 
     public RitualAltarScreen(RitualAltarMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
