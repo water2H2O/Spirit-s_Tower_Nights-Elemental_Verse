@@ -107,16 +107,23 @@ public final class EVConfig {
     /** 当前生效的时长表，配置加载/重载时刷新。 */
     private static Map<ElementType, int[]> durations = PRESET_DURATIONS.get(Preset.OBSERVE);
 
-    /** 两套预设的完整时长表。 */
+    /**
+     * 两套预设的完整时长表。
+     *
+     * <p>秒级预设里 1 秒 = 20 tick。水元素最短，专门留给作者观察。
+     * **作者实测后的定值：阶段① 5 秒、阶段② 10 秒**
+     * （2026-10-17 反馈：原来 20/40 秒还是太慢，看一次要等一分钟）。
+     * 其余元素按同一比例（÷4）缩放，保持「地最耐存、光暗最持久」的手感。
+     */
     private static Map<Preset, Map<ElementType, int[]>> buildPresets() {
         Map<ElementType, int[]> observe = new EnumMap<>(ElementType.class);
-        observe.put(ElementType.WATER, seconds(20, 40));   // 全程 1 分钟
-        observe.put(ElementType.GRASS, seconds(25, 50));
-        observe.put(ElementType.FIRE, seconds(30, 60));
-        observe.put(ElementType.WIND, seconds(35, 70));
-        observe.put(ElementType.EARTH, seconds(45, 90));
-        observe.put(ElementType.LIGHT, seconds(60, 120));
-        observe.put(ElementType.SHADOW, seconds(60, 120));
+        observe.put(ElementType.WATER, seconds(5, 10));    // 全程 15 秒
+        observe.put(ElementType.GRASS, seconds(6, 12));
+        observe.put(ElementType.FIRE, seconds(8, 15));
+        observe.put(ElementType.WIND, seconds(9, 18));
+        observe.put(ElementType.EARTH, seconds(11, 23));
+        observe.put(ElementType.LIGHT, seconds(15, 30));
+        observe.put(ElementType.SHADOW, seconds(15, 30));
 
         Map<ElementType, int[]> normal = new EnumMap<>(ElementType.class);
         normal.put(ElementType.EARTH, days(8, 16));

@@ -104,25 +104,20 @@ public class ElementVialItem extends Item {
     }
 
     /**
-     * 悬停提示。
+     * 关键：**别播换手动效。**
      *
-     * <p>**默认不显示任何关于元素的描述。** 设定里的信息应该靠"特殊的工具"去看，
-     * 而不是鼠标一放就全交代出来。目前只保留一个调试开关（精确剩余秒数，默认关）。
+     * <p>只要堆叠的数据组件变了，客户端就认为"这个物品变了"，会重播手持/拾取动画 ——
+     * 玩家看到的就是元素瓶在手上闪。形态变化（只换组件）应该完全静默。
+     *
+     * <p>真正的物品类型变化（→ 死寂物质）仍会正常播动效。
      */
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
-
-        if (!EVConfig.showsExactSeconds()) {
-            return;
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (!slotChanged && !oldStack.isEmpty() && !newStack.isEmpty()
+                && oldStack.is(this) && newStack.is(this)) {
+            return false;
         }
-
-        ElementType type = getElement(stack);
-        if (!DecayEngine.decays(type)) {
-            return;
-        }
-        tooltip.add(Component.translatable(EVLang.TOOLTIP_EXACT_SECONDS,
-                DecayEngine.getRemainingSeconds(stack)).withStyle(ChatFormatting.DARK_AQUA));
+        return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
     }
 
     // ------------------------------------------------------------ 采集

@@ -42,13 +42,21 @@ public final class EVDataComponents {
                             .persistent(ElementType.CODEC)
                             .networkSynchronized(ByteBufCodecs.idMapper(ElementType::fromOrdinal, ElementType::ordinal)));
 
-    /** 已经过的 tick 数。由统一的慢速 tick 累加，不依赖真实时间。 */
+    /**
+     * 已经过的 tick 数。由统一的慢速 tick 累加，不依赖真实时间。
+     *
+     * <p>**刻意不做网络同步。**
+     * 这个组件每秒都会变一次；一旦同步，客户端每一秒都会收到"这个物品变了"，
+     * 于是重播手持/拾取动画 —— 玩家看到的就是元素瓶在手上闪。
+     * 而客户端其实**不需要**它：显示用的名字与图标来自 {@link #ELEMENT}，
+     * 计时器只在服务端参与判定。省掉同步，既没闪动也省带宽。
+     *
+     * <p>如果以后要在客户端显示倒计时（例如"特殊工具"），再打开同步即可。
+     */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> DECAY_TIMER =
             DATA_COMPONENTS.registerComponentType(
                     "decay_timer",
-                    builder -> builder
-                            .persistent(Codec.INT)
-                            .networkSynchronized(ByteBufCodecs.VAR_INT));
+                    builder -> builder.persistent(Codec.INT));
 
     public static void register(IEventBus modEventBus) {
         DATA_COMPONENTS.register(modEventBus);
