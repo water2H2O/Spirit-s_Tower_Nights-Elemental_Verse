@@ -80,6 +80,9 @@ public final class ElementStackMerger {
         // 只在时间真的不同时才写，省一次组件变更（也少一次客户端重绘）
         if (averaged != ElementVialItem.getTimer(into)) {
             ElementVialItem.setTimer(into, averaged);
+            // 计时器变了，耐久条百分比要立刻跟着重算，
+            // 否则要等下一秒的衰变 tick 才自愈，玩家会看到条卡一下
+            ElementVialItem.refreshProgress(into);
         }
     }
 
