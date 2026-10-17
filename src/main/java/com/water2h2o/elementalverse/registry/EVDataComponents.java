@@ -61,6 +61,19 @@ public final class EVDataComponents {
                     "decay_timer",
                     builder -> builder.persistent(Codec.INT));
 
+    /**
+     * 衰变进度 0..100（**要同步**，客户端要靠它画耐久条）。
+     *
+     * <p>刻意只存整数百分比：一条衰变链下来最多变 100 次，
+     * 而不是每秒推送一次完整计时器 —— 省流量，也少触发客户端重绘。
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> DECAY_PROGRESS =
+            DATA_COMPONENTS.registerComponentType(
+                    "decay_progress",
+                    builder -> builder
+                            .persistent(Codec.INT)
+                            .networkSynchronized(ByteBufCodecs.VAR_INT));
+
     /** 小包内容的编解码器（持久化与网络共用）。**必须声明在使用它的字段之前**。 */
     public static final Codec<List<ItemStack>> POUCH_CODEC = ItemStack.OPTIONAL_CODEC.listOf();
 

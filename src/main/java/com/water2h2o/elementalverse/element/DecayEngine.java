@@ -108,6 +108,9 @@ public final class DecayEngine {
         int next = Math.min(TIMER_CAP, timer + advanced);
         ElementVialItem.setTimer(stack, next);
 
+        // 耐久条用的百分比：整数变了才写（所以每秒最多一次小小更新）
+        ElementVialItem.setProgress(stack, (int) Math.min(100L, next * 100L / threshold));
+
         return next >= threshold;
     }
 

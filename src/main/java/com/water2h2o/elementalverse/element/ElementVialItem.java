@@ -68,16 +68,52 @@ public class ElementVialItem extends Item {
         stack.set(EVDataComponents.DECAY_TIMER.get(), timer);
     }
 
+    /** 衰变进度 0..100（给客户端的耐久条用）。 */
+    public static int getProgress(ItemStack stack) {
+        Integer progress = stack.get(EVDataComponents.DECAY_PROGRESS.get());
+        return progress == null ? 0 : progress;
+    }
+
+    /** 只在整数百分比真的变了时才写，避免每 tick 都标记物品变更。 */
+    public static void setProgress(ItemStack stack, int progress) {
+        if (getProgress(stack) == progress) {
+            return;
+        }
+        if (progress <= 0) {
+            stack.remove(EVDataComponents.DECAY_PROGRESS.get());
+        } else {
+            stack.set(EVDataComponents.DECAY_PROGRESS.get(), Math.min(100, progress));
+        }
+    }
+
+    /** 按当前计时器与阈值算出百分比；换形态后阈值会变，必须重算。 */
+    public static void refreshProgress(ItemStack stack) {
+        ElementType type = getElement(stack);
+        if (type.isEmpty()) {
+            setProgress(stack, 0);
+            return;
+        }
+        int threshold = EVConfig.getThreshold(type);
+        if (threshold <= 0) {
+            setProgress(stack, 0);
+            return;
+        }
+        int timer = getTimer(stack);
+        setProgress(stack, (int) Math.min(100L, timer * 100L / threshold));
+    }
+
     /** 换形态：元素、计时器、模型序号一起写。只在真正变形时调用。 */
     public static void setElement(ItemStack stack, ElementType type, int timer) {
         if (type.isEmpty()) {
             stack.remove(EVDataComponents.ELEMENT.get());
             stack.remove(EVDataComponents.DECAY_TIMER.get());
+            stack.remove(EVDataComponents.DECAY_PROGRESS.get());
             stack.remove(DataComponents.CUSTOM_MODEL_DATA);
         } else {
             stack.set(EVDataComponents.ELEMENT.get(), type);
             stack.set(EVDataComponents.DECAY_TIMER.get(), timer);
             stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.modelIndex()));
+            refreshProgress(stack);
         }
     }
 

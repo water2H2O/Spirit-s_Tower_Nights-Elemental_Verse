@@ -1,5 +1,6 @@
 package com.water2h2o.elementalverse;
 
+import com.water2h2o.elementalverse.client.DecayBarDecorator;
 import com.water2h2o.elementalverse.client.PouchScreen;
 import com.water2h2o.elementalverse.client.SealedVaultScreen;
 import com.water2h2o.elementalverse.registry.EVMenus;
@@ -11,6 +12,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -37,6 +39,15 @@ public class SpiritsTowerNightsElementalVerseClient {
     static void onRegisterScreens(RegisterMenuScreensEvent event) {
         event.register(EVMenus.SEALED_VAULT.get(), SealedVaultScreen::new);
         event.register(EVMenus.POUCH.get(), PouchScreen::new);
+    }
+
+    /** 给三种元素容器加"衰变期"横条（外观同耐久条，但不碰原版耐久系统）。 */
+    @SubscribeEvent
+    static void onRegisterItemDecorations(RegisterItemDecorationsEvent event) {
+        DecayBarDecorator decorator = new DecayBarDecorator();
+        event.register(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_VIAL.get(), decorator);
+        event.register(com.water2h2o.elementalverse.registry.EVItems.REFRACTION_PRISM.get(), decorator);
+        event.register(com.water2h2o.elementalverse.registry.EVItems.SHADOW_BOTTLE.get(), decorator);
     }
 
     static {
