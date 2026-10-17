@@ -3,11 +3,11 @@
   "category": "misc",
   "group": "elemental_verse_vial",
   "pattern": [
-    "G"
+    "B"
   ],
   "key": {
-    "G": {
-      "item": "minecraft:glass"
+    "B": {
+      "item": "minecraft:glass_bottle"
     }
   },
   "result": {
