@@ -9,5 +9,6 @@
     "amount": 1.0,
     "duration": 200,
     "cost": 1.0
-  }
+  },
+  "name": "火焰保护"
 }

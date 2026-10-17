@@ -8,5 +8,6 @@
     "amount": 1.0,
     "duration": 20,
     "cost": 1.0
-  }
+  },
+  "name": "灭火"
 }

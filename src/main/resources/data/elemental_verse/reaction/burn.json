@@ -9,5 +9,6 @@
     "amount": 2.0,
     "duration": 60,
     "cost": 2.0
-  }
+  },
+  "name": "燃烧"
 }

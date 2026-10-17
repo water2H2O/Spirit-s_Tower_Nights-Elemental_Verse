@@ -59,10 +59,17 @@ public class DeclarationPlateItem extends Item {
     /** 造一块写好的板子：主料 + 态 + 辅料。 */
     public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier,
                                     ElementType reagentElement, int reagentTier) {
+        return written(element, tier, stateElement, stateTier, reagentElement, reagentTier, "");
+    }
+
+    /** 造一块写好的板子：主料 + 态 + 辅料 + **魔法名**（写入时定好）。 */
+    public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier,
+                                    ElementType reagentElement, int reagentTier, String magic) {
         ItemStack stack = new ItemStack(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get());
         setDeclaration(stack, new Declaration(element, tier, "release", "projectile",
                 stateElement == null ? ElementType.EMPTY : stateElement, stateTier,
-                reagentElement == null ? ElementType.EMPTY : reagentElement, reagentTier));
+                reagentElement == null ? ElementType.EMPTY : reagentElement, reagentTier,
+                magic == null ? "" : magic));
         return stack;
     }
 
@@ -92,6 +99,9 @@ public class DeclarationPlateItem extends Item {
         if (!declaration.isDefined()) {
             return Component.translatable(getDescriptionId());
         }
+        if (declaration.hasMagic()) {
+            return Component.translatable(EVLang.MAGIC_NAME, declaration.magic());
+        }
         return Component.translatable(EVLang.PLATE_WRITTEN, declaration.element().displayName());
     }
 
@@ -113,6 +123,10 @@ public class DeclarationPlateItem extends Item {
             return;
         }
 
+        if (declaration.hasMagic()) {
+            tooltip.add(Component.translatable(EVLang.MAGIC_NAME, declaration.magic())
+                    .withStyle(ChatFormatting.GOLD));
+        }
         tooltip.add(Component.translatable(EVLang.PLATE_ELEMENT, declaration.element().displayName())
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable(EVLang.PLATE_TIER, declaration.tier())

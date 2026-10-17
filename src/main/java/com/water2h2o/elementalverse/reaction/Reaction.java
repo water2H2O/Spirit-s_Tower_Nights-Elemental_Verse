@@ -17,12 +17,14 @@ import com.water2h2o.elementalverse.element.ElementValue;
  * @param phenomenon 产生的现象
  * @param refund    返还的元素值（多数反应是空的）
  */
-public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue refund) {
+public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue refund,
+                       String name) {
 
     public static final Codec<Reaction> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ElementValue.CODEC.fieldOf("consume").forGetter(Reaction::consume),
             Phenomenon.CODEC.fieldOf("phenomenon").forGetter(Reaction::phenomenon),
-            ElementValue.CODEC.optionalFieldOf("refund", ElementValue.ZERO).forGetter(Reaction::refund)
+            ElementValue.CODEC.optionalFieldOf("refund", ElementValue.ZERO).forGetter(Reaction::refund),
+            Codec.STRING.optionalFieldOf("name", "").forGetter(Reaction::name)
     ).apply(instance, Reaction::new));
 
     /**

@@ -129,8 +129,19 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             }
         }
 
-        return DeclarationPlateItem.written(element, tier, stateElement, stateTier,
+        // 写入时就把"这是什么魔法"算出来存好 —— 客户端没有反应表，
+        // 不能指望它在运行时再匹配一次。
+        String magicName = "";
+        var preview = DeclarationPlateItem.written(element, tier, stateElement, stateTier,
                 reagentElement, reagentTier);
+        var declaration = DeclarationPlateItem.getDeclaration(preview);
+        var matched = com.water2h2o.elementalverse.reaction.ReactionManager.match(declaration.inputValue());
+        if (matched.isPresent()) {
+            magicName = matched.get().name();
+        }
+
+        return DeclarationPlateItem.written(element, tier, stateElement, stateTier,
+                reagentElement, reagentTier, magicName);
     }
 
     /** 玩家把产出拿走时，按档位扣材料。 */

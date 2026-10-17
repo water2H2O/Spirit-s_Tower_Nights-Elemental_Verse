@@ -24,11 +24,11 @@ import net.minecraft.network.codec.StreamCodec;
  */
 public record Declaration(ElementType element, int tier, String operation, String form,
                           ElementType stateElement, int stateTier,
-                          ElementType reagentElement, int reagentTier) {
+                          ElementType reagentElement, int reagentTier, String magic) {
 
     public static final Declaration EMPTY = new Declaration(
             ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0,
-            ElementType.EMPTY, 0);
+            ElementType.EMPTY, 0, "");
 
     /** 兼容旧写法（没有态）。 */
     public Declaration(ElementType element, int tier, String operation, String form) {
@@ -38,7 +38,15 @@ public record Declaration(ElementType element, int tier, String operation, Strin
     /** 兼容"没辅料"的写法。 */
     public Declaration(ElementType element, int tier, String operation, String form,
                        ElementType stateElement, int stateTier) {
-        this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0);
+        this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0, "");
+    }
+
+    /** 兼容"没辅料也没魔法名"的写法。 */
+    public Declaration(ElementType element, int tier, String operation, String form,
+                       ElementType stateElement, int stateTier,
+                       ElementType reagentElement, int reagentTier) {
+        this(element, tier, operation, form, stateElement, stateTier,
+                reagentElement, reagentTier, "");
     }
 
     /**
@@ -64,11 +72,17 @@ public record Declaration(ElementType element, int tier, String operation, Strin
             Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier),
             ElementType.CODEC.optionalFieldOf("reagent_element", ElementType.EMPTY)
                     .forGetter(Declaration::reagentElement),
-            Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier)
+            Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier),
+            Codec.STRING.optionalFieldOf("magic", "").forGetter(Declaration::magic)
     ).apply(instance, Declaration::new));
 
     public static final StreamCodec<io.netty.buffer.ByteBuf, Declaration> STREAM_CODEC =
             ByteBufCodecs.fromCodec(CODEC);
+
+    /** 这条申明算出来的魔法名（写板子时定好，客户端直接显示）。 */
+    public boolean hasMagic() {
+        return magic != null && !magic.isEmpty();
+    }
 
     /** 写过了没有。 */
     public boolean isDefined() {

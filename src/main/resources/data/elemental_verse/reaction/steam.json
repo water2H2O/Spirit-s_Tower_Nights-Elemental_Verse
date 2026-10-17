@@ -9,5 +9,6 @@
     "amount": 2.0,
     "duration": 20,
     "cost": 1.5
-  }
+  },
+  "name": "蒸汽"
 }
