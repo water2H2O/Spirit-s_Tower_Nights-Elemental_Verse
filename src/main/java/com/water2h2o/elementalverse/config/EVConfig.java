@@ -237,6 +237,47 @@ public final class EVConfig {
         return found;
     }
 
+    /**
+     * 某个形态的**绝对**衰变阈值（tick）—— 距离「下一次变形」的总时长。
+     *
+     * <p>计时器是绝对口径（跨形态连续累计，见 {@code DecayEngine} 的说明），
+     * 所以阈值必须也是绝对的：
+     *
+     * <ul>
+     *   <li>**稳定元素**：阈值 = 预设里的阶段①。水（观察预设）= 400 tick。</li>
+     *   <li>**衍生元素**：阈值 = 它的父稳定元素的「阶段① + 阶段②」。
+     *       冰 = 400 + 800 = 1200 tick，即水从采集到变成死寂共 60 秒。</li>
+     * </ul>
+     *
+     * <p>返回 0 表示不参与衰变（霜、金、芽这类还没接入链的支线元素）。
+     */
+    public static int getThreshold(ElementType type) {
+        if (type == null || type.isEmpty() || !type.decays()) {
+            return 0;
+        }
+
+        int[] own = getStageDurations(type);
+        if (own[0] > 0) {
+            // 稳定元素：自己的阶段①就是阈值
+            return own[0];
+        }
+        if (own[1] > 0) {
+            // 若某天给衍生元素单独配了时长，直接用
+            return own[1];
+        }
+
+        // 衍生元素：找它的父稳定元素，取「阶段① + 阶段②」
+        for (ElementType parent : ElementType.values()) {
+            if (parent.isBaseElement() && parent.stage1() == type) {
+                int[] parentDurations = getStageDurations(parent);
+                if (parentDurations[0] > 0) {
+                    return parentDurations[0] + parentDurations[1];
+                }
+            }
+        }
+        return 0;
+    }
+
     /** 配置加载或重载时刷新生效的时长表。 */
     @SubscribeEvent
     static void onConfigLoad(ModConfigEvent event) {

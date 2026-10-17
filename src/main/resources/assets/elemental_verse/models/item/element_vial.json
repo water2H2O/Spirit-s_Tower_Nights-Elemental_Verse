@@ -2,5 +2,109 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "elemental_verse:item/element_vial"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "elemental_verse:item/vial/earth"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "elemental_verse:item/vial/water"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4
+      },
+      "model": "elemental_verse:item/vial/wind"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5
+      },
+      "model": "elemental_verse:item/vial/fire"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6
+      },
+      "model": "elemental_verse:item/vial/grass"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 7
+      },
+      "model": "elemental_verse:item/vial/light"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8
+      },
+      "model": "elemental_verse:item/vial/shadow"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 9
+      },
+      "model": "elemental_verse:item/vial/ice"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10
+      },
+      "model": "elemental_verse:item/vial/frost"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 11
+      },
+      "model": "elemental_verse:item/vial/lightning"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 12
+      },
+      "model": "elemental_verse:item/vial/wood"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 13
+      },
+      "model": "elemental_verse:item/vial/sand"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 14
+      },
+      "model": "elemental_verse:item/vial/ember"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 15
+      },
+      "model": "elemental_verse:item/vial/metal"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 16
+      },
+      "model": "elemental_verse:item/vial/bud"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 17
+      },
+      "model": "elemental_verse:item/vial/dawn"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 18
+      },
+      "model": "elemental_verse:item/vial/shadow_essence"
+    }
+  ]
 }

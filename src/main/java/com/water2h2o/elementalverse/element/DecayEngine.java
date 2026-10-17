@@ -9,14 +9,19 @@ import net.minecraft.world.level.Level;
 /**
  * 衰变的全部计算。**纯粹的加减法，不碰注册表、不碰世界状态** —— 这样它最好测、最好改。
  *
- * <p>设计要点（总纲 2.5）：
- * <ul>
- *   <li>不存「还剩多久」，只存「已经走了多久」（{@code decay_timer} 组件）。</li>
- *   <li>推进是**离散的**：每 {@code decay.tickInterval} tick 累加一次，没加载就不累加。
- *       所以「世界停下，东西就停下」是天然成立的，不是额外判断出来的。</li>
- *   <li>环境修正（光在暗处加速等）在这里生效 —— 它按「这次推进有多少 tick」缩放，
- *       所以走在路上把光元素带进矿洞，下一跳就会变快。</li>
- * </ul>
+ * <h2>计时口径：绝对，不重置</h2>
+ * {@code decay_timer} 是「从装进瓶子到现在一共过了多少 tick」，**跨形态连续累计，不重置**。
+ *
+ * <p>这条是踩过坑才定下来的：早先每次变形都把计时器清零，结果
+ * 「稳定元素 → 衍生元素」之后新形态又从 0 开始算，而衍生元素没有自己的时长条目，
+ * 于是**永远到不了死寂物质**。改用绝对口径后：
+ *
+ * <pre>
+ *   水 ：阈值 400            → 400 时变成冰（计时器仍是 400）
+ *   冰 ：阈值 400+800=1200   → 1200 时变成死寂物质
+ * </pre>
+ *
+ * 每条链的绝对阈值 = 父稳定元素的「阶段① + 阶段②」（见 {@link EVConfig#getThreshold}）。
  */
 public final class DecayEngine {
 
@@ -30,7 +35,7 @@ public final class DecayEngine {
 
     /** 这个形态会不会随时间变。 */
     public static boolean decays(ElementType type) {
-        return type != null && !type.isEmpty() && type.decays() && type.stage1() != null;
+        return type != null && !type.isEmpty() && type.decays();
     }
 
     /** 当前处在哪一段。 */
@@ -40,17 +45,16 @@ public final class DecayEngine {
             return type.isEmpty() ? DecayStage.EMPTY : DecayStage.DEAD;
         }
 
-        int[] durations = EVConfig.getStageDurations(type);
-        if (durations[0] <= 0) {
-            // 没进时长表（霜、芽、金）—— 阶段 01 视作不再变化
+        int threshold = EVConfig.getThreshold(type);
+        if (threshold <= 0) {
+            // 进了衰变表但没算出阈值（配置写坏 / 支线元素）—— 视作不再变化
             return DecayStage.DEAD;
         }
 
-        int timer = ElementVialItem.getTimer(stack);
-        if (timer >= durations[0] + durations[1]) {
+        if (ElementVialItem.getTimer(stack) >= threshold) {
             return DecayStage.DEAD;
         }
-        return timer >= durations[0] ? DecayStage.DERIVED : DecayStage.STABLE;
+        return type.isBaseElement() ? DecayStage.STABLE : DecayStage.DERIVED;
     }
 
     /** 距离下一次变质还有多少秒（只给调试 tooltip 用）。 */
@@ -59,21 +63,20 @@ public final class DecayEngine {
         if (!decays(type)) {
             return 0;
         }
-        int[] durations = EVConfig.getStageDurations(type);
-        int total = durations[0] + durations[1];
+        int threshold = EVConfig.getThreshold(type);
         int timer = ElementVialItem.getTimer(stack);
-        return Math.max(0, (total - timer) / 20);
+        return Math.max(0, (threshold - timer) / 20);
     }
 
     // ---------------------------------------------------------------- 推进
 
     /**
-     * 推进一个物品堆叠的衰变计时。
+     * 推进一个物品堆叠的衰变计时（只动计时器组件，不换形态）。
      *
-     * @param stack 要推进的堆叠（会被就地修改）
-     * @param level 它所在的维度；为 null 表示算不出来（不做环境修正）
-     * @param pos   它所在的位置；为 null 表示在玩家身上（会退回用玩家坐标）
-     * @return true 表示它**越过了阈值、形态应该换了**，调用方负责替换物品
+     * @param stack       要推进的堆叠（会被就地修改）
+     * @param level       它所在的维度；为 null 表示算不出来（不做环境修正）
+     * @param pos         它所在的位置
+     * @return true 表示它**越过了阈值、形态应该换了**，调用方负责替换／就地转换
      */
     public static boolean tickStack(ItemStack stack, Level level, BlockPos pos, int elapsedTicks) {
         if (!EVConfig.isDecayEnabled()) {
@@ -85,29 +88,27 @@ public final class DecayEngine {
             return false;
         }
 
-        int[] durations = EVConfig.getStageDurations(type);
-        if (durations[0] <= 0) {
+        int threshold = EVConfig.getThreshold(type);
+        if (threshold <= 0) {
             return false;
         }
 
         int timer = ElementVialItem.getTimer(stack);
-        int total = durations[0] + durations[1];
-        if (timer >= total) {
-            // 已经该换了；调用方这次没换成功的话，下一跳还会再报一次
+        if (timer >= threshold) {
+            // 已经到点了；调用方这次没换成功的话，下一跳还会再报一次
             return true;
         }
 
         double multiplier = EVConfig.getGlobalMultiplier() * environmentalFactor(type, level, pos);
         int advanced = (int) Math.round(Math.min(elapsedTicks, MAX_STEP) * multiplier);
         if (advanced < 1) {
-            // 减速超过 100% 时至少也走 0；只有真的被减到 0 才跳过
-            advanced = 0;
+            return false;
         }
 
         int next = Math.min(TIMER_CAP, timer + advanced);
-        ElementVialItem.setElement(stack, type, next);
+        ElementVialItem.setTimer(stack, next);
 
-        return next >= durations[0];
+        return next >= threshold;
     }
 
     // ---------------------------------------------------------------- 环境修正
@@ -136,20 +137,19 @@ public final class DecayEngine {
 
         if (type == ElementType.LIGHT) {
             if (brightness <= 3) {
-                return fast;   // 暗处加速
+                return fast;
             }
             if (brightness >= 12) {
-                return slow;   // 光下更稳
+                return slow;
             }
             return 1.0D;
         }
 
-        // 暗元素
         if (!EVConfig.darknessSpeedsShadow()) {
             return 1.0D;
         }
         if (brightness >= 12) {
-            return fast;       // 见光就散
+            return fast;
         }
         if (brightness <= 3) {
             return slow;
@@ -157,7 +157,7 @@ public final class DecayEngine {
         return 1.0D;
     }
 
-    /** 光暗在当前环境下是"在变快"还是"在变慢"，给 tooltip 与调试用。 */
+    /** 光暗在当前环境下是"在变快"还是"在变慢"，给调试用。 */
     public static String describeEnvironment(ElementType type, Level level, BlockPos pos) {
         double factor = environmentalFactor(type, level, pos);
         if (factor > 1.0D) {

@@ -9,6 +9,7 @@ import com.water2h2o.elementalverse.util.EVLang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -29,6 +31,12 @@ import net.minecraft.world.phys.HitResult;
  *
  * <p>「空元素瓶」和「水元素瓶」是**同一个物品**，靠 {@link EVDataComponents#ELEMENT} 区分。
  * 这样采集出来天然就是「装着东西的瓶子」，而加新元素只需要动枚举。
+ *
+ * <h2>图标怎么分</h2>
+ * 物品本身只有一个，图标靠 {@code custom_model_data} 组件 + 物品模型的 overrides 分发
+ * （见 {@code assets/elemental_verse/models/item/element_vial.json}）。
+ * 组件值 = {@link ElementType#modelIndex()}，0／缺失 = 空瓶。
+ * 这条链路不需要任何客户端代码。
  */
 public class ElementVialItem extends Item {
 
@@ -49,13 +57,26 @@ public class ElementVialItem extends Item {
         return timer == null ? 0 : timer;
     }
 
+    /**
+     * 只更新计时器。
+     *
+     * <p>刻意**不动** {@code custom_model_data}：每秒一次的计时推进如果连带改模型值，
+     * 会让客户端把物品当成"变了"，白白刷新一次同步与渲染。
+     */
+    public static void setTimer(ItemStack stack, int timer) {
+        stack.set(EVDataComponents.DECAY_TIMER.get(), timer);
+    }
+
+    /** 换形态：元素、计时器、模型序号一起写。只在真正变形时调用。 */
     public static void setElement(ItemStack stack, ElementType type, int timer) {
         if (type.isEmpty()) {
             stack.remove(EVDataComponents.ELEMENT.get());
             stack.remove(EVDataComponents.DECAY_TIMER.get());
+            stack.remove(DataComponents.CUSTOM_MODEL_DATA);
         } else {
             stack.set(EVDataComponents.ELEMENT.get(), type);
             stack.set(EVDataComponents.DECAY_TIMER.get(), timer);
+            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.modelIndex()));
         }
     }
 
@@ -82,39 +103,30 @@ public class ElementVialItem extends Item {
         return Component.translatable(EVLang.vial(type));
     }
 
+    /**
+     * 悬停提示。
+     *
+     * <p>**默认不显示任何关于元素的描述。** 设定里的信息应该靠"特殊的工具"去看，
+     * 而不是鼠标一放就全交代出来。目前只保留一个调试开关（精确剩余秒数，默认关）。
+     */
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
 
+        if (!EVConfig.showsExactSeconds()) {
+            return;
+        }
+
         ElementType type = getElement(stack);
-        if (type.isEmpty()) {
-            tooltip.add(Component.translatable(EVLang.TOOLTIP_EMPTY_VIAL).withStyle(ChatFormatting.GRAY));
-            return;
-        }
-
-        if (!EVConfig.isDecayEnabled()) {
-            tooltip.add(Component.translatable(EVLang.TOOLTIP_DEBUG_DISABLED).withStyle(ChatFormatting.DARK_GRAY));
-            return;
-        }
-
         if (!DecayEngine.decays(type)) {
-            tooltip.add(Component.translatable(EVLang.TOOLTIP_NO_DECAY).withStyle(ChatFormatting.DARK_GRAY));
             return;
         }
-
-        // 刻意只给一句模糊描述，不给数字 —— 玩家该能判断「该处理了」，但不该读得出秒表
-        DecayStage stage = DecayEngine.getStage(stack);
-        tooltip.add(Component.translatable(stage.descriptionKey()).withStyle(ChatFormatting.DARK_GRAY));
-
-        if (EVConfig.showsExactSeconds()) {
-            tooltip.add(Component.translatable(EVLang.TOOLTIP_EXACT_SECONDS,
-                    DecayEngine.getRemainingSeconds(stack)).withStyle(ChatFormatting.DARK_AQUA));
-        }
+        tooltip.add(Component.translatable(EVLang.TOOLTIP_EXACT_SECONDS,
+                DecayEngine.getRemainingSeconds(stack)).withStyle(ChatFormatting.DARK_AQUA));
     }
 
     // ------------------------------------------------------------ 采集
     // 阶段 01 只做一条最小链路：空瓶 → 水（或霜）。其余元素走创造物品栏。
-    // 完整的采集系统（风要在高处、光暗要专用容器……）留给后面的阶段。
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {

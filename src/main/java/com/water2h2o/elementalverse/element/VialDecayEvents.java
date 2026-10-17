@@ -73,7 +73,8 @@ public final class VialDecayEvents {
             return;
         }
 
-        ItemStack replacement = advance(stack, itemEntity.getCommandSenderWorld(), itemEntity.blockPosition(), interval);
+        ItemStack replacement = advance(stack, itemEntity.getCommandSenderWorld(),
+                itemEntity.blockPosition(), interval);
         if (replacement != null) {
             itemEntity.setItem(replacement);
         }
@@ -82,9 +83,17 @@ public final class VialDecayEvents {
     // ---------------------------------------------------------------- 换形态
 
     /**
-     * 推进一个堆叠。越过阈值就把它换成下一个形态。
+     * 推进一个堆叠，到点就换形态。
      *
-     * @return 换过之后的堆叠；不需要换就返回 null（调用方什么也不做）
+     * <h2>为什么要区分「就地改」和「替换」</h2>
+     * 「稳定元素 → 衍生元素」只换数据组件，**物品本身没变**。这时如果也返回一个
+     * 新的 {@link ItemStack} 让调用方替换，客户端会把整格物品当成换了个东西：
+     * 手持时会看到物品**反复"丢掉再捡起"的动画**。
+     *
+     * <p>所以：只换组件的情况**就地改**（返回 null），只有物品类型真的变了
+     * （衍生元素 → 死寂物质）才返回新堆叠。这是模组里处理"会变的物品"的常见做法。
+     *
+     * @return 需要替换成的新堆叠；已就地修改、或无需变化时返回 null
      */
     private static ItemStack advance(ItemStack stack, Level level, BlockPos pos, int elapsedTicks) {
         if (!DecayEngine.tickStack(stack, level, pos, elapsedTicks)) {
@@ -92,21 +101,22 @@ public final class VialDecayEvents {
         }
 
         ElementType current = ElementVialItem.getElement(stack);
-        if (current.isEmpty() || !DecayEngine.decays(current) || !DecayEngine.getStage(stack).canDecay()) {
+        if (current.isEmpty() || !DecayEngine.decays(current)) {
             return null;
         }
 
         ElementType next = current.stage1();
         int count = stack.getCount();
+        int timer = ElementVialItem.getTimer(stack);
 
         if (next == null) {
-            // 走到尽头：瓶子消失，原地留下一块死寂物质
+            // 走到尽头：瓶子消失，留下一块死寂物质（物品类型变了，只能替换）
             return new ItemStack(EVItems.DEAD_MATTER.get(), count);
         }
 
-        ItemStack replacement = ElementVialItem.createStack(next);
-        replacement.setCount(count);
-        return replacement;
+        // 只换组件：就地改，保留计时器（绝对口径，见 DecayEngine 注释）
+        ElementVialItem.setElement(stack, next, timer);
+        return null;
     }
 
     private VialDecayEvents() {

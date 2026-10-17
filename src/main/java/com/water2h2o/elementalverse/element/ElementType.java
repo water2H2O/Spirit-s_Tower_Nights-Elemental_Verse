@@ -42,8 +42,14 @@ public enum ElementType implements StringRepresentable {
     SHADOW("shadow", "shadow_essence", null, true),
 
     // ---- 十种衍生元素 ----
-    /** 水 → 冰，独占「延缓衰变（冷链）」。 */
-    ICE("ice", "frost", null, true),
+    /**
+     * 水 → 冰，独占「延缓衰变（冷链）」。
+     *
+     * <p>{@code stage1 == null} 表示**冰的下一个形态是死寂物质** ——
+     * 衍生元素一律如此（衰变链是 稳定 → 衍生 → 死寂物质）。
+     * 早先这里写成 {@code "frost"}，导致冰永远到不了死寂物质。
+     */
+    ICE("ice", null, null, true),
     /** 水元素的低温支线，阶段 01 只注册、不参与衰变。 */
     FROST("frost", null, null, false),
     /** 风 → 电，独占「瞬时爆发」。 */
@@ -129,11 +135,22 @@ public enum ElementType implements StringRepresentable {
         return DecayStage.DERIVED;
     }
 
-    private boolean isBaseElement() {
+    /** 是不是七种基础元素之一（衰变链的第一段）。 */
+    public boolean isBaseElement() {
         return switch (this) {
             case EARTH, WATER, WIND, FIRE, GRASS, LIGHT, SHADOW -> true;
             default -> false;
         };
+    }
+
+    /**
+     * 创造物品栏与模型分发用的序号。
+     *
+     * <p>{@code +1} 是为了给「空瓶」留出 0：0 对应基础模型，1..N 对应各元素。
+     * 这个值会写进 {@code custom_model_data} 组件，由物品模型的 overrides 读取。
+     */
+    public int modelIndex() {
+        return ordinal() + 1;
     }
 
     /** 「土元素瓶」里的「土元素」部分。 */
