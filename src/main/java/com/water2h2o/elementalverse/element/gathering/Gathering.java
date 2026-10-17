@@ -3,6 +3,7 @@ package com.water2h2o.elementalverse.element.gathering;
 import com.water2h2o.elementalverse.config.EVConfig;
 import com.water2h2o.elementalverse.element.ElementCarrier;
 import com.water2h2o.elementalverse.element.ElementType;
+import com.water2h2o.elementalverse.element.ElementStackMerger;
 import com.water2h2o.elementalverse.element.ElementVialItem;
 import com.water2h2o.elementalverse.util.EVLang;
 
@@ -224,21 +225,24 @@ public final class Gathering {
 
         stack.shrink(actual);
 
-        ItemStack first = null;
+        ItemStack intoHand = null;
         for (int i = 0; i < actual; i++) {
             ItemStack filled = ElementVialItem.createStack(type);
-            if (i == 0) {
-                first = filled;
-            } else if (!player.getInventory().add(filled)) {
+
+            // 手里那格刚好用完：第一瓶放回手上，玩家可以接着点
+            if (i == 0 && stack.isEmpty()) {
+                intoHand = filled;
+                continue;
+            }
+
+            // 其余走"并入同元素堆叠"（时间加权平均，上限 64）
+            if (!ElementStackMerger.add(player, filled)) {
                 player.drop(filled, false);
             }
         }
 
-        // 手里那格空了就把第一瓶放回手上，否则进背包
-        if (stack.isEmpty() && first != null) {
-            player.setItemInHand(hand, first);
-        } else if (first != null && !player.getInventory().add(first)) {
-            player.drop(first, false);
+        if (intoHand != null) {
+            player.setItemInHand(hand, intoHand);
         }
 
         if (blockEffect != null) {
