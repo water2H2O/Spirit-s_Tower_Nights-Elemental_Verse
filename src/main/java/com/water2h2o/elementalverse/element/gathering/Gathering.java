@@ -1,7 +1,5 @@
 package com.water2h2o.elementalverse.element.gathering;
 
-import java.util.Map;
-
 import com.water2h2o.elementalverse.config.EVConfig;
 import com.water2h2o.elementalverse.element.ElementCarrier;
 import com.water2h2o.elementalverse.element.ElementType;
@@ -9,7 +7,9 @@ import com.water2h2o.elementalverse.element.ElementVialItem;
 import com.water2h2o.elementalverse.util.EVLang;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -32,21 +32,16 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 采集系统的统一入口。
  *
- * <p>规则见 `docs/分阶段/03-采集系统.md`。要点：
- * <ul>
- *   <li>手持**空**容器右键目标 → 装进去；容器本身不消耗</li>
- *   <li>容器里已有东西 → **静默**（作者定：不刷屏）</li>
- *   <li>没有冷却、没有耐久、没有概率</li>
- *   <li>只有"条件不满足"才给提示（太暗/太亮/风进不来/风太弱）</li>
- * </ul>
+ * <h2>装填方式：按"水瓶模式"</h2>
+ * 一次右键**消耗手里一个空容器 → 得到一个装好的容器**。
+ * 产出 N 份的元素（岩浆 5、钻石矿 3）就消耗 N 个空容器；
+ * 手里不够就只装够的数量。
  *
- * <h2>为什么集中在一个类里</h2>
- * 七种元素的判定条件差别很大，但它们共享同一套"先取目标、再判定、再装填"的流程。
- * 拆成七个类反而让公共部分散开；这里按元素分私有方法，公共流程只有一份。
+ * <p>早先的实现直接对整格堆叠写数据组件，结果 16 个空瓶一次全装满 —— 这是个真 bug。
  */
 public final class Gathering {
 
-    /** 伸手距离。原版是 4.5 格，这里直接写死，避免依赖版本差异的 API。 */
+    /** 伸手距离。原版是 4.5 格。 */
     private static final double REACH = 4.5D;
 
     /** 岩浆采集的扣血（6 点 = 3 颗心）。 */
@@ -85,7 +80,6 @@ public final class Gathering {
                                                                      InteractionHand hand, ItemStack stack) {
         BlockHitResult hit = pick(level, player);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            // 没打到方块 → 试试"对空气采风"
             return gatherWind(level, player, hand, stack);
         }
 
@@ -94,53 +88,64 @@ public final class Gathering {
 
         // ① 岩浆：扣血、一次 5 份（作者定：不消耗容器，改成扣血）
         if (state.getFluidState().is(FluidTags.LAVA)) {
-            return give(level, player, hand, stack, ElementType.FIRE, LAVA_YIELD, () -> {
+            return give(level, player, hand, stack, ElementType.FIRE, LAVA_YIELD, null, () -> {
                 player.hurt(level.damageSources().lava(), LAVA_DAMAGE);
                 player.setRemainingFireTicks(60);
             });
         }
 
-        // ② 水：一次 1 份
+        // ② 水：1 份
         if (state.getFluidState().is(FluidTags.WATER)) {
-            return give(level, player, hand, stack, ElementType.WATER, 1, null);
+            return give(level, player, hand, stack, ElementType.WATER, 1, null, null);
         }
 
-        // ③ 营火：温度不够，只能得烬（作者定）
+        // ③ 营火：给烬；能采 5 次，之后熄灭（作者定）
         if (state.getBlock() instanceof CampfireBlock) {
-            return give(level, player, hand, stack, ElementType.EMBER, 1, null);
+            if (!BlockUses.canGather(state)) {
+                return InteractionResultHolder.pass(stack);
+            }
+            return give(level, player, hand, stack, ElementType.EMBER, 1,
+                    () -> BlockUses.consume(level, pos, state), null);
         }
 
         // ④ 火焰方块：不扣血，1 份，火被扑灭
         if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE)) {
             return give(level, player, hand, stack, ElementType.FIRE, 1,
-                    () -> level.removeBlock(pos, false));
+                    () -> level.removeBlock(pos, false), null);
         }
 
-        // ⑤ 冰类：1 份，并且方块越来越薄（蓝冰→浮冰→冰→消失）
-        int iceYield = IceReserve.yieldFor(state);
-        if (iceYield > 0) {
+        // ⑤ 冰类：1 份，方块越来越薄，并带破碎音效与粒子（作者定）
+        if (BlockUses.canGather(state) && BlockUses.kindOf(state) == BlockUses.Kind.ICE) {
             return give(level, player, hand, stack, ElementType.ICE, 1,
-                    () -> IceReserve.consume(level, pos, state));
+                    () -> BlockUses.consume(level, pos, state),
+                    () -> iceFeedback(level, pos));
         }
 
-        // ⑥ 矿物：按稀有度给 1~3 份（作者定：地从矿物取，不从石头取）
+        // ⑥ 矿物：按稀有度给 1~3 份（地从矿物取，不从石头取）
         int oreYield = OreYield.of(state);
         if (oreYield > 0) {
-            return give(level, player, hand, stack, ElementType.EARTH, oreYield, null);
+            return give(level, player, hand, stack, ElementType.EARTH, oreYield, null, null);
         }
 
         // ⑦ 草：草方块变泥土（草会自然蔓延回来 → 可再生）
         if (state.is(Blocks.GRASS_BLOCK)) {
             return give(level, player, hand, stack, ElementType.GRASS, 1,
-                    () -> level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState()));
+                    () -> level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState()), null);
         }
         if (state.is(Blocks.FERN) || state.is(Blocks.LARGE_FERN) || state.is(Blocks.TALL_GRASS)
                 || state.is(Blocks.SHORT_GRASS) || state.is(BlockTags.FLOWERS)) {
             return give(level, player, hand, stack, ElementType.GRASS, 1,
-                    () -> level.removeBlock(pos, false));
+                    () -> level.removeBlock(pos, false), null);
         }
 
-        // 打到了方块但什么都不产出 → 静默
+        // ⑧ 木：树苗 / 枯木 / 树叶（作者定 —— 注意**不含原木**，
+        //    否则任何一棵树都能无限刷木元素）
+        if (state.is(BlockTags.SAPLINGS) || state.is(BlockTags.LEAVES)
+                || state.is(Blocks.DEAD_BUSH)) {
+            return give(level, player, hand, stack, ElementType.WOOD, 1,
+                    () -> level.removeBlock(pos, false), null);
+        }
+
         return InteractionResultHolder.pass(stack);
     }
 
@@ -148,14 +153,15 @@ public final class Gathering {
     private static InteractionResultHolder<ItemStack> gatherWind(Level level, Player player,
                                                                  InteractionHand hand, ItemStack stack) {
         BlockPos pos = player.blockPosition();
-        if (!level.canSeeSky(pos.above())) {
+        boolean open = level.canSeeSky(pos.above());
+        if (!open) {
             return hint(level, player, stack, EVLang.MSG_NO_WIND);
         }
-        boolean storm = level.isThundering() && level.canSeeSky(pos.above());
+        boolean storm = level.isThundering();
         if (!storm && pos.getY() < EVConfig.getWindMinY()) {
             return hint(level, player, stack, EVLang.MSG_WEAK_WIND);
         }
-        return give(level, player, hand, stack, ElementType.WIND, 1, null);
+        return give(level, player, hand, stack, ElementType.WIND, 1, null, null);
     }
 
     // ---------------------------------------------------------------- 光 / 暗
@@ -169,7 +175,7 @@ public final class Gathering {
         if (!open || skyLight < EVConfig.getLightMinSky()) {
             return hint(level, player, stack, EVLang.MSG_NO_LIGHT);
         }
-        return give(level, player, hand, stack, ElementType.LIGHT, 1, null);
+        return give(level, player, hand, stack, ElementType.LIGHT, 1, null, null);
     }
 
     private static InteractionResultHolder<ItemStack> gatherShadow(Level level, Player player,
@@ -178,41 +184,69 @@ public final class Gathering {
         if (level.getMaxLocalRawBrightness(pos) > EVConfig.getShadowMaxBrightness()) {
             return hint(level, player, stack, EVLang.MSG_TOO_BRIGHT);
         }
-        return give(level, player, hand, stack, ElementType.SHADOW, 1, null);
+        return give(level, player, hand, stack, ElementType.SHADOW, 1, null, null);
     }
 
     // ---------------------------------------------------------------- 公共
 
-    /** 装填：成功则在服务端写数据组件、播音效；客户端只回成功。 */
+    /**
+     * 装填（**水瓶模式**）：消耗手里 N 个空容器，得到 N 个装好的容器。
+     *
+     * @param count      想装几份
+     * @param blockEffect 成功后对方块的副作用（降级/变泥土/灭火等），可为 null
+     * @param feedback   额外的音效/粒子（冰的破碎效果），可为 null
+     */
     private static InteractionResultHolder<ItemStack> give(Level level, Player player, InteractionHand hand,
                                                            ItemStack stack, ElementType type, int count,
-                                                           Runnable sideEffect) {
+                                                           Runnable blockEffect, Runnable feedback) {
         if (level.isClientSide()) {
             return InteractionResultHolder.success(stack);
         }
 
-        ElementVialItem.setElement(stack, type, 0);
-        if (count > 1) {
-            // 多份的情况：直接把数量记在瓶子的"份数"上暂时不支持，改成给多个容器太啰嗦，
-            // 这里用同一格堆叠多次装填解决不了，所以走"补满到 count"的语义
-            gatherExtra(player, type, count - 1);
+        // 手里有几个空容器，就最多装几份
+        int available = stack.getCount();
+        int actual = Math.min(count, available);
+        if (actual <= 0) {
+            return InteractionResultHolder.pass(stack);
         }
 
-        if (sideEffect != null) {
-            sideEffect.run();
+        stack.shrink(actual);
+
+        ItemStack first = null;
+        for (int i = 0; i < actual; i++) {
+            ItemStack filled = ElementVialItem.createStack(type);
+            if (i == 0) {
+                first = filled;
+            } else if (!player.getInventory().add(filled)) {
+                player.drop(filled, false);
+            }
+        }
+
+        // 手里那格空了就把第一瓶放回手上，否则进背包
+        if (stack.isEmpty() && first != null) {
+            player.setItemInHand(hand, first);
+        } else if (first != null && !player.getInventory().add(first)) {
+            player.drop(first, false);
+        }
+
+        if (blockEffect != null) {
+            blockEffect.run();
+        }
+        if (feedback != null) {
+            feedback.run();
         }
 
         level.playSound(null, player.blockPosition(), SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 0.6F, 1.2F);
-        return InteractionResultHolder.success(stack);
+        return InteractionResultHolder.success(player.getItemInHand(hand));
     }
 
-    /** 岩浆那种"一次给 5 份"：另外 4 个直接塞进背包。 */
-    private static void gatherExtra(Player player, ElementType type, int extra) {
-        for (int i = 0; i < extra; i++) {
-            ItemStack bonus = ElementVialItem.createStack(type);
-            if (!player.getInventory().add(bonus)) {
-                player.drop(bonus, false);
-            }
+    /** 冰的破碎音效 + 粒子。 */
+    private static void iceFeedback(Level level, BlockPos pos) {
+        level.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 0.7F, 1.4F);
+        if (level instanceof ServerLevel server) {
+            server.sendParticles(ParticleTypes.SNOWFLAKE,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    10, 0.35, 0.35, 0.35, 0.01);
         }
     }
 

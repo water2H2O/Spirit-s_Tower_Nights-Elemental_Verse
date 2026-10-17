@@ -46,7 +46,10 @@ public final class EVCreativeTabs {
                         output.accept(new ItemStack(EVItems.SHADOW_BOTTLE.get()));
                         acceptCarrier(output, ElementCarrier.SHADOW_BOTTLE);
 
-                        // ④ 便携容器
+                        // ④ 仓储方块（作者反馈：创造栏里找不到密封仓）
+                        output.accept(new ItemStack(EVItems.SEALED_VAULT.get()));
+
+                        // ⑤ 便携容器
                         output.accept(new ItemStack(EVItems.ELEMENT_POUCH.get()));
 
                         // ⑤ 衰变的终点
