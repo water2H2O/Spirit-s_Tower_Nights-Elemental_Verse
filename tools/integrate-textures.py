@@ -64,7 +64,7 @@ def run_tool(script: str) -> int:
 
 
 def main() -> int:
-    keep_art = "--keep-art" in sys.argv
+    fix_art = "--fix-art" in sys.argv
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) < 2:
         print(__doc__)
@@ -110,8 +110,8 @@ def main() -> int:
     print("④ 方块物品模型已指回方块模型")
 
     # ⑤ 元素瓶贴图：顶部留白 + 瓶塞
-    if keep_art:
-        print("⑤ 跳过贴图修正（--keep-art）")
+    if not fix_art:
+        print("⑤ 保留作者原稿贴图（需要留白+瓶塞时加 --fix-art）")
     elif run_tool("fix-item-icon-margin.py") != 0:
         print("贴图修正失败")
         return 1
