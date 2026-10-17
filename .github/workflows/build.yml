@@ -22,15 +22,32 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       # This is needed to be able to run ./gradlew below
-      # You can run `git update-index --chmod +x gradlew` then remove this step.
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      # 先老老实实跑，不加管道 —— 之前 `| tee` 吞掉退出码，把失败伪装成成功。
-      - name: Build with Gradle
-        run: ./gradlew build --stacktrace --console=plain
+      - name: Show toolchain
+        run: |
+          java -version
+          ./gradlew --version
 
-      # 构建成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
+      # 用 --no-configuration-cache：常见 CI 玄学失败的来源之一。
+      # 不加管道，避免退出码被吞。
+      - name: Build with Gradle
+        id: gradle_build
+        run: ./gradlew build --no-configuration-cache --console=plain --stacktrace
+
+      # 主构建失败时，只编译 Java 并把错误原样打出来 —— 用来区分
+      # 「代码编译不过」和「构建流程别的地方出问题」。
+      - name: Diagnose (compile only)
+        if: failure()
+        run: |
+          echo "=== 主构建失败了，单独跑 compileJava 看真实错误 ==="
+          ./gradlew compileJava --no-configuration-cache --console=plain 2>&1 || true
+          echo "=== build 目录 ==="
+          ls -la build 2>/dev/null || echo "(build 目录不存在)"
+          echo "=== 所有 jar ==="
+          find . -name '*.jar' -path '*/build/*' 2>/dev/null | head -20 || true
+
       - name: Upload mod jar
         if: success()
         uses: actions/upload-artifact@v4
