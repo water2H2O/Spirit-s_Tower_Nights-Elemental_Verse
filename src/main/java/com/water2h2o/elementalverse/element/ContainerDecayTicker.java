@@ -131,6 +131,14 @@ public final class ContainerDecayTicker {
         boolean touched = false;
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             ItemStack stack = container.getItem(slot);
+
+            // 容器里也可能放着小包 —— 包里的东西按小包自己的规则推进
+            if (stack.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
+                PouchDecay.tick(stack, level, pos, SWEEP_INTERVAL);
+                touched = true;
+                continue;
+            }
+
             if (!ElementCarrier.isCarrier(stack)) {
                 continue;
             }

@@ -1,6 +1,7 @@
 package com.water2h2o.elementalverse.registry;
 
 import com.water2h2o.elementalverse.element.ElementVialItem;
+import com.water2h2o.elementalverse.element.PouchItem;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -58,6 +59,15 @@ public final class EVItems {
     public static final DeferredItem<BlockItem> SEALED_VAULT = ITEMS.register(
             "sealed_vault",
             () -> new BlockItem(EVBlocks.SEALED_VAULT.get(), new Item.Properties()));
+
+    /**
+     * 元素小包：9 格便携容器，放霜/冰可以减缓内容物的变质。
+     *
+     * <p>作者 2026-10-17：把几种元素装在一起随身带，方便现场做东西。
+     */
+    public static final DeferredItem<PouchItem> ELEMENT_POUCH = ITEMS.register(
+            "element_pouch",
+            () -> new PouchItem(new Item.Properties().stacksTo(1)));
 
     public static void register(IEventBus modEventBus) {
         ITEMS.register(modEventBus);

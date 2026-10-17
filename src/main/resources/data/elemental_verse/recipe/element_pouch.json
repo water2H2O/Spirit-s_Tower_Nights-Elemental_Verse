@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "elemental_verse_pouch",
+  "pattern": [
+    "DDD",
+    "V V",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "elemental_verse:dead_dust"
+    },
+    "V": {
+      "item": "elemental_verse:element_vial"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:element_pouch",
+    "count": 1
+  }
+}

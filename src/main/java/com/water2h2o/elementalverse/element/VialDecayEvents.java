@@ -56,6 +56,13 @@ public final class VialDecayEvents {
 
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
+
+            // 元素小包：里面的东西用自己的冷却规则推进
+            if (stack.is(EVItems.ELEMENT_POUCH.get())) {
+                PouchDecay.tick(stack, level, pos, interval);
+                continue;
+            }
+
             if (!ElementCarrier.isCarrier(stack)) {
                 continue;
             }

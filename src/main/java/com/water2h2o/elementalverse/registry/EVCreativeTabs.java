@@ -46,7 +46,10 @@ public final class EVCreativeTabs {
                         output.accept(new ItemStack(EVItems.SHADOW_BOTTLE.get()));
                         acceptCarrier(output, ElementCarrier.SHADOW_BOTTLE);
 
-                        // ④ 衰变的终点
+                        // ④ 便携容器
+                        output.accept(new ItemStack(EVItems.ELEMENT_POUCH.get()));
+
+                        // ⑤ 衰变的终点
                         output.accept(new ItemStack(EVItems.DEAD_DUST.get()));
                         output.accept(new ItemStack(EVItems.DEAD_MATTER.get()));
                     })

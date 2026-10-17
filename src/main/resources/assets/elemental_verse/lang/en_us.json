@@ -58,5 +58,8 @@
   "elemental_verse.configuration.lightDarknessMultiplier": "Light/Shadow Environment Multiplier",
   "elemental_verse.configuration.darknessSpeedsShadow": "Shadow Decays Faster In Bright Light",
   "elemental_verse.configuration.showsExactSeconds": "Show Exact Seconds (debug)",
-  "block.elemental_verse.sealed_vault": "Sealed Stone Vault"
+  "block.elemental_verse.sealed_vault": "Sealed Stone Vault",
+  "item.elemental_verse.element_pouch": "Element Pouch",
+  "tooltip.elemental_verse.pouch_count": "%s item(s) inside",
+  "tooltip.elemental_verse.pouch_cooling": "Cooling %s"
 }

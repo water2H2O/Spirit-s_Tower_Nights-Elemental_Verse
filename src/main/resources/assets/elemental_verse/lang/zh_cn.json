@@ -58,5 +58,8 @@
   "elemental_verse.configuration.lightDarknessMultiplier": "光暗的明暗倍率",
   "elemental_verse.configuration.darknessSpeedsShadow": "暗在亮处加速",
   "elemental_verse.configuration.showsExactSeconds": "显示精确秒数（调试）",
-  "block.elemental_verse.sealed_vault": "石制密封仓"
+  "block.elemental_verse.sealed_vault": "石制密封仓",
+  "item.elemental_verse.element_pouch": "元素小包",
+  "tooltip.elemental_verse.pouch_count": "装有 %s 件",
+  "tooltip.elemental_verse.pouch_cooling": "冷却中 %s"
 }

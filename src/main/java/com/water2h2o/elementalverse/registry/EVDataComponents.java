@@ -3,9 +3,12 @@ package com.water2h2o.elementalverse.registry;
 import com.mojang.serialization.Codec;
 import com.water2h2o.elementalverse.element.ElementType;
 
+import java.util.List;
+
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -57,6 +60,25 @@ public final class EVDataComponents {
             DATA_COMPONENTS.registerComponentType(
                     "decay_timer",
                     builder -> builder.persistent(Codec.INT));
+
+    /** 小包内容的编解码器（持久化与网络共用）。**必须声明在使用它的字段之前**。 */
+    public static final Codec<List<ItemStack>> POUCH_CODEC = ItemStack.OPTIONAL_CODEC.listOf();
+
+    /**
+     * 元素小包里装的东西（9 格）。
+     *
+     * <p>**这个要同步**：不像计时器，小包的内容是玩家要看的（界面上就是那 9 格），
+     * 不同步的话客户端界面会一片空白。
+     *
+     * <p>用 {@code List<ItemStack>} 而不是原版的 `container` 组件，是为了保持
+     * **固定 9 格、位置有意义**（原版那个是"无序列表"，做成 3×3 界面会乱序）。
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<List<ItemStack>>> POUCH_CONTENTS =
+            DATA_COMPONENTS.registerComponentType(
+                    "pouch_contents",
+                    builder -> builder
+                            .persistent(POUCH_CODEC)
+                            .networkSynchronized(ByteBufCodecs.fromCodecWithRegistries(POUCH_CODEC)));
 
     public static void register(IEventBus modEventBus) {
         DATA_COMPONENTS.register(modEventBus);

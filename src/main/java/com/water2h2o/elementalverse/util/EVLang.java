@@ -18,6 +18,9 @@ public final class EVLang {
     public static final String ITEM_SHADOW_BOTTLE = "item.elemental_verse.shadow_bottle";
     public static final String ITEM_DEAD_DUST = "item.elemental_verse.dead_dust";
     public static final String BLOCK_DEAD_MATTER = "block.elemental_verse.dead_matter";
+    public static final String ITEM_POUCH = "item.elemental_verse.element_pouch";
+    public static final String TOOLTIP_POUCH_COUNT = "tooltip.elemental_verse.pouch_count";
+    public static final String TOOLTIP_POUCH_COOLING = "tooltip.elemental_verse.pouch_cooling";
 
     // tooltip
     public static final String TOOLTIP_EMPTY_VIAL = "tooltip.elemental_verse.empty_vial";

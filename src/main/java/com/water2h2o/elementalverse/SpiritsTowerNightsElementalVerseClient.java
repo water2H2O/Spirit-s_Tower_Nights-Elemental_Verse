@@ -1,5 +1,6 @@
 package com.water2h2o.elementalverse;
 
+import com.water2h2o.elementalverse.client.PouchScreen;
 import com.water2h2o.elementalverse.client.SealedVaultScreen;
 import com.water2h2o.elementalverse.registry.EVMenus;
 
@@ -35,6 +36,7 @@ public class SpiritsTowerNightsElementalVerseClient {
     @SubscribeEvent
     static void onRegisterScreens(RegisterMenuScreensEvent event) {
         event.register(EVMenus.SEALED_VAULT.get(), SealedVaultScreen::new);
+        event.register(EVMenus.POUCH.get(), PouchScreen::new);
     }
 
     static {

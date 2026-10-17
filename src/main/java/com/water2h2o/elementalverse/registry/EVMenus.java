@@ -1,5 +1,6 @@
 package com.water2h2o.elementalverse.registry;
 
+import com.water2h2o.elementalverse.menu.PouchMenu;
 import com.water2h2o.elementalverse.menu.SealedVaultMenu;
 
 import net.minecraft.core.registries.Registries;
@@ -20,6 +21,9 @@ public final class EVMenus {
             MENUS.register("sealed_vault",
                     () -> IMenuTypeExtension.create(SealedVaultMenu::new));
 
+    /** 元素小包界面。 */
+    public static final DeferredHolder<MenuType<?>, MenuType<PouchMenu>> POUCH =
+            MENUS.register("pouch", () -> IMenuTypeExtension.create(PouchMenu::new));
     public static void register(IEventBus modEventBus) {
         MENUS.register(modEventBus);
     }
