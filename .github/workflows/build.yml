@@ -31,14 +31,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build 2>&1 | tee build-log.txt
 
-      # 先把 build/libs 里到底有什么打出来 —— jar 名字跟预想不一样时能立刻看见。
+      # 先把 build/ 里到底有什么打出来 —— jar 名字跟预想不一样时能立刻看见。
       - name: List build outputs
         if: always()
         run: |
+          echo "=== build 顶层 ==="
+          ls -la build || true
+          echo "=== 所有 jar（任意深度）==="
+          find build -name '*.jar' -type f 2>/dev/null | head -50 || true
           echo "=== build/libs ==="
           ls -la build/libs || true
-          echo "=== build/ 顶层 ==="
-          ls -la build || true
 
       # 只在失败时上传，避免把日志当产物发出去。
       - name: Upload build log (on failure)
@@ -50,11 +52,13 @@ jobs:
           if-no-files-found: warn
 
       # 成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
-      # sources/javadoc 这类附件也一起带上（体积很小），主产物在 build/libs 根下。
+      # 用任意深度匹配：ModDevGradle 可能把产物放到 build/libs/<archivesName>/ 之类的位置。
       - name: Upload mod jar (on success)
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: elemental_verse-jar
-          path: build/libs/*.jar
-          if-no-files-found: error
+          path: |
+            build/libs/**/*.jar
+            build/libs/*.jar
+          if-no-files-found: warn
