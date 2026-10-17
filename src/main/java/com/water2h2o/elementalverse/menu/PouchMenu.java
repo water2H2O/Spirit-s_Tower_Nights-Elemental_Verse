@@ -27,6 +27,10 @@ public class PouchMenu extends AbstractContainerMenu {
     private static final int GRID_TOP = 17;
     private static final int CELL = 18;
 
+    /** 燃料格的位置：3×3 右侧的空白处（界面贴图里专门开的一个槽）。 */
+    private static final int FUEL_LEFT = 134;
+    private static final int FUEL_TOP = 17;
+
     private final ItemStack pouch;
     private final SimpleContainer container;
 
@@ -46,13 +50,21 @@ public class PouchMenu extends AbstractContainerMenu {
             this.container.setItem(i, stored.get(i));
         }
 
-        // 3×3 存储格
+        // 3×3 存放格
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 this.addSlot(new Slot(container, col + row * 3,
                         GRID_LEFT + col * CELL, GRID_TOP + row * CELL));
             }
         }
+
+        // 独立的燃料格（作者要求：像熔炉/酿造台那样单独一格）
+        this.addSlot(new Slot(container, PouchContents.FUEL_SLOT, FUEL_LEFT, FUEL_TOP) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return PouchContents.isCoolant(stack);
+            }
+        });
 
         // 玩家背包 3×9
         for (int row = 0; row < 3; row++) {
@@ -89,7 +101,7 @@ public class PouchMenu extends AbstractContainerMenu {
             if (!this.moveItemStackTo(inSlot, storageEnd, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
-        } else if (!this.moveItemStackTo(inSlot, 0, storageEnd, false)) {
+        } else if (!this.moveItemStackTo(inSlot, 0, PouchContents.STORAGE, false)) {
             return ItemStack.EMPTY;
         }
 

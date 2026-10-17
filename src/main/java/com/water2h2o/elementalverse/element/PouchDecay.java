@@ -27,13 +27,10 @@ public final class PouchDecay {
 
         double multiplier = PouchContents.coolingMultiplier(items);
 
-        for (int slot = 0; slot < items.size(); slot++) {
+        // 只有存放格会衰变；燃料格里的霜/冰是被"花掉"的燃料
+        for (int slot = 0; slot < PouchContents.STORAGE; slot++) {
             ItemStack inside = items.get(slot);
             if (inside.isEmpty() || !ElementCarrier.isCarrier(inside)) {
-                continue;
-            }
-            if (PouchContents.isCoolant(inside)) {
-                // 冷却剂不腐化：它是被"花掉"的
                 continue;
             }
 

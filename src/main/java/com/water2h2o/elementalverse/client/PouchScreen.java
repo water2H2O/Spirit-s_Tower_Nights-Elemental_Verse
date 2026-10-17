@@ -8,11 +8,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-/** 元素小包的界面：与密封仓共用发射器贴图（3×3 布局一致）。 */
+/**
+ * 元素小包的界面。
+ *
+ * <p>贴图是 `textures/gui/pouch.png` —— 由发射器底图拼出来的：
+ * 左边 3×3 存放格，右边一个**独立的燃料格**（作者要求像熔炉/酿造台那样单开一格）。
+ */
 public class PouchScreen extends AbstractContainerScreen<PouchMenu> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/gui/container/dispenser.png");
+            ResourceLocation.fromNamespaceAndPath("elemental_verse", "textures/gui/pouch.png");
 
     public PouchScreen(PouchMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);

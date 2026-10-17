@@ -9,22 +9,28 @@ import com.water2h2o.elementalverse.registry.EVDataComponents;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 元素小包的内容物逻辑（9 格 + 冷却剂）。
+ * 元素小包的内容物逻辑（9 格存放 + 1 格燃料）。
  *
  * <p>作者 2026-10-17 的设计：
  * <ul>
  *   <li>小包可以**存放多种元素材料**，方便随身带着做东西</li>
- *   <li>里面放着**霜**或**冰**时，可以**消耗它们来减缓其它东西的变质**
- *       —— 霜 ×0.8、冰 ×0.5</li>
+ *   <li>另有一个**独立的燃料格**（像熔炉/酿造台那样），只能放霜或冰；
+ *       放进去后会被消耗，换取其它内容物更慢的变质速度</li>
  * </ul>
  *
- * <p>冷却剂不占用独立槽位：**包里只要有霜/冰就自动生效**，优先消耗霜（便宜的先用），
- * 霜用完了才动冰。这样不需要额外的界面，3×3 就够。
+ * <p>系数：霜 ×0.8、冰 ×0.5（冰更好，同时有优先用冰的系数）。
+ * 消耗顺序反过来：**先耗霜、后耗冰**（便宜的先用）。
  */
 public final class PouchContents {
 
-    /** 容量。与密封仓、发射器同为 9 格。 */
-    public static final int SIZE = 9;
+    /** 存放格数。 */
+    public static final int STORAGE = 9;
+
+    /** 燃料格（第 10 格）。 */
+    public static final int FUEL_SLOT = STORAGE;
+
+    /** 总格数 = 9 存放 + 1 燃料。 */
+    public static final int SIZE = STORAGE + 1;
 
     /** 冷却剂的消耗间隔（tick）。60 秒消耗一个。 */
     public static final int COOLANT_BURN_TICKS = 1200;
@@ -32,7 +38,7 @@ public final class PouchContents {
     private PouchContents() {
     }
 
-    /** 读内容；没有组件就是空的（补齐到 9 格，保证位置稳定）。 */
+    /** 读内容；没有组件就是空的（补齐到 SIZE 格，保证位置稳定）。 */
     public static List<ItemStack> get(ItemStack pouch) {
         List<ItemStack> stored = pouch.get(EVDataComponents.POUCH_CONTENTS.get());
         List<ItemStack> out = new ArrayList<>(Collections.nCopies(SIZE, ItemStack.EMPTY));
@@ -54,77 +60,69 @@ public final class PouchContents {
         }
     }
 
-    /**
-     * 当前冷却系数：包里有没有霜/冰。
-     *
-     * @return 1.0 = 没有冷却剂；0.8 = 有霜；0.5 = 有冰（冰优先，取更好的那个）
-     */
-    public static double coolingMultiplier(List<ItemStack> items) {
-        boolean frost = false;
-        for (ItemStack stack : items) {
-            ElementType type = ElementVialItem.getElement(stack);
-            if (type == ElementType.ICE) {
-                return 0.5D;
-            }
-            if (type == ElementType.FROST) {
-                frost = true;
-            }
-        }
-        return frost ? 0.8D : 1.0D;
+    // ------------------------------------------------------------ 燃料格
+
+    /** 这一格是不是燃料格。 */
+    public static int fuelSlot() {
+        return FUEL_SLOT;
     }
 
     /**
-     * 消耗一个冷却剂：优先霜，其次冰。
+     * 当前冷却系数，只看**燃料格**。
+     *
+     * @return 1.0 = 没有冷却剂；0.8 = 霜；0.5 = 冰（同时有取更好的）
+     */
+    public static double coolingMultiplier(List<ItemStack> items) {
+        ItemStack fuel = items.get(FUEL_SLOT);
+        ElementType type = ElementVialItem.getElement(fuel);
+        if (type == ElementType.ICE) {
+            return 0.5D;
+        }
+        if (type == ElementType.FROST) {
+            return 0.8D;
+        }
+        return 1.0D;
+    }
+
+    /** 燃料格里还有多少个冷却剂。 */
+    public static int coolantCount(List<ItemStack> items) {
+        ItemStack fuel = items.get(FUEL_SLOT);
+        return isCoolant(fuel) ? fuel.getCount() : 0;
+    }
+
+    /**
+     * 消耗一个冷却剂：优先霜，其次冰。（同一格内两种不能混装，所以实际只动这一格）
      *
      * @return 真的消耗掉了返回 true
      */
     public static boolean consumeCoolant(List<ItemStack> items) {
-        for (int i = 0; i < items.size(); i++) {
-            if (ElementVialItem.getElement(items.get(i)) == ElementType.FROST) {
-                return shrink(items, i);
-            }
+        ItemStack fuel = items.get(FUEL_SLOT);
+        if (!isCoolant(fuel)) {
+            return false;
         }
-        for (int i = 0; i < items.size(); i++) {
-            if (ElementVialItem.getElement(items.get(i)) == ElementType.ICE) {
-                return shrink(items, i);
-            }
-        }
-        return false;
-    }
-
-    private static boolean shrink(List<ItemStack> items, int slot) {
-        ItemStack stack = items.get(slot);
-        stack.shrink(1);
-        if (stack.isEmpty()) {
-            items.set(slot, ItemStack.EMPTY);
+        fuel.shrink(1);
+        if (fuel.isEmpty()) {
+            items.set(FUEL_SLOT, ItemStack.EMPTY);
         }
         return true;
     }
 
-    /** 这个堆叠是不是在充当冷却剂（冷却剂本身不参与衰变，它已经被"花掉"了）。 */
+    /** 这个堆叠能不能当燃料（霜或冰的容器）。 */
     public static boolean isCoolant(ItemStack stack) {
         ElementType type = ElementVialItem.getElement(stack);
         return type == ElementType.FROST || type == ElementType.ICE;
     }
 
-    /** 里面还有多少个冷却剂（霜 + 冰）。 */
-    public static int coolantCount(List<ItemStack> items) {
-        int count = 0;
-        for (ItemStack stack : items) {
-            if (isCoolant(stack)) {
-                count += stack.getCount();
-            }
-        }
-        return count;
-    }
+    // ------------------------------------------------------------ 存放格
 
     /**
-     * 里面有没有**需要被保护的东西**（冷却剂以外、且会衰变的元素）。
+     * 存放格里有没有**需要被保护的东西**（会衰变的元素）。
      *
      * <p>用来避免"空包也在烧冷却剂"这种纯浪费：没东西可保就不消耗。
      */
     public static boolean hasProtectedContents(List<ItemStack> items) {
-        for (ItemStack stack : items) {
+        for (int i = 0; i < STORAGE; i++) {
+            ItemStack stack = items.get(i);
             if (stack.isEmpty() || isCoolant(stack)) {
                 continue;
             }
