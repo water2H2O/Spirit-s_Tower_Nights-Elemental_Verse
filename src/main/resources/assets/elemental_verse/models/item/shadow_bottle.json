@@ -5,13 +5,13 @@
       "predicate": {
         "custom_model_data": 8
       },
-      "model": "elemental_verse:item/element_vial_shadow"
+      "model": "elemental_verse:item/bottle_shadow"
     },
     {
       "predicate": {
         "custom_model_data": 18
       },
-      "model": "elemental_verse:item/element_vial_shadow_essence"
+      "model": "elemental_verse:item/bottle_shadow_essence"
     }
   ]
 }

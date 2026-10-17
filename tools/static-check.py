@@ -438,6 +438,13 @@ CARRIER_MODEL = {
     "SHADOW_BOTTLE": "shadow_bottle",
 }
 
+# 内容态模型的文件名前缀（作者补充素材定的命名：棱镜 prism_*、聚影瓶 bottle_*）
+CARRIER_MODEL_PREFIX = {
+    "ELEMENT_VIAL": "element_vial_",
+    "REFRACTION_PRISM": "prism_",
+    "SHADOW_BOTTLE": "bottle_",
+}
+
 
 def element_constants() -> list[tuple[str, str]]:
     """按源码顺序返回 [(枚举常量名, 元素 id)]。"""
@@ -485,8 +492,10 @@ def check_dispatch_models() -> None:
         if element_id == "empty":
             continue
         model_index = position + 1
-        carrier = CARRIER_MODEL.get(carriers.get(constant, "ELEMENT_VIAL"), "element_vial")
-        expected[carrier][model_index] = f"{NS}:item/element_vial_{element_id}"
+        carrier_key = carriers.get(constant, "ELEMENT_VIAL")
+        carrier = CARRIER_MODEL.get(carrier_key, "element_vial")
+        prefix = CARRIER_MODEL_PREFIX.get(carrier_key, "element_vial_")
+        expected[carrier][model_index] = f"{NS}:item/{prefix}{element_id}"
 
     for carrier, wanted in expected.items():
         path = os.path.join(ASSETS, "models", "item", f"{carrier}.json")

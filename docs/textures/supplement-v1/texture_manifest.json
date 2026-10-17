@@ -1,0 +1,144 @@
+{
+  "namespace": "elemental_verse",
+  "new_textures": 12,
+  "item_textures": 6,
+  "block_textures": 6,
+  "frame_size": [
+    16,
+    16
+  ],
+  "textures": [
+    {
+      "name": "dead_dust",
+      "label": "死寂尘",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/dead_dust.png",
+      "design": "浅灰色松散粉堆，周围少量断开的颗粒；比固体残片更浅、更碎"
+    },
+    {
+      "name": "prism_light",
+      "label": "折射棱镜 · 光",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/prism_light.png",
+      "design": "沿用原三角棱镜轮廓，浅金内容与象牙白光核"
+    },
+    {
+      "name": "prism_dawn",
+      "label": "折射棱镜 · 晨",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/prism_dawn.png",
+      "design": "沿用原三角棱镜轮廓，桃色日轮与灰粉霞层"
+    },
+    {
+      "name": "bottle_shadow",
+      "label": "聚影瓶 · 暗",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/bottle_shadow.png",
+      "design": "保留原紫晶瓶体；紫色雾团用连续大色块和单侧亮边表达悬浮"
+    },
+    {
+      "name": "bottle_shadow_essence",
+      "label": "聚影瓶 · 影",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/bottle_shadow_essence.png",
+      "design": "保留原紫晶瓶体；蓝灰凝影使用完整沉积面和浅弯边，收敛零碎高光"
+    },
+    {
+      "name": "element_pouch",
+      "label": "元素小包",
+      "kind": "item",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/item/element_pouch.png",
+      "design": "沿用原轮廓与配色，细化卷边袋口、暗部开口、受力褶皱、抽绳结与侧缝"
+    },
+    {
+      "name": "sealed_vault_side",
+      "label": "石制密封仓 · 侧面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/sealed_vault_side.png",
+      "design": "厚石盖倒角、压紧夹片、连续密封缝与侧面石质层次"
+    },
+    {
+      "name": "sealed_vault_top",
+      "label": "石制密封仓 · 顶面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/sealed_vault_top.png",
+      "design": "切角石盖、密封槽、三色压片和自然石质切面"
+    },
+    {
+      "name": "sealed_vault_front",
+      "label": "石制密封仓 · 正面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/sealed_vault_front.png",
+      "design": "凹入石板门、跨缝铅条、八角压印铅封与盖沿夹片"
+    },
+    {
+      "name": "rune_cabinet_side",
+      "label": "符文柜 · 侧面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/rune_cabinet_side.png",
+      "design": "分层深板岩嵌板、下沉线槽与铜质护角"
+    },
+    {
+      "name": "rune_cabinet_top",
+      "label": "符文柜 · 顶面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/rune_cabinet_top.png",
+      "design": "内凹石板顶、双层框边与四角铜卡扣"
+    },
+    {
+      "name": "rune_cabinet_front",
+      "label": "符文柜 · 正面",
+      "kind": "block",
+      "size": [
+        16,
+        16
+      ],
+      "texture": "assets/elemental_verse/textures/block/rune_cabinet_front.png",
+      "design": "有厚度的单扇柜门、双铰链、右侧锁扣与嵌入式符文环"
+    }
+  ]
+}

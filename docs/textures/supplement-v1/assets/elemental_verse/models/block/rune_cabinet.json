@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "elemental_verse:block/rune_cabinet_front",
+    "side": "elemental_verse:block/rune_cabinet_side",
+    "top": "elemental_verse:block/rune_cabinet_top",
+    "bottom": "elemental_verse:block/rune_cabinet_top"
+  }
+}

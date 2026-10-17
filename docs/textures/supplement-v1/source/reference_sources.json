@@ -1,0 +1,92 @@
+[
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\Unlicense\\末影接口\\assets\\enderio\\textures\\item\\death_pouch.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\block\\vault\\vault_front_small.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\block\\vault\\vault_side_small.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\机械动力-1.20.1-6.0.6版本-之后的版本贴图转为ARR\\assets\\create\\textures\\block\\vault\\vault_top_small.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\农夫乐事\\assets\\farmersdelight\\textures\\block\\spruce_cabinet_front.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  },
+  {
+    "source": "D:\\MCMOD\\贴图存放\\WahtImageThatYouCanUse\\MIT\\农夫乐事\\assets\\farmersdelight\\textures\\block\\spruce_cabinet_side.png",
+    "image_size": [
+      16,
+      16
+    ],
+    "displayed_box": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "frame_index": 0,
+    "animation": null
+  }
+]

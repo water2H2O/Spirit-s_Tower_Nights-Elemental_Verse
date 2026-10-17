@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=north": {
       "model": "elemental_verse:block/sealed_vault"
+    },
+    "facing=east": {
+      "model": "elemental_verse:block/sealed_vault",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "elemental_verse:block/sealed_vault",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "elemental_verse:block/sealed_vault",
+      "y": 270
     }
   }
 }

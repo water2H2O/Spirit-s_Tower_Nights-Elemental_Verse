@@ -5,13 +5,13 @@
       "predicate": {
         "custom_model_data": 7
       },
-      "model": "elemental_verse:item/element_vial_light"
+      "model": "elemental_verse:item/prism_light"
     },
     {
       "predicate": {
         "custom_model_data": 17
       },
-      "model": "elemental_verse:item/element_vial_dawn"
+      "model": "elemental_verse:item/prism_dawn"
     }
   ]
 }

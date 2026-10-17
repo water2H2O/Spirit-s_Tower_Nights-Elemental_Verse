@@ -3,15 +3,23 @@ package com.water2h2o.elementalverse.block;
 import com.mojang.serialization.MapCodec;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
@@ -19,18 +27,46 @@ import net.minecraft.world.phys.BlockHitResult;
  *
  * <p>定位是"主力仓储"——便宜、能盖一片，但要占地方。
  * 界面直接复用原版发射器的 3×3 布局与贴图（作者要求"和发射器一样"）。
+ *
+ * <p>带水平朝向（{@code facing}）：作者的方块模型是 {@code orientable}，
+ * 正面（密封盖）朝向玩家放置时的反方向。
  */
 public class SealedVaultBlock extends BaseEntityBlock {
 
     public static final MapCodec<SealedVaultBlock> CODEC = simpleCodec(SealedVaultBlock::new);
 
+    /** 水平朝向。 */
+    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+
     public SealedVaultBlock(Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        // 正面朝向玩家
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override

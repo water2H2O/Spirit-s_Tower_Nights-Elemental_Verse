@@ -1,0 +1,13 @@
+﻿中文名,类型,路径,尺寸,设计
+死寂尘,item,assets/elemental_verse/textures/item/dead_dust.png,16x16,浅灰色松散粉堆，周围少量断开的颗粒；比固体残片更浅、更碎
+折射棱镜 · 光,item,assets/elemental_verse/textures/item/prism_light.png,16x16,沿用原三角棱镜轮廓，浅金内容与象牙白光核
+折射棱镜 · 晨,item,assets/elemental_verse/textures/item/prism_dawn.png,16x16,沿用原三角棱镜轮廓，桃色日轮与灰粉霞层
+聚影瓶 · 暗,item,assets/elemental_verse/textures/item/bottle_shadow.png,16x16,保留原紫晶瓶体；紫色雾团用连续大色块和单侧亮边表达悬浮
+聚影瓶 · 影,item,assets/elemental_verse/textures/item/bottle_shadow_essence.png,16x16,保留原紫晶瓶体；蓝灰凝影使用完整沉积面和浅弯边，收敛零碎高光
+元素小包,item,assets/elemental_verse/textures/item/element_pouch.png,16x16,沿用原轮廓与配色，细化卷边袋口、暗部开口、受力褶皱、抽绳结与侧缝
+石制密封仓 · 侧面,block,assets/elemental_verse/textures/block/sealed_vault_side.png,16x16,厚石盖倒角、压紧夹片、连续密封缝与侧面石质层次
+石制密封仓 · 顶面,block,assets/elemental_verse/textures/block/sealed_vault_top.png,16x16,切角石盖、密封槽、三色压片和自然石质切面
+石制密封仓 · 正面,block,assets/elemental_verse/textures/block/sealed_vault_front.png,16x16,凹入石板门、跨缝铅条、八角压印铅封与盖沿夹片
+符文柜 · 侧面,block,assets/elemental_verse/textures/block/rune_cabinet_side.png,16x16,分层深板岩嵌板、下沉线槽与铜质护角
+符文柜 · 顶面,block,assets/elemental_verse/textures/block/rune_cabinet_top.png,16x16,内凹石板顶、双层框边与四角铜卡扣
+符文柜 · 正面,block,assets/elemental_verse/textures/block/rune_cabinet_front.png,16x16,有厚度的单扇柜门、双铰链、右侧锁扣与嵌入式符文环

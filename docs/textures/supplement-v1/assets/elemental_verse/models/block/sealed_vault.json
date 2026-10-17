@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "elemental_verse:block/sealed_vault_front",
+    "side": "elemental_verse:block/sealed_vault_side",
+    "top": "elemental_verse:block/sealed_vault_top",
+    "bottom": "elemental_verse:block/sealed_vault_top"
+  }
+}

@@ -41,6 +41,15 @@ CARRIER_BASE = {
     "shadow_bottle": f"{NS}:item/shadow_bottle",
 }
 
+# 载体 -> 内容态模型的文件名前缀。
+# 元素瓶是 element_vial_<id>，棱镜是 prism_<id>，聚影瓶是 bottle_<id>
+# （作者 2026-10-17 补充素材定的命名）。
+CARRIER_MODEL_PREFIX = {
+    "element_vial": "element_vial_",
+    "refraction_prism": "prism_",
+    "shadow_bottle": "bottle_",
+}
+
 # 与 ElementType.carrier() 保持一致
 CARRIER_OF = {
     "light": "refraction_prism",
@@ -84,14 +93,15 @@ def main() -> None:
 
         carrier = carrier_of(element_id)
         model_index = position + 1  # 与 ElementType.modelIndex() 保持一致
+        model_base = CARRIER_MODEL_PREFIX[carrier] + element_id
 
-        model_file = os.path.join(MODELS, f"element_vial_{element_id}.json")
+        model_file = os.path.join(MODELS, f"{model_base}.json")
         if not os.path.exists(model_file):
             missing.append(os.path.basename(model_file))
 
         overrides[carrier].append({
             "predicate": {"custom_model_data": model_index},
-            "model": f"{NS}:item/element_vial_{element_id}",
+            "model": f"{NS}:item/{model_base}",
         })
 
     if missing:

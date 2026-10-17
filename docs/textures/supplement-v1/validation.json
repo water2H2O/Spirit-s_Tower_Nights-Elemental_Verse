@@ -1,0 +1,183 @@
+{
+  "new_texture_count": 12,
+  "native_16x16": true,
+  "binary_alpha": true,
+  "block_faces_opaque": true,
+  "container_silhouettes_preserved": true,
+  "local_model_textures_resolve": true,
+  "charge_mask_pixel_count": 25,
+  "in_game_checked": false,
+  "files": [
+    {
+      "texture": "item/dead_dust",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 4,
+      "sha256": "20920c4affa97a0902b120dc0f81a5cbfcad5b8bb5e3298ebe913a4c468e8c11"
+    },
+    {
+      "texture": "item/prism_light",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 12,
+      "sha256": "f0f0d2d6330338a516c5b2405f05248d3d50957f406ffba1affa517b11012ba5"
+    },
+    {
+      "texture": "item/prism_dawn",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 13,
+      "sha256": "a8fa734f7f15e875528d0010bde604d02449ae9f50f2a2587357f5eeb451e407"
+    },
+    {
+      "texture": "item/bottle_shadow",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 17,
+      "sha256": "664b08a05b7d5b547f7d8066901d2174ef7f5ae999e5a4bc0ba8ea8ee6bda6da"
+    },
+    {
+      "texture": "item/bottle_shadow_essence",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 18,
+      "sha256": "44d32340d862401ee2b8ce33abdc23791900d82df8a3776784da87ff01eff291"
+    },
+    {
+      "texture": "item/element_pouch",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "colors": 14,
+      "sha256": "5fc82b0ae66a4b7396c9ba3f634d31005355e0381a70a95a8b3f1240b830478f"
+    },
+    {
+      "texture": "block/sealed_vault_side",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 9,
+      "sha256": "b7e74ed54723aa1ce92d825955db3b9d8dfbc21b2e636b7d954bd56ad64c8b4b"
+    },
+    {
+      "texture": "block/sealed_vault_top",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 9,
+      "sha256": "1c45e7b89e59f2399728be76f5c0929fbaedb5e353da93e1413d66c6bcf716fd"
+    },
+    {
+      "texture": "block/sealed_vault_front",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 9,
+      "sha256": "c0f3ea4153b301c27dbf4aababec7f4b0ede0f6c95c4756bc6787c5f1b4bdb17"
+    },
+    {
+      "texture": "block/rune_cabinet_side",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 8,
+      "sha256": "87e3a379a66b076c018963d565b9bc3357c47e84b72ee51aef81ee971410dc87"
+    },
+    {
+      "texture": "block/rune_cabinet_top",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 8,
+      "sha256": "d621ea801dee177a7d86e09e42c85f4b558efe4958240d2a2cbc9dd904f8af18"
+    },
+    {
+      "texture": "block/rune_cabinet_front",
+      "size": [
+        16,
+        16
+      ],
+      "alpha": [
+        255
+      ],
+      "colors": 10,
+      "sha256": "24efeab15ec92e8ba6c7b6ccfc1f7b18dd62f5b895d280cefba78caf873e21a1"
+    }
+  ],
+  "source_generator_roundtrip": true,
+  "editable_matrix_roundtrip": true,
+  "skill_sprite_verifier": true,
+  "blockstate_model_references_resolve": true,
+  "four_facing_model_rotations": true,
+  "visual_review": {
+    "overview": true,
+    "native_scale": true,
+    "container_states": true,
+    "projected_storage_cubes": true,
+    "charge_brightness_region": true,
+    "bottle_contents_before_after": true
+  },
+  "only_changed_textures": [
+    "bottle_shadow.png",
+    "bottle_shadow_essence.png"
+  ],
+  "other_10_textures_identical": true,
+  "empty_bottle_base_identical": true,
+  "bottle_silhouettes_preserved": true,
+  "all_pixels_outside_contents_region_match_empty_bottle": true
+}
