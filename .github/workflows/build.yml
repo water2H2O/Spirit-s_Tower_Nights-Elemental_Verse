@@ -42,14 +42,15 @@ jobs:
           echo "=== build/libs ==="
           ls -la build/libs || true
 
-      # 只在失败时上传，避免把日志当产物发出去。
-      - name: Upload build log (on failure)
-        if: failure()
+      # 日志总是上传（包括成功时）。原因：GitHub 的「下载任务日志」接口需要管理员权限，
+      # 而构建产物一旦失败就得能自证原因。日志体积很小，常开没负担。
+      - name: Upload build log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
           path: build-log.txt
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       # 成功时把 jar 发出来，方便不装环境直接丢进 mods 里试。
       # 用任意深度匹配：ModDevGradle 可能把产物放到 build/libs/<archivesName>/ 之类的位置。
