@@ -57,6 +57,17 @@ public final class EVCommands {
                                             return clash(context.getSource(), first, second);
                                         }))))
 
+                .then(Commands.literal("heat")
+                        .executes(context -> {
+                            double heat = com.water2h2o.elementalverse.heat.ChunkHeat.get(
+                                    context.getSource().getLevel(),
+                                    context.getSource().getPlayerOrException().blockPosition());
+                            context.getSource().sendSystemMessage(
+                                    net.minecraft.network.chat.Component.literal(
+                                            "当前区块余热：" + Math.round(heat * 10) / 10.0));
+                            return 1;
+                        }))
+
                 .then(Commands.literal("reactions")
                         .executes(context -> {
                             for (String line : ReactionManager.describeAll()) {

@@ -103,7 +103,11 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
 
         ItemStack elements = items.getItem(ACTIVE_ELEMENT_SLOT);
         if (elements.isEmpty() || !ElementCarrier.isCarrier(elements)) {
-            return ItemStack.EMPTY;
+            // 相邻容器加成：紧挨着密封仓/符文柜时，可以直接用里面的元素
+            elements = neighbourElements();
+            if (elements.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
         }
         ElementType element = ElementVialItem.getElement(elements);
         if (element.isEmpty()) {
@@ -185,6 +189,36 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
 
         plate.shrink(1);
         elements.shrink(Math.min(cost, elements.getCount()));
+    }
+
+    /**
+     * 读相邻容器的元素（上下左右，不含对角）。
+     *
+     * <p>作者的原意是"列出最多 9 种让玩家挑 3 种"，但界面选择要一整套 UI。
+     * 当前版本先做**自动取第一种可用元素**：功能上等价于"从仓库直接施法"，
+     * 等界面做好再升级成手动挑选。
+     */
+    private ItemStack neighbourElements() {
+        if (level == null) {
+            return ItemStack.EMPTY;
+        }
+        for (net.minecraft.core.Direction direction : net.minecraft.core.Direction.values()) {
+            if (direction.getAxis().isVertical()) {
+                continue;
+            }
+            var neighbour = level.getBlockEntity(worldPosition.relative(direction));
+            if (!(neighbour instanceof net.minecraft.world.Container container)) {
+                continue;
+            }
+            for (int i = 0; i < container.getContainerSize(); i++) {
+                ItemStack stack = container.getItem(i);
+                if (!stack.isEmpty() && ElementCarrier.isCarrier(stack)
+                        && !ElementVialItem.getElement(stack).isEmpty()) {
+                    return stack;
+                }
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     // ---------------------------------------------------------------- Container
