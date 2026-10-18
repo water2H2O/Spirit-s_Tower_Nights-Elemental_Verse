@@ -1,0 +1,36 @@
+{
+  "texture": "elemental_verse:block/ritual_altar_top",
+  "canvas": [
+    16,
+    16
+  ],
+  "coordinates": "zero-based top-face [x,y], north/rear at y=0",
+  "declaration_recess_xywh": [
+    5,
+    4,
+    6,
+    7
+  ],
+  "element_pits_xywh": [
+    [
+      2,
+      2,
+      3,
+      3
+    ],
+    [
+      11,
+      2,
+      3,
+      3
+    ],
+    [
+      6,
+      12,
+      3,
+      3
+    ]
+  ],
+  "orientation": "前方对应顶面 y=15；三个元素口为后侧左、后侧右、前侧中。",
+  "note": "这是像素视觉分区；实际交互/命中区域由模组代码决定。"
+}

@@ -86,6 +86,38 @@ public final class ElementStackMerger {
         }
     }
 
+    /**
+     * 一次性整理玩家背包里"同元素、不同剩余时间"的堆叠。
+     *
+     * <p>**只在关闭我们自己的界面时调用**，不做每秒扫描 ——
+     * 之前做过每秒扫描，结果玩家故意分开的瓶子会被粘回去。
+     * 而"从 GUI 里拿出来合并不了"是另一个问题：每叠剩余时间不同，
+     * 原版就认为它们不是同一种物品（组件不同），永远不会自动合并。
+     */
+    public static void mergeAll(Player player) {
+        Inventory inventory = player.getInventory();
+        for (int target = 0; target < inventory.getContainerSize(); target++) {
+            ItemStack into = inventory.getItem(target);
+            if (into.isEmpty() || !ElementCarrier.isCarrier(into)
+                    || into.getCount() >= into.getMaxStackSize()) {
+                continue;
+            }
+            ElementType type = ElementVialItem.getElement(into);
+            for (int source = target + 1; source < inventory.getContainerSize(); source++) {
+                ItemStack from = inventory.getItem(source);
+                if (from.isEmpty() || from.getItem() != into.getItem()
+                        || ElementVialItem.getElement(from) != type) {
+                    continue;
+                }
+                mergeInto(into, from);
+                if (from.isEmpty()) {
+                    inventory.setItem(source, ItemStack.EMPTY);
+                }
+            }
+        }
+        inventory.setChanged();
+    }
+
     /** 供外部（容器、掉落物）复用的加权平均计算。 */
     public static int averageTimer(List<ItemStack> stacks) {
         long weighted = 0L;

@@ -94,6 +94,14 @@ public class RitualAltarMenu extends AbstractContainerMenu {
     }
 
     @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide()) {
+            com.water2h2o.elementalverse.element.ElementStackMerger.mergeAll(player);
+        }
+    }
+
+    @Override
     public boolean stillValid(Player player) {
         return altar != null && altar.stillValid(player);
     }

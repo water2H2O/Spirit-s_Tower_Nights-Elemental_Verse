@@ -126,6 +126,9 @@ public class PouchMenu extends AbstractContainerMenu {
         }
         PouchContents.set(pouch, items);
 
+        // 关界面时把背包里同元素、不同剩余时间的堆叠并一次
+        com.water2h2o.elementalverse.element.ElementStackMerger.mergeAll(player);
+
         // 收口的声音（作者要求：大多数行为都给音效）
         player.level().playSound(null, player.blockPosition(),
                 net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value(),

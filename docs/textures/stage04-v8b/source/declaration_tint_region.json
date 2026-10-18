@@ -1,0 +1,83 @@
+{
+  "texture": "elemental_verse:item/declaration_plate_written",
+  "canvas": [
+    16,
+    16
+  ],
+  "coordinates": "zero-based [x,y], origin at top left",
+  "rectangle_xywh": [
+    6,
+    6,
+    4,
+    4
+  ],
+  "pixels": [
+    [
+      6,
+      6
+    ],
+    [
+      7,
+      6
+    ],
+    [
+      8,
+      6
+    ],
+    [
+      9,
+      6
+    ],
+    [
+      6,
+      7
+    ],
+    [
+      7,
+      7
+    ],
+    [
+      8,
+      7
+    ],
+    [
+      9,
+      7
+    ],
+    [
+      6,
+      8
+    ],
+    [
+      7,
+      8
+    ],
+    [
+      8,
+      8
+    ],
+    [
+      9,
+      8
+    ],
+    [
+      6,
+      9
+    ],
+    [
+      7,
+      9
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      9,
+      9
+    ]
+  ],
+  "mask": "masks/declaration_plate_tint.png",
+  "operation": "multiply each RGB channel by the selected element color; preserve alpha",
+  "note": "只染此区域；直接对整张物品模型染色会把石板本身也染色。如使用分层物品模型，将掩膜区域拆成独立 layer 再设置 tintindex。未生成版本相关模型。"
+}
