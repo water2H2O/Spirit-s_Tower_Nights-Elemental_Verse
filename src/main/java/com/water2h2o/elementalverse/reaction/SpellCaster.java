@@ -83,20 +83,50 @@ public final class SpellCaster {
 
         Optional<Reaction> matched = ReactionManager.match(input);
         if (matched.isPresent()) {
-            apply(level, player, matched.get().phenomenon(), params, declaration.form());
+            apply(level, player, matched.get().phenomenon(), params, declaration.form(), null);
         } else {
             applyFallback(level, player, input, params);
         }
 
         // 4) 表现：必须让人一眼看出"放了"
-        playCastFeedback(level, player, input);
+        playCastFeedback(level, player, input, null);
+        return true;
+    }
+
+    /**
+     * 由**武器**触发：目标已经确定（打中的那个实体），不再做射线。
+     *
+     * @return 真的放出来了返回 true
+     */
+    public static boolean castAtEntity(Level level, Player player,
+                                       com.water2h2o.elementalverse.element.Declaration declaration,
+                                       Entity target) {
+        int needed = declaration.investCount();
+        if (countVials(player, declaration.element()) < needed) {
+            player.displayClientMessage(
+                    Component.translatable(EVLang.MSG_NOT_ENOUGH,
+                            declaration.element().displayName()), true);
+            return false;
+        }
+        consumeVials(player, declaration.element(), needed);
+
+        ElementValue input = declaration.inputValue();
+        SpellParams params = SpellParams.of(declaration);
+        var hit = new EntityHitResult(target);
+
+        var matched = ReactionManager.match(input);
+        if (matched.isPresent()) {
+            apply(level, player, matched.get().phenomenon(), params,
+                    declaration.form(), hit);
+        }
+        playCastFeedback(level, player, input, hit);
         return true;
     }
 
     // ---------------------------------------------------------------- 现象
 
     private static void apply(Level level, Player player, Phenomenon phenomenon, SpellParams params,
-                              String form) {
+                              String form, HitResult providedHit) {
         // 自生：现象直接落在施法者自己身上（不射线）
         if ("self".equals(form)) {
             HitResult selfHit = new EntityHitResult(player);
@@ -104,7 +134,8 @@ public final class SpellCaster {
             return;
         }
         // 触摸：射线命中。弹射物形态还没做，先按触摸跑
-        dispatch(level, player, phenomenon, params, player.pick(RANGE, 1.0F, false));
+        dispatch(level, player, phenomenon, params, providedHit != null
+                ? providedHit : player.pick(RANGE, 1.0F, false));
     }
 
     private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
@@ -277,7 +308,8 @@ public final class SpellCaster {
      *   <li>在目标处播放与元素匹配的声音（不是每级都同一个音）</li>
      * </ol>
      */
-    private static void playCastFeedback(Level level, Player player, ElementValue input) {
+    private static void playCastFeedback(Level level, Player player, ElementValue input,
+                                        HitResult providedHit) {
         var axis = input.dominant();
         int color = switch (axis == null ? ElementAxis.FIRE : axis) {
             case FIRE -> 0xFF6A00;
@@ -288,7 +320,7 @@ public final class SpellCaster {
             case LIGHT -> 0xFFE066;
         };
 
-        var hit = player.pick(RANGE, 1.0F, false);
+        var hit = providedHit != null ? providedHit : player.pick(RANGE, 1.0F, false);
         var target = hit.getType() == HitResult.Type.MISS
                 ? player.getEyePosition().add(player.getViewVector(1.0F).scale(RANGE))
                 : hit.getLocation();

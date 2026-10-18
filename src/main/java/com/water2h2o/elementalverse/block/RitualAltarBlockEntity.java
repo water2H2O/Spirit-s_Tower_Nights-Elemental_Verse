@@ -41,7 +41,11 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     public static final int SLOT_ELEMENT_C = 2;
     public static final int SLOT_PLATE = 3;
     public static final int SLOT_OUTPUT = 4;
-    public static final int SIZE = 5;
+
+    /** 工具槽：把剑放这里，就能把已写好的申明"刻"上去。 */
+    public static final int SLOT_TOOL = 5;
+
+    public static final int SIZE = 6;
 
     /** 第 2、3 口本期不参与计算。 */
     public static final int ACTIVE_ELEMENT_SLOT = SLOT_ELEMENT_A;
@@ -84,9 +88,17 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         if (plate.isEmpty() || !plate.is(EVItems.DECLARATION_PLATE.get())) {
             return ItemStack.EMPTY;
         }
-        // 已经是写好的板子 → 不能再写一遍
+        // 已经写好的板子 + 工具槽里有剑 → 把申明刻到剑上（锻造模板式升级）
         if (DeclarationPlateItem.getDeclaration(plate).isDefined()) {
-            return ItemStack.EMPTY;
+            ItemStack tool = items.getItem(SLOT_TOOL);
+            if (tool.isEmpty() || !tool.is(net.minecraft.tags.ItemTags.SWORDS)) {
+                return ItemStack.EMPTY;
+            }
+            ItemStack enchanted = tool.copy();
+            enchanted.setCount(1);
+            enchanted.set(com.water2h2o.elementalverse.registry.EVDataComponents.DECLARATION.get(),
+                    DeclarationPlateItem.getDeclaration(plate));
+            return enchanted;
         }
 
         ItemStack elements = items.getItem(ACTIVE_ELEMENT_SLOT);
@@ -149,6 +161,14 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         ItemStack plate = items.getItem(SLOT_PLATE);
         ItemStack elements = items.getItem(ACTIVE_ELEMENT_SLOT);
         if (plate.isEmpty() || elements.isEmpty()) {
+            return;
+        }
+
+        // 刻到工具上的情况：消耗的是申明板本身（像锻造模板）
+        if (DeclarationPlateItem.getDeclaration(plate).isDefined()) {
+            if (!items.getItem(SLOT_TOOL).isEmpty()) {
+                plate.shrink(1);
+            }
             return;
         }
 
@@ -226,6 +246,7 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             case SLOT_ELEMENT_A, SLOT_ELEMENT_B, SLOT_ELEMENT_C -> ElementCarrier.isCarrier(stack)
                     && !ElementVialItem.getElement(stack).isEmpty();
             case SLOT_PLATE -> stack.is(EVItems.DECLARATION_PLATE.get());
+            case SLOT_TOOL -> stack.is(net.minecraft.tags.ItemTags.SWORDS);
             default -> false;
         };
     }

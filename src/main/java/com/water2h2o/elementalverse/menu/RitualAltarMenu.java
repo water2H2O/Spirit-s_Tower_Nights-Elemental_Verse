@@ -71,6 +71,9 @@ public class RitualAltarMenu extends AbstractContainerMenu {
             }
             // 申明板
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_PLATE, GRID_LEFT, GRID_TOP + CELL));
+            // 工具槽（剑）：放在申明板和产出中间
+            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_TOOL,
+                    GRID_LEFT + CELL, GRID_TOP + CELL));
             // 产出：只能拿，不能放
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_OUTPUT,
                     GRID_LEFT + 2 * CELL, GRID_TOP + CELL) {
@@ -115,7 +118,7 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         ItemStack copy = stack.copy();
 
-        int machineSlots = altar == null ? 0 : 5;
+        int machineSlots = altar == null ? 0 : RitualAltarBlockEntity.SIZE;
         if (index < machineSlots) {
             if (!this.moveItemStackTo(stack, machineSlots, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
