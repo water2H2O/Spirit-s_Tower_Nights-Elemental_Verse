@@ -2,13 +2,13 @@
   "name": "反胃",
   "consume": {
     "wind": 1,
-    "shadow": 1
+    "light": -1
   },
   "phenomenon": {
     "type": "effect:confusion",
     "element": "wind",
     "amount": 1.0,
     "duration": 160,
-    "cost": 1.0
+    "cost": 2
   }
 }

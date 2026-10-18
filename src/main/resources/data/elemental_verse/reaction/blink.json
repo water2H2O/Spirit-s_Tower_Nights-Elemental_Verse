@@ -1,0 +1,14 @@
+{
+  "name": "闪现",
+  "consume": {
+    "wind": 1,
+    "light": 1
+  },
+  "phenomenon": {
+    "type": "blink",
+    "element": "wind",
+    "amount": 1.0,
+    "duration": 20,
+    "cost": 2
+  }
+}

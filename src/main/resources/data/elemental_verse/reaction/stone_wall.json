@@ -1,0 +1,13 @@
+{
+  "name": "岩壁",
+  "consume": {
+    "earth": 2
+  },
+  "phenomenon": {
+    "type": "place_stone",
+    "element": "earth",
+    "amount": 1.0,
+    "duration": 20,
+    "cost": 2
+  }
+}

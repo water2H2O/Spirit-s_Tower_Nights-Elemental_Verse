@@ -1,0 +1,14 @@
+{
+  "name": "暴风雪",
+  "consume": {
+    "water": 1,
+    "wind": 1
+  },
+  "phenomenon": {
+    "type": "effect:slowness",
+    "element": "water",
+    "amount": 1.0,
+    "duration": 160,
+    "cost": 2
+  }
+}

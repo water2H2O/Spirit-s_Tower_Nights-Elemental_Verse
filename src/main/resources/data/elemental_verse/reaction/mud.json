@@ -1,0 +1,14 @@
+{
+  "name": "泥泞",
+  "consume": {
+    "water": 1,
+    "earth": 1
+  },
+  "phenomenon": {
+    "type": "effect:slowness",
+    "element": "water",
+    "amount": 1.0,
+    "duration": 120,
+    "cost": 2
+  }
+}

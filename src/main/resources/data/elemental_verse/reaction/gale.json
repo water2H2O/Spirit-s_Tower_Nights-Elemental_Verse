@@ -1,0 +1,13 @@
+{
+  "name": "疾风",
+  "consume": {
+    "wind": 2
+  },
+  "phenomenon": {
+    "type": "push",
+    "element": "wind",
+    "amount": 2.0,
+    "duration": 20,
+    "cost": 2
+  }
+}

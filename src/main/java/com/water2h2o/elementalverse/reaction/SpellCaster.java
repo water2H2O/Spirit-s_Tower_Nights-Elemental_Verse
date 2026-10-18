@@ -123,7 +123,7 @@ public final class SpellCaster {
             case "lava" -> lava(level, hit, params);
             case "fire_resistance" -> fireResistance(player, params);
             case "chaos" -> chaos(level, player, hit, params);
-            default -> applyNamedEffect(level, player, phenomenon, params);
+            default -> applyPrimitive(level, player, hit, phenomenon, params);
         }
     }
 
@@ -145,6 +145,129 @@ public final class SpellCaster {
                         && center.distSqr(spot) <= (double) radius * radius + 0.5D) {
                     level.setBlockAndUpdate(spot, BaseFireBlock.getState(level, spot));
                 }
+            }
+        }
+    }
+
+    /**
+     * 通用原语：现象类型直接写原语名。
+     *
+     * <p>这样加一条反应基本只需要写 JSON —— 只有"全新机制"才需要在这里加分支。
+     */
+    private static void applyPrimitive(Level level, Player player, HitResult hit,
+                                       Phenomenon phenomenon, SpellParams params) {
+        String type = phenomenon.type();
+        BlockPos center = hit instanceof BlockHitResult blockHit
+                ? blockHit.getBlockPos().relative(blockHit.getDirection())
+                : player.blockPosition();
+        int radius = Math.max(1, (int) Math.round(params.radius()));
+        int ticks = Math.max(20, params.durationTicks());
+
+        switch (type) {
+            case "area_fire" -> {
+                for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
+                        center.offset(radius, 1, radius))) {
+                    BlockPos spot = pos.immutable();
+                    if (level.getBlockState(spot).isAir()
+                            && center.distSqr(spot) <= (double) radius * radius + 0.5D) {
+                        level.setBlockAndUpdate(spot, BaseFireBlock.getState(level, spot));
+                    }
+                }
+            }
+            case "smolder" -> {
+                // 阴燃：不着明火，但目标持续受伤
+                if (hit instanceof EntityHitResult entityHit
+                        && entityHit.getEntity() instanceof LivingEntity living) {
+                    living.hurt(level.damageSources().magic(),
+                            (float) (phenomenon.amount() * params.intensity()));
+                    living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.WITHER,
+                            (int) Math.round(ticks * 0.5D), 0));
+                }
+            }
+            case "place_stone" -> fillSphere(level, center, radius, Blocks.STONE.defaultBlockState());
+            case "place_grass" -> fillSphere(level, center, radius, Blocks.GRASS_BLOCK.defaultBlockState());
+            case "grow" -> {
+                for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
+                        center.offset(radius, 1, radius))) {
+                    BlockPos spot = pos.immutable();
+                    if (level.getBlockState(spot).isAir()
+                            && level.getBlockState(spot.below()).is(Blocks.GRASS_BLOCK)) {
+                        level.setBlockAndUpdate(spot, Blocks.SHORT_GRASS.defaultBlockState());
+                    }
+                }
+            }
+            case "push" -> {
+                if (level instanceof ServerLevel server) {
+                    for (Entity entity : server.getEntitiesOfClass(Entity.class,
+                            new net.minecraft.world.phys.AABB(center).inflate(radius))) {
+                        if (entity == player) {
+                            continue;
+                        }
+                        var dir = entity.position().subtract(player.position()).normalize();
+                        entity.push(dir.x * params.intensity(), 0.35D, dir.z * params.intensity());
+                    }
+                }
+            }
+            case "blink" -> {
+                var look = player.getViewVector(1.0F).normalize()
+                        .scale(4.0D + params.radius());
+                player.teleportTo(player.getX() + look.x, player.getY(), player.getZ() + look.z);
+                player.resetFallDistance();
+            }
+            case "cleanse" -> {
+                player.getActiveEffects().stream()
+                        .filter(effect -> !effect.getEffect().value().isBeneficial())
+                        .map(effect -> effect.getEffect())
+                        .toList()
+                        .forEach(player::removeEffect);
+                player.heal((float) (2.0D * params.intensity()));
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.GLOWING, ticks, 0));
+            }
+            case "lock_inventory" -> {
+                if (hit instanceof EntityHitResult entityHit
+                        && entityHit.getEntity() instanceof Player target) {
+                    for (int i = 0; i < target.getInventory().getContainerSize(); i++) {
+                        ItemStack stack = target.getInventory().getItem(i);
+                        if (!stack.isEmpty()) {
+                            target.getCooldowns().addCooldown(stack.getItem(), ticks);
+                        }
+                    }
+                    target.hurt(level.damageSources().magic(), (float) params.intensity());
+                }
+            }
+            case "freeze" -> {
+                if (hit instanceof EntityHitResult entityHit
+                        && entityHit.getEntity() instanceof LivingEntity living) {
+                    living.setTicksFrozen(living.getTicksRequiredToFreeze() + ticks);
+                    living.hurt(level.damageSources().freeze(), (float) params.intensity());
+                }
+            }
+            case "annihilate" -> {
+                // 光 + 暗：正负抵消，什么都不发生，但很脏（余热以后接）
+                level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK,
+                        SoundSource.PLAYERS, 0.8F, 0.6F);
+            }
+            case "extend_effects" -> {
+                player.getActiveEffects().forEach(effect ->
+                        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                effect.getEffect(),
+                                effect.getDuration() * 2,
+                                Math.min(3, effect.getAmplifier() + 1))));
+            }
+            default -> applyNamedEffect(level, player, phenomenon, params);
+        }
+    }
+
+    private static void fillSphere(Level level, BlockPos center, int radius,
+                                   net.minecraft.world.level.block.state.BlockState state) {
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -radius, -radius),
+                center.offset(radius, radius, radius))) {
+            BlockPos spot = pos.immutable();
+            if (center.distSqr(spot) <= (double) radius * radius + 0.5D
+                    && (level.getBlockState(spot).isAir() || level.getBlockState(spot).canBeReplaced())) {
+                level.setBlockAndUpdate(spot, state);
             }
         }
     }

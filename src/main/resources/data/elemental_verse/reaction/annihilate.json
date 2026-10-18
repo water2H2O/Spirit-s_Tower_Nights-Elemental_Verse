@@ -1,0 +1,11 @@
+{
+  "name": "湮灭",
+  "consume": {},
+  "phenomenon": {
+    "type": "annihilate",
+    "element": "light",
+    "amount": 1.0,
+    "duration": 20,
+    "cost": 0.0
+  }
+}

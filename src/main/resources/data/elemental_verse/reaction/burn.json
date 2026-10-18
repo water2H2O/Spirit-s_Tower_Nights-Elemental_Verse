@@ -8,7 +8,7 @@
     "element": "fire",
     "amount": 2.0,
     "duration": 60,
-    "cost": 2.0
+    "cost": 2
   },
   "name": "燃烧"
 }

@@ -1,0 +1,14 @@
+{
+  "name": "易伤",
+  "consume": {
+    "earth": 1,
+    "light": -1
+  },
+  "phenomenon": {
+    "type": "effect:weakness",
+    "element": "earth",
+    "amount": 1.0,
+    "duration": 200,
+    "cost": 2
+  }
+}

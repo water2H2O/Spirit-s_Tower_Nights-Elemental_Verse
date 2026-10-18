@@ -1,0 +1,14 @@
+{
+  "name": "冰冻",
+  "consume": {
+    "water": 1,
+    "light": -1
+  },
+  "phenomenon": {
+    "type": "freeze",
+    "element": "water",
+    "amount": 2.0,
+    "duration": 80,
+    "cost": 2
+  }
+}

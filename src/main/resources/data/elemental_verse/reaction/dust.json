@@ -1,0 +1,14 @@
+{
+  "name": "沙尘",
+  "consume": {
+    "earth": 1,
+    "wind": 1
+  },
+  "phenomenon": {
+    "type": "effect:blindness",
+    "element": "earth",
+    "amount": 1.0,
+    "duration": 100,
+    "cost": 2
+  }
+}

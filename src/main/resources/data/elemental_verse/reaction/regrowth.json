@@ -1,0 +1,13 @@
+{
+  "name": "再生",
+  "consume": {
+    "grass": 2
+  },
+  "phenomenon": {
+    "type": "extend_effects",
+    "element": "grass",
+    "amount": 1.0,
+    "duration": 100,
+    "cost": 2
+  }
+}

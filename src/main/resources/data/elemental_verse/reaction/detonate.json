@@ -1,0 +1,14 @@
+{
+  "name": "爆燃",
+  "consume": {
+    "fire": 1,
+    "wind": 1
+  },
+  "phenomenon": {
+    "type": "area_fire",
+    "element": "fire",
+    "amount": 2.0,
+    "duration": 60,
+    "cost": 2
+  }
+}

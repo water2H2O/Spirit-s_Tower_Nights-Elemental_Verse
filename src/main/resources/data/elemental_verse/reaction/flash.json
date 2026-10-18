@@ -1,0 +1,13 @@
+{
+  "name": "强光",
+  "consume": {
+    "light": 2
+  },
+  "phenomenon": {
+    "type": "effect:blindness",
+    "element": "light",
+    "amount": 2.0,
+    "duration": 120,
+    "cost": 2
+  }
+}

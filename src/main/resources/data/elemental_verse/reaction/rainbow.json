@@ -1,0 +1,14 @@
+{
+  "name": "彩虹",
+  "consume": {
+    "water": 1,
+    "light": 1
+  },
+  "phenomenon": {
+    "type": "cleanse",
+    "element": "light",
+    "amount": 2.0,
+    "duration": 100,
+    "cost": 2
+  }
+}

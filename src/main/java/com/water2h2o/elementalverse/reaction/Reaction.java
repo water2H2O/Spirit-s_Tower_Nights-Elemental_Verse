@@ -39,8 +39,19 @@ public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue
      * 只是强度不同。**一条配方覆盖一整类组合**，这是数量不爆炸的关键。
      */
     public boolean accepts(ElementValue input) {
+        // 空要求 = 只匹配"净归零"的输入（光 + 暗 = 湮灭就靠这条）
+        if (consume.asMap().isEmpty()) {
+            return input.isZero();
+        }
         for (var entry : consume.asMap().entrySet()) {
-            if (input.get(entry.getKey()) + ElementValue.EPSILON < entry.getValue()) {
+            double required = entry.getValue();
+            double actual = input.get(entry.getKey());
+            // 负要求表示"必须带这么多负分量"（例如暗 = 光 -1）
+            if (required >= 0) {
+                if (actual + ElementValue.EPSILON < required) {
+                    return false;
+                }
+            } else if (actual > required + ElementValue.EPSILON) {
                 return false;
             }
         }

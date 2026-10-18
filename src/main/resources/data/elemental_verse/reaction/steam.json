@@ -8,7 +8,7 @@
     "element": "water",
     "amount": 2.0,
     "duration": 20,
-    "cost": 1.5
+    "cost": 2
   },
   "name": "蒸汽"
 }

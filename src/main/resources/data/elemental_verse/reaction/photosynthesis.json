@@ -1,0 +1,14 @@
+{
+  "name": "光合",
+  "consume": {
+    "grass": 1,
+    "light": 1
+  },
+  "phenomenon": {
+    "type": "effect:regeneration",
+    "element": "grass",
+    "amount": 1.0,
+    "duration": 160,
+    "cost": 2
+  }
+}

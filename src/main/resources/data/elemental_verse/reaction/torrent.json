@@ -1,0 +1,13 @@
+{
+  "name": "洪流",
+  "consume": {
+    "water": 2
+  },
+  "phenomenon": {
+    "type": "lock_inventory",
+    "element": "water",
+    "amount": 2.0,
+    "duration": 100,
+    "cost": 2
+  }
+}

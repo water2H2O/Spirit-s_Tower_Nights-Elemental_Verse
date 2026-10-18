@@ -1,0 +1,14 @@
+{
+  "name": "沃土",
+  "consume": {
+    "earth": 1,
+    "grass": 1
+  },
+  "phenomenon": {
+    "type": "place_grass",
+    "element": "grass",
+    "amount": 1.0,
+    "duration": 60,
+    "cost": 2
+  }
+}

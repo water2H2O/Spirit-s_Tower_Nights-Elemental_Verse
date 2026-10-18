@@ -1,0 +1,14 @@
+{
+  "name": "孢子",
+  "consume": {
+    "wind": 1,
+    "grass": 1
+  },
+  "phenomenon": {
+    "type": "grow",
+    "element": "grass",
+    "amount": 1.0,
+    "duration": 120,
+    "cost": 2
+  }
+}
