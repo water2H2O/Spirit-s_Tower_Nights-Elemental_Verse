@@ -122,11 +122,8 @@ public final class SpellCaster {
             case "steam" -> steam(level, hit, params);
             case "lava" -> lava(level, hit, params);
             case "fire_resistance" -> fireResistance(player, params);
-            default -> {
-                // 未实现的现象类型：至少给个反馈，别让玩家以为卡住了
-                level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
-                        SoundSource.PLAYERS, 0.5F, 1.6F);
-            }
+            case "chaos" -> chaos(level, player, hit, params);
+            default -> applyNamedEffect(level, player, phenomenon, params);
         }
     }
 
@@ -150,6 +147,51 @@ public final class SpellCaster {
                 }
             }
         }
+    }
+
+    /**
+     * 通用状态：现象类型写成 {@code effect:<原版效果id>}。
+     *
+     * <p>这样加一条"抗性提升"只要写 JSON，不用改 Java。
+     */
+    private static void applyNamedEffect(Level level, Player player, Phenomenon phenomenon,
+                                         SpellParams params) {
+        String type = phenomenon.type();
+        if (!type.startsWith("effect:")) {
+            level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
+                    SoundSource.PLAYERS, 0.5F, 1.6F);
+            return;
+        }
+        var id = net.minecraft.resources.ResourceLocation.tryParse(type.substring("effect:".length()));
+        if (id == null) {
+            return;
+        }
+        var holder = net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getHolder(id);
+        if (holder.isEmpty()) {
+            return;
+        }
+        int ticks = Math.max(20, (int) Math.round(params.durationTicks() * params.intensity()));
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(holder.get(), ticks, 0));
+    }
+
+    /** 暗渊：随机给几个负面状态 + 固定黑暗（目前落在施法者身上，等弹射物形态再改成命中目标）。 */
+    private static void chaos(Level level, Player player, HitResult hit, SpellParams params) {
+        var pool = java.util.List.of(
+                net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
+                net.minecraft.world.effect.MobEffects.WEAKNESS,
+                net.minecraft.world.effect.MobEffects.DIG_SLOWDOWN,
+                net.minecraft.world.effect.MobEffects.CONFUSION,
+                net.minecraft.world.effect.MobEffects.POISON);
+        var random = level.getRandom();
+        var picked = new java.util.ArrayList<>(pool);
+        java.util.Collections.shuffle(picked, new java.util.Random(random.nextLong()));
+        int count = Math.min(5, picked.size());
+        int ticks = Math.max(20, params.durationTicks());
+        for (int i = 0; i < count; i++) {
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(picked.get(i), ticks, 0));
+        }
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.DARKNESS, ticks, 0));
     }
 
     /** 蒸汽：小而烫的伤害 + 击退。 */

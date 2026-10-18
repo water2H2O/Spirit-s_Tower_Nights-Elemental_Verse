@@ -1,0 +1,13 @@
+{
+  "name": "暗渊",
+  "consume": {
+    "shadow": 2
+  },
+  "phenomenon": {
+    "type": "chaos",
+    "element": "light",
+    "amount": 1.0,
+    "duration": 120,
+    "cost": 2.0
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "抗性提升",
+  "consume": {
+    "earth": 1,
+    "light": 1
+  },
+  "phenomenon": {
+    "type": "effect:resistance",
+    "element": "light",
+    "amount": 1.0,
+    "duration": 200,
+    "cost": 1.0
+  }
+}

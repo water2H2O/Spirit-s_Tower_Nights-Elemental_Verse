@@ -1,0 +1,14 @@
+{
+  "name": "凋零",
+  "consume": {
+    "grass": 1,
+    "shadow": 1
+  },
+  "phenomenon": {
+    "type": "effect:wither",
+    "element": "grass",
+    "amount": 1.0,
+    "duration": 100,
+    "cost": 1.0
+  }
+}
