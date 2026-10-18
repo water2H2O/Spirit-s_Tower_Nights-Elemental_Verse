@@ -66,7 +66,7 @@ public class DeclarationPlateItem extends Item {
     public static ItemStack written(ElementType element, int tier, ElementType stateElement, int stateTier,
                                     ElementType reagentElement, int reagentTier, String magic) {
         ItemStack stack = new ItemStack(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get());
-        setDeclaration(stack, new Declaration(element, tier, "release", "projectile",
+        setDeclaration(stack, new Declaration(element, tier, "release", "touch",
                 stateElement == null ? ElementType.EMPTY : stateElement, stateTier,
                 reagentElement == null ? ElementType.EMPTY : reagentElement, reagentTier,
                 magic == null ? "" : magic));

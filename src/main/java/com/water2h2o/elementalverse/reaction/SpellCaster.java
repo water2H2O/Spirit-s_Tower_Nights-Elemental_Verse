@@ -82,7 +82,7 @@ public final class SpellCaster {
 
         Optional<Reaction> matched = ReactionManager.match(input);
         if (matched.isPresent()) {
-            apply(level, player, matched.get().phenomenon(), params);
+            apply(level, player, matched.get().phenomenon(), params, declaration.form());
         } else {
             applyFallback(level, player, input, params);
         }
@@ -100,8 +100,20 @@ public final class SpellCaster {
 
     // ---------------------------------------------------------------- 现象
 
-    private static void apply(Level level, Player player, Phenomenon phenomenon, SpellParams params) {
-        HitResult hit = player.pick(RANGE, 1.0F, false);
+    private static void apply(Level level, Player player, Phenomenon phenomenon, SpellParams params,
+                              String form) {
+        // 自生：现象直接落在施法者自己身上（不射线）
+        if ("self".equals(form)) {
+            HitResult selfHit = new EntityHitResult(player);
+            dispatch(level, player, phenomenon, params, selfHit);
+            return;
+        }
+        // 触摸：射线命中。弹射物形态还没做，先按触摸跑
+        dispatch(level, player, phenomenon, params, player.pick(RANGE, 1.0F, false));
+    }
+
+    private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
+                                 HitResult hit) {
 
         switch (phenomenon.type()) {
             case "ignite" -> ignite(level, hit, phenomenon, params);
@@ -236,18 +248,29 @@ public final class SpellCaster {
         int total = 0;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
-            if (!ElementCarrier.isCarrier(stack)) {
+
+            // 元素小包：里面的元素也算（作者反馈：施法读不到小包）
+            if (stack.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
+                for (ItemStack inside : com.water2h2o.elementalverse.element.PouchContents.get(stack)) {
+                    if (!inside.isEmpty() && ElementVialItem.getElement(inside) == element) {
+                        total += inside.getCount();
+                    }
+                }
                 continue;
             }
-            if (ElementVialItem.getElement(stack) == element) {
-                total += stack.getCount();
+
+            if (!ElementCarrier.isCarrier(stack) || ElementVialItem.getElement(stack) != element) {
+                continue;
             }
+            total += stack.getCount();
         }
         return total;
     }
 
     private static void consumeVials(Player player, ElementType element, int needed) {
         int left = needed;
+
+        // 先扣背包里的
         for (int slot = 0; slot < player.getInventory().getContainerSize() && left > 0; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (!ElementCarrier.isCarrier(stack) || ElementVialItem.getElement(stack) != element) {
@@ -257,6 +280,30 @@ public final class SpellCaster {
             stack.shrink(take);
             left -= take;
         }
+
+        // 不够再从小包里扣
+        for (int slot = 0; slot < player.getInventory().getContainerSize() && left > 0; slot++) {
+            ItemStack pouch = player.getInventory().getItem(slot);
+            if (!pouch.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
+                continue;
+            }
+            var inside = com.water2h2o.elementalverse.element.PouchContents.get(pouch);
+            boolean changed = false;
+            for (int i = 0; i < com.water2h2o.elementalverse.element.PouchContents.STORAGE && left > 0; i++) {
+                ItemStack item = inside.get(i);
+                if (item.isEmpty() || ElementVialItem.getElement(item) != element) {
+                    continue;
+                }
+                int take = Math.min(left, item.getCount());
+                item.shrink(take);
+                left -= take;
+                changed = true;
+            }
+            if (changed) {
+                com.water2h2o.elementalverse.element.PouchContents.set(pouch, inside);
+            }
+        }
+
         player.getInventory().setChanged();
     }
 
