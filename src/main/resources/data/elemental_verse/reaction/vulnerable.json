@@ -5,7 +5,7 @@
     "light": -1
   },
   "phenomenon": {
-    "type": "effect:weakness",
+    "type": "effect:elemental_verse:vulnerable",
     "element": "earth",
     "amount": 1.0,
     "duration": 200,

@@ -80,5 +80,6 @@
   "tooltip.elemental_verse.plate.operation": "Form: release / projectile",
   "message.elemental_verse.not_enough": "Not enough %s",
   "tooltip.elemental_verse.plate.state": "State: %s - tier %s",
-  "item.elemental_verse.magic": "%s Declaration"
+  "item.elemental_verse.magic": "%s Declaration",
+  "effect.elemental_verse.vulnerable": "Vulnerable"
 }

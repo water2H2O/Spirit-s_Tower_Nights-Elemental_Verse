@@ -3,6 +3,7 @@ package com.water2h2o.elementalverse.reaction;
 import java.util.Optional;
 
 import com.water2h2o.elementalverse.element.Declaration;
+import com.water2h2o.elementalverse.element.ElementAxis;
 import com.water2h2o.elementalverse.element.ElementCarrier;
 import com.water2h2o.elementalverse.element.ElementType;
 import com.water2h2o.elementalverse.element.ElementValue;
@@ -87,14 +88,8 @@ public final class SpellCaster {
             applyFallback(level, player, input, params);
         }
 
-        // 4) 表现
-        level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
-                SoundSource.PLAYERS, 0.7F, 1.2F);
-        if (level instanceof ServerLevel server) {
-            server.sendParticles(ParticleTypes.ENCHANT,
-                    player.getX(), player.getY() + 1.0, player.getZ(),
-                    12, 0.4, 0.6, 0.4, 0.05);
-        }
+        // 4) 表现：必须让人一眼看出"放了"
+        playCastFeedback(level, player, input);
         return true;
     }
 
@@ -270,6 +265,72 @@ public final class SpellCaster {
                 level.setBlockAndUpdate(spot, state);
             }
         }
+    }
+
+    /**
+     * 施法反馈。
+     *
+     * <p>作者反馈："很多时候看不出来有没有施法"。所以这里做三件事：
+     * <ol>
+     *   <li>沿"玩家 → 目标"的连线撒一条粒子，让人看见法术飞出去</li>
+     *   <li>颜色按主成分轴区分（火橙、水蓝、草绿…）</li>
+     *   <li>在目标处播放与元素匹配的声音（不是每级都同一个音）</li>
+     * </ol>
+     */
+    private static void playCastFeedback(Level level, Player player, ElementValue input) {
+        var axis = input.dominant();
+        int color = switch (axis == null ? ElementAxis.FIRE : axis) {
+            case FIRE -> 0xFF6A00;
+            case WATER -> 0x3FA9F5;
+            case GRASS -> 0x4CD137;
+            case EARTH -> 0x9B7653;
+            case WIND -> 0xD9F0FF;
+            case LIGHT -> 0xFFE066;
+        };
+
+        var hit = player.pick(RANGE, 1.0F, false);
+        var target = hit.getType() == HitResult.Type.MISS
+                ? player.getEyePosition().add(player.getViewVector(1.0F).scale(RANGE))
+                : hit.getLocation();
+
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+
+        // 连线粒子：从手到目标
+        var start = player.getEyePosition().add(player.getViewVector(1.0F).scale(0.6D));
+        for (int step = 0; step <= 12; step++) {
+            double t = step / 12.0D;
+            double x = start.x + (target.x - start.x) * t;
+            double y = start.y + (target.y - start.y) * t;
+            double z = start.z + (target.z - start.z) * t;
+            server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(
+                            new org.joml.Vector3f(((color >> 16) & 0xFF) / 255.0F,
+                                    ((color >> 8) & 0xFF) / 255.0F,
+                                    (color & 0xFF) / 255.0F), 1.2F),
+                    x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+
+        // 目标处的爆发
+        server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(
+                        new org.joml.Vector3f(((color >> 16) & 0xFF) / 255.0F,
+                                ((color >> 8) & 0xFF) / 255.0F,
+                                (color & 0xFF) / 255.0F), 1.6F),
+                target.x, target.y, target.z, 18, 0.35D, 0.35D, 0.35D, 0.02D);
+
+        // 元素对应的声音
+        var sound = switch (axis == null ? ElementAxis.FIRE : axis) {
+            case FIRE -> SoundEvents.BLAZE_SHOOT;
+            case WATER -> SoundEvents.BUCKET_EMPTY;
+            case GRASS -> SoundEvents.GRASS_BREAK;
+            case EARTH -> SoundEvents.STONE_PLACE;
+            case WIND -> SoundEvents.PHANTOM_FLAP;
+            case LIGHT -> SoundEvents.AMETHYST_BLOCK_CHIME;
+        };
+        level.playSound(null, target.x, target.y, target.z, sound, SoundSource.PLAYERS, 0.8F, 1.1F);
+        // 再补一声"施法"底噪，保证任何时候都有明确反馈
+        level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
+                SoundSource.PLAYERS, 0.45F, 1.4F);
     }
 
     /**
