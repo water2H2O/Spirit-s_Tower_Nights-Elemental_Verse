@@ -272,22 +272,22 @@ public enum ElementType implements StringRepresentable {
         VALUES.put("frost", ElementValue.of(java.util.Map.of(
                 ElementAxis.WATER, 1.0, ElementAxis.FIRE, -0.5)));
         VALUES.put("ice", ElementValue.of(java.util.Map.of(
-                ElementAxis.WATER, 1.0, ElementAxis.FIRE, -1.0)));
+                ElementAxis.WATER, 1.5, ElementAxis.FIRE, -1.0)));   // 强度 2.5，主成分=水
         VALUES.put("sand", ElementValue.of(java.util.Map.of(
                 ElementAxis.EARTH, 1.0, ElementAxis.WATER, -0.5)));
         VALUES.put("lightning", ElementValue.of(java.util.Map.of(
-                ElementAxis.WIND, 1.0, ElementAxis.LIGHT, 0.5)));
+                ElementAxis.WIND, 1.5, ElementAxis.LIGHT, 0.5)));    // 强度 2.0
         VALUES.put("ember", ElementValue.of(java.util.Map.of(
                 ElementAxis.FIRE, 1.0, ElementAxis.LIGHT, -0.5)));
         VALUES.put("bud", ElementValue.of(java.util.Map.of(
                 ElementAxis.GRASS, 1.0, ElementAxis.WATER, 0.5)));
         VALUES.put("wood", ElementValue.of(ElementAxis.GRASS, 2));
         VALUES.put("dawn", ElementValue.of(java.util.Map.of(
-                ElementAxis.LIGHT, 1.0, ElementAxis.FIRE, 0.5)));
+                ElementAxis.LIGHT, 1.5, ElementAxis.FIRE, 0.5)));    // 强度 2.0
         VALUES.put("shadow_essence", ElementValue.of(java.util.Map.of(
-                ElementAxis.LIGHT, -1.0, ElementAxis.GRASS, -0.5)));
+                ElementAxis.LIGHT, -1.5, ElementAxis.GRASS, -0.5))); // 强度 2.0
         VALUES.put("metal", ElementValue.of(java.util.Map.of(
-                ElementAxis.EARTH, 2.0, ElementAxis.FIRE, 1.0)));
+                ElementAxis.EARTH, 2.0, ElementAxis.FIRE, 0.5)));    // 强度 2.5（原 3.0 过高）
     }
 
     /** 这种元素的元素值（空元素返回零向量）。 */
