@@ -29,6 +29,10 @@ public final class EVMenus {
             MENUS.register("ritual_altar",
                     () -> IMenuTypeExtension.create(com.water2h2o.elementalverse.menu.RitualAltarMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.water2h2o.elementalverse.menu.RuneCabinetMenu>> RUNE_CABINET =
+            MENUS.register("rune_cabinet",
+                    () -> IMenuTypeExtension.create(com.water2h2o.elementalverse.menu.RuneCabinetMenu::new));
+
     public static void register(IEventBus modEventBus) {
         MENUS.register(modEventBus);
     }

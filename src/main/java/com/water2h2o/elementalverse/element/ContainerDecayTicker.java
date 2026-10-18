@@ -128,6 +128,12 @@ public final class ContainerDecayTicker {
     private static void tickContainer(ServerLevel level, BlockPos pos, Container container, BlockEntity be) {
         double multiplier = be instanceof SealedVaultBlockEntity vault ? vault.decayMultiplier() : 1.0D;
 
+        // 符文柜通电时完全不衰变
+        if (container instanceof com.water2h2o.elementalverse.block.RuneCabinetBlockEntity cabinet
+                && cabinet.isCharged()) {
+            return;
+        }
+
         boolean touched = false;
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             ItemStack stack = container.getItem(slot);

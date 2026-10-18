@@ -72,6 +72,10 @@ public final class EVItems {
                             new Item.Properties().stacksTo(16)));
 
     /** 仪式台的方块物品（没有它，方块放不下来也拿不到）。 */
+    public static final DeferredItem<BlockItem> RUNE_CABINET = ITEMS.register(
+            "rune_cabinet",
+            () -> new BlockItem(EVBlocks.RUNE_CABINET.get(), new Item.Properties()));
+
     public static final DeferredItem<BlockItem> RITUAL_ALTAR = ITEMS.register(
             "ritual_altar",
             () -> new BlockItem(EVBlocks.RITUAL_ALTAR.get(), new Item.Properties()));

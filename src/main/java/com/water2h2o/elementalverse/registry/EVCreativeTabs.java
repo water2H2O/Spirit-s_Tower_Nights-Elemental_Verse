@@ -52,6 +52,7 @@ public final class EVCreativeTabs {
 
                         // ④ 仓储方块（作者反馈：创造栏里找不到密封仓）
                         output.accept(new ItemStack(EVItems.SEALED_VAULT.get()));
+                        output.accept(new ItemStack(EVItems.RUNE_CABINET.get()));
 
                         // ⑤ 便携容器
                         output.accept(new ItemStack(EVItems.ELEMENT_POUCH.get()));

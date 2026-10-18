@@ -39,6 +39,8 @@ public class SpiritsTowerNightsElementalVerseClient {
     static void onRegisterScreens(RegisterMenuScreensEvent event) {
         event.register(EVMenus.SEALED_VAULT.get(), SealedVaultScreen::new);
         event.register(EVMenus.POUCH.get(), PouchScreen::new);
+        event.register(EVMenus.RUNE_CABINET.get(),
+                com.water2h2o.elementalverse.client.RuneCabinetScreen::new);
         event.register(EVMenus.RITUAL_ALTAR.get(),
                 com.water2h2o.elementalverse.client.RitualAltarScreen::new);
     }

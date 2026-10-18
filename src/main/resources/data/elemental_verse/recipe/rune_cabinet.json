@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "DAD",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "tag": "minecraft:planks"
+    },
+    "D": {
+      "item": "elemental_verse:dead_dust"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    }
+  },
+  "result": {
+    "id": "elemental_verse:rune_cabinet",
+    "count": 1
+  }
+}

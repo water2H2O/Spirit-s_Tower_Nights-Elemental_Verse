@@ -27,6 +27,13 @@ public final class EVBlockEntities {
                                     EVBlocks.RITUAL_ALTAR.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.water2h2o.elementalverse.block.RuneCabinetBlockEntity>> RUNE_CABINET =
+            BLOCK_ENTITIES.register("rune_cabinet",
+                    () -> BlockEntityType.Builder
+                            .of(com.water2h2o.elementalverse.block.RuneCabinetBlockEntity::new,
+                                    EVBlocks.RUNE_CABINET.get())
+                            .build(null));
+
     public static void register(IEventBus modEventBus) {
         BLOCK_ENTITIES.register(modEventBus);
     }

@@ -81,5 +81,7 @@
   "message.elemental_verse.not_enough": "%s 不够了",
   "tooltip.elemental_verse.plate.state": "态：%s · %s 档",
   "item.elemental_verse.magic": "%s申明板",
-  "effect.elemental_verse.vulnerable": "易伤"
+  "effect.elemental_verse.vulnerable": "易伤",
+  "block.elemental_verse.rune_cabinet": "符文柜",
+  "message.elemental_verse.only_cold": "符文柜只吃霜或冰的申明"
 }

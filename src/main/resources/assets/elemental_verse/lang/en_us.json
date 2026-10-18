@@ -81,5 +81,7 @@
   "message.elemental_verse.not_enough": "Not enough %s",
   "tooltip.elemental_verse.plate.state": "State: %s - tier %s",
   "item.elemental_verse.magic": "%s Declaration",
-  "effect.elemental_verse.vulnerable": "Vulnerable"
+  "effect.elemental_verse.vulnerable": "Vulnerable",
+  "block.elemental_verse.rune_cabinet": "Rune Cabinet",
+  "message.elemental_verse.only_cold": "The rune cabinet only accepts frost or ice declarations"
 }

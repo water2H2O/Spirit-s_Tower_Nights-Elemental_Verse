@@ -44,6 +44,16 @@ public final class EVBlocks {
      * <p>同样**不加** {@code requiresCorrectToolForDrops()}，先保证徒手能挖下来。
      */
     /** 基础仪式台：把元素写成申明板。 */
+    /** 符文柜：27 格、通电时完全不衰变。 */
+    public static final DeferredBlock<com.water2h2o.elementalverse.block.RuneCabinetBlock> RUNE_CABINET =
+            BLOCKS.register("rune_cabinet",
+                    () -> new com.water2h2o.elementalverse.block.RuneCabinetBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.WOOD)
+                                    .strength(3.0F, 6.0F)
+                                    .sound(SoundType.WOOD)
+                                    .noOcclusion()));
+
     public static final DeferredBlock<com.water2h2o.elementalverse.block.RitualAltarBlock> RITUAL_ALTAR =
             BLOCKS.register("ritual_altar",
                     () -> new com.water2h2o.elementalverse.block.RitualAltarBlock(
