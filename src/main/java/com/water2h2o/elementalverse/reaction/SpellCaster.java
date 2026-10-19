@@ -152,7 +152,10 @@ public final class SpellCaster {
             return false;
         }
         // 发射：飞出去，命中时由 SpellProjectile 回调 applyProjectileHit
-        if ("projectile".equals(form) && providedHit == null) {
+        //
+        // 老存档里的板子写的是 touch，也让它飞 —— 否则同一个法术，新板子飞、旧板子不飞，
+        // 玩家会以为"时灵时不灵"。所以除"自身"以外，一律飞。
+        if (providedHit == null) {
             return launchProjectile(level, player, declaration);
         }
         // 触摸：射线命中
