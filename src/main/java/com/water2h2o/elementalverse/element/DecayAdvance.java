@@ -26,11 +26,12 @@ public final class DecayAdvance {
      */
     public static ItemStack advance(ItemStack stack, Level level, BlockPos pos,
                                     int elapsedTicks, double multiplier) {
-        int scaled = (int) Math.round(elapsedTicks * multiplier);
-        if (scaled <= 0) {
+        long scaled = Math.round((double) elapsedTicks * multiplier);
+        if (scaled <= 0L) {
             return null;
         }
-        if (!DecayEngine.tickStack(stack, level, pos, scaled)) {
+        int step = (int) Math.min(Integer.MAX_VALUE, scaled);
+        if (!DecayEngine.tickStack(stack, level, pos, step)) {
             return null;
         }
 

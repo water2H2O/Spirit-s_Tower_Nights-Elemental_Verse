@@ -8,6 +8,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -96,6 +98,15 @@ public class SealedVaultBlockEntity extends BlockEntity implements Container, Me
     @Override
     public void clearContent() {
         items.clear();
+    }
+
+    /** 关界面时补一声沉重的关闭声（打开声在 SealedVaultBlock.useWithoutItem 里）。 */
+    @Override
+    public void stopOpen(Player player) {
+        if (level != null && !level.isClientSide()) {
+            level.playSound(null, worldPosition, SoundEvents.IRON_DOOR_CLOSE,
+                    SoundSource.BLOCKS, 0.65F, 0.85F);
+        }
     }
 
     // ------------------------------------------------------------ 存档

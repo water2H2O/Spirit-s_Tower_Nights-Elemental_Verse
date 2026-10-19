@@ -37,7 +37,7 @@ public final class EVConfig {
 
     /** 时长预设。 */
     public enum Preset implements StringRepresentable {
-        /** 秒级：水元素 20 秒进入下一阶段，全程 1 分钟。 */
+        /** 秒级：水元素 5 秒进入下一阶段，全程约 15 秒。 */
         OBSERVE("observe"),
         /** 日级：总纲 2.3 的正式数值。 */
         NORMAL("normal");
@@ -309,12 +309,12 @@ public final class EVConfig {
      * 所以阈值必须也是绝对的：
      *
      * <ul>
-     *   <li>**稳定元素**：阈值 = 预设里的阶段①。水（观察预设）= 400 tick。</li>
+     *   <li>**稳定元素**：阈值 = 预设里的阶段①。水（观察预设）= 100 tick（5 秒）。</li>
      *   <li>**衍生元素**：阈值 = 它的父稳定元素的「阶段① + 阶段②」。
-     *       冰 = 400 + 800 = 1200 tick，即水从采集到变成死寂共 60 秒。</li>
+     *       霜 = 100 + 200 = 300 tick，即水从采集到变成死寂共 15 秒。</li>
      * </ul>
      *
-     * <p>返回 0 表示不参与衰变（霜、金、芽这类还没接入链的支线元素）。
+     * <p>返回 0 表示不参与衰变（金这类没有接入链的支线元素，或配置写坏）。
      */
     public static int getThreshold(ElementType type) {
         if (type == null || type.isEmpty() || !type.decays()) {

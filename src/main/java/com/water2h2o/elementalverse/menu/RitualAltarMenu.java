@@ -14,14 +14,14 @@ import net.minecraft.world.item.ItemStack;
 /**
  * 仪式台界面。
  *
- * <p>布局沿用发射器的 3×3 底图（省一张贴图，玩家也熟）：
+ * <p>布局用作者给的仪式台底图：
  * <pre>
- *   上排三个格子：元素投入口 1 / 2 / 3
- *   左中：申明板      右中：产出
+ *   上排三个格子：主料 / 辅料 / 态
+ *   左中：申明板      中下：剑槽（刻印）      右下：产出
  * </pre>
  *
- * <p>**第 2、3 口本期不参与计算**：可以放，但界面会在对应位置给出提示
- * （提示由贴图/文字负责，见 `docs/分阶段/04-仪式台与申明板.md` 第九节第 3 条）。
+ * <p>三个投入口都参与计算：主料 + 辅料构成反应输入，态决定 SpellParams。
+ * 剑槽在贴图原来的“箭头”位置，屏幕会补画一个槽位底图并标注“剑槽”。
  */
 public class RitualAltarMenu extends AbstractContainerMenu {
 
@@ -115,6 +115,25 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         if (slot == null || !slot.hasItem()) {
             return ItemStack.EMPTY;
         }
+
+        // 产出格必须走 removeItem（会扣材料）。直接 moveItemStackTo 会绕过消耗，
+        // 再被 setByPlayer(EMPTY) 清空，等于无限白拿。
+        if (altar != null && slot.container == altar
+                && slot.getContainerSlot() == RitualAltarBlockEntity.SLOT_OUTPUT) {
+            ItemStack extracted = slot.remove(slot.getItem().getCount());
+            if (extracted.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+            ItemStack result = extracted.copy();
+            this.moveItemStackTo(extracted, RitualAltarBlockEntity.SIZE, this.slots.size(), true);
+            if (!extracted.isEmpty()) {
+                player.drop(extracted, false);
+                // 背包满了：这一份已经掉出来了，别再让 doClick 的 shift 循环继续消耗输入。
+                return ItemStack.EMPTY;
+            }
+            return result;
+        }
+
         ItemStack stack = slot.getItem();
         ItemStack copy = stack.copy();
 

@@ -225,24 +225,19 @@ public final class Gathering {
 
         stack.shrink(actual);
 
-        ItemStack intoHand = null;
+        // 手里那格刚好用完：**先**把第一瓶放回手上，再处理其余。
+        // 不能等循环结束再放：其余瓶子会先占掉刚空出来的手牌格，随后被覆盖，少一瓶。
+        if (stack.isEmpty()) {
+            player.setItemInHand(hand, ElementVialItem.createStack(type));
+            actual--;
+        }
+
         for (int i = 0; i < actual; i++) {
             ItemStack filled = ElementVialItem.createStack(type);
-
-            // 手里那格刚好用完：第一瓶放回手上，玩家可以接着点
-            if (i == 0 && stack.isEmpty()) {
-                intoHand = filled;
-                continue;
-            }
-
             // 其余走"并入同元素堆叠"（时间加权平均，上限 64）
             if (!ElementStackMerger.add(player, filled)) {
                 player.drop(filled, false);
             }
-        }
-
-        if (intoHand != null) {
-            player.setItemInHand(hand, intoHand);
         }
 
         if (blockEffect != null) {

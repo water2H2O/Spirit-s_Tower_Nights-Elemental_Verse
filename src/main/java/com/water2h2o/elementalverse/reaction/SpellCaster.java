@@ -1,5 +1,7 @@
 package com.water2h2o.elementalverse.reaction;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 
 import com.water2h2o.elementalverse.element.Declaration;
@@ -58,37 +60,33 @@ public final class SpellCaster {
             return false;
         }
 
-        // 1) 材料够不够
-        int needed = declaration.investCount();
-        if (countVials(player, declaration.element()) < needed) {
-            if (!level.isClientSide()) {
-                player.displayClientMessage(
-                        Component.translatable(EVLang.MSG_NOT_ENOUGH, declaration.element().displayName()),
-                        true);
-            }
+        // 客户端没有反应表，只做“材料够不够”的预测；真正的匹配在服务端。
+        if (level.isClientSide()) {
+            return checkMaterials(level, player, declaration);
+        }
+
+        ElementValue input = declaration.inputValue();
+        SpellParams params = SpellParams.of(declaration);
+        Optional<Reaction> matched = ReactionManager.match(input);
+
+        // 没有精确配方、也没有主成分兜底 → 不扣材料，直接提示。
+        if (matched.isEmpty() && !hasFallback(input)) {
+            player.displayClientMessage(Component.translatable(EVLang.MSG_NO_REACTION), true);
             return false;
         }
 
-        if (level.isClientSide()) {
-            return true;
+        if (!checkMaterials(level, player, declaration)) {
+            return false;
         }
+        consumeMaterials(player, declaration);
 
-        // 2) 扣材料
-        consumeVials(player, declaration.element(), needed);
-
-        // 3) 匹配反应
-        ElementValue input = declaration.inputValue();
-        // 态：第三个投入口决定"怎么发生"（原理文档五之二）
-        SpellParams params = SpellParams.of(declaration);
-
-        Optional<Reaction> matched = ReactionManager.match(input);
         if (matched.isPresent()) {
             apply(level, player, matched.get().phenomenon(), params, declaration.form(), null);
         } else {
             applyFallback(level, player, input, params);
         }
 
-        // 4) 表现：必须让人一眼看出"放了"
+        // 表现：必须让人一眼看出"放了"
         playCastFeedback(level, player, input, null);
         return true;
     }
@@ -101,24 +99,26 @@ public final class SpellCaster {
     public static boolean castAtEntity(Level level, Player player,
                                        com.water2h2o.elementalverse.element.Declaration declaration,
                                        Entity target) {
-        int needed = declaration.investCount();
-        if (countVials(player, declaration.element()) < needed) {
-            player.displayClientMessage(
-                    Component.translatable(EVLang.MSG_NOT_ENOUGH,
-                            declaration.element().displayName()), true);
+        if (!declaration.isDefined()) {
             return false;
         }
-        consumeVials(player, declaration.element(), needed);
 
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
         var hit = new EntityHitResult(target);
-
         var matched = ReactionManager.match(input);
-        if (matched.isPresent()) {
-            apply(level, player, matched.get().phenomenon(), params,
-                    declaration.form(), hit);
+
+        // 武器触发没有“主成分兜底”：凑不出反应就不扣材料、也不触发。
+        if (matched.isEmpty()) {
+            player.displayClientMessage(Component.translatable(EVLang.MSG_NO_REACTION), true);
+            return false;
         }
+        if (!checkMaterials(level, player, declaration)) {
+            return false;
+        }
+
+        consumeMaterials(player, declaration);
+        apply(level, player, matched.get().phenomenon(), params, declaration.form(), hit);
         playCastFeedback(level, player, input, hit);
         return true;
     }
@@ -144,18 +144,31 @@ public final class SpellCaster {
         switch (phenomenon.type()) {
             case "ignite" -> ignite(level, hit, phenomenon, params);
             case "douse" -> douse(level, hit, params);
-            case "sustained_element_damage" -> strike(level, player, phenomenon, params);
-            case "steam" -> steam(level, hit, params);
-            case "lava" -> lava(level, hit, params);
-            case "fire_resistance" -> fireResistance(player, params);
-            case "chaos" -> chaos(level, player, hit, params);
+            case "sustained_element_damage" -> strike(level, player, phenomenon, params, hit);
+            case "steam" -> steam(level, player, hit, params);
+            case "lava" -> lava(level, hit, phenomenon, params);
+            case "fire_resistance" -> fireResistance(player, phenomenon, params);
+            case "chaos" -> chaos(level, player, hit, phenomenon, params);
             default -> applyPrimitive(level, player, hit, phenomenon, params);
         }
     }
 
+    /**
+     * 现象持续时间。
+     *
+     * <p>JSON 的 {@code duration} 是基准（tick）；第三个投入口如果是光系，
+     * 会按 2 / 5 / 12 秒的比例把它拉长。这样“写进 JSON 的持续时间”终于真的生效了。
+     */
+    private static int effectTicks(Phenomenon phenomenon, SpellParams params) {
+        int base = Math.max(1, phenomenon.duration());
+        double factor = Math.max(1, params.durationSec())
+                / (double) Math.max(1, SpellParams.DEFAULT.durationSec());
+        return Math.max(1, (int) Math.round(base * factor));
+    }
+
     /** 点燃：命中的实体着火，或者命中方块的面上一格起火。 */
     private static void ignite(Level level, HitResult hit, Phenomenon phenomenon, SpellParams params) {
-        int fireTicks = (int) Math.round(params.durationTicks() * params.intensity());
+        int fireTicks = (int) Math.round(effectTicks(phenomenon, params) * params.intensity());
 
         if (hit instanceof EntityHitResult entityHit) {
             entityHit.getEntity().setRemainingFireTicks(fireTicks);
@@ -183,11 +196,16 @@ public final class SpellCaster {
     private static void applyPrimitive(Level level, Player player, HitResult hit,
                                        Phenomenon phenomenon, SpellParams params) {
         String type = phenomenon.type();
-        BlockPos center = hit instanceof BlockHitResult blockHit
-                ? blockHit.getBlockPos().relative(blockHit.getDirection())
-                : player.blockPosition();
+        BlockPos center;
+        if (hit instanceof BlockHitResult blockHit) {
+            center = blockHit.getBlockPos().relative(blockHit.getDirection());
+        } else if (hit instanceof EntityHitResult entityHit) {
+            center = entityHit.getEntity().blockPosition();
+        } else {
+            center = player.blockPosition();
+        }
         int radius = Math.max(1, (int) Math.round(params.radius()));
-        int ticks = Math.max(20, params.durationTicks());
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
 
         switch (type) {
             case "area_fire" -> {
@@ -276,13 +294,13 @@ public final class SpellCaster {
                         SoundSource.PLAYERS, 0.8F, 0.6F);
             }
             case "extend_effects" -> {
-                player.getActiveEffects().forEach(effect ->
+                player.getActiveEffects().stream().toList().forEach(effect ->
                         player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                                 effect.getEffect(),
                                 effect.getDuration() * 2,
                                 Math.min(3, effect.getAmplifier() + 1))));
             }
-            default -> applyNamedEffect(level, player, phenomenon, params);
+            default -> applyNamedEffect(level, player, hit, phenomenon, params);
         }
     }
 
@@ -370,8 +388,8 @@ public final class SpellCaster {
      *
      * <p>这样加一条"抗性提升"只要写 JSON，不用改 Java。
      */
-    private static void applyNamedEffect(Level level, Player player, Phenomenon phenomenon,
-                                         SpellParams params) {
+    private static void applyNamedEffect(Level level, Player player, HitResult hit,
+                                         Phenomenon phenomenon, SpellParams params) {
         String type = phenomenon.type();
         if (!type.startsWith("effect:")) {
             level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
@@ -386,12 +404,25 @@ public final class SpellCaster {
         if (holder.isEmpty()) {
             return;
         }
-        int ticks = Math.max(20, (int) Math.round(params.durationTicks() * params.intensity()));
-        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(holder.get(), ticks, 0));
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
+
+        // 增益（抗性、再生…）默认给自己；减益（强光、凋零、反胃…）只打命中的实体。
+        // 减益打空（射线只命中方块）时不落到自己头上——那等于自己吃了自己的法术。
+        LivingEntity target;
+        if (holder.get().value().isBeneficial()) {
+            target = player;
+        } else if (hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity living) {
+            target = living;
+        } else {
+            return;
+        }
+        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(holder.get(), ticks, 0));
     }
 
-    /** 暗渊：随机给几个负面状态 + 固定黑暗（目前落在施法者身上，等弹射物形态再改成命中目标）。 */
-    private static void chaos(Level level, Player player, HitResult hit, SpellParams params) {
+    /** 暗渊：随机给几个负面状态 + 固定黑暗（打在命中的实体上；没命中才落在施法者身上）。 */
+    private static void chaos(Level level, Player player, HitResult hit, Phenomenon phenomenon,
+                              SpellParams params) {
         var pool = java.util.List.of(
                 net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
                 net.minecraft.world.effect.MobEffects.WEAKNESS,
@@ -402,27 +433,37 @@ public final class SpellCaster {
         var picked = new java.util.ArrayList<>(pool);
         java.util.Collections.shuffle(picked, new java.util.Random(random.nextLong()));
         int count = Math.min(5, picked.size());
-        int ticks = Math.max(20, params.durationTicks());
-        for (int i = 0; i < count; i++) {
-            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(picked.get(i), ticks, 0));
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
+        LivingEntity target = player;
+        if (hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity living) {
+            target = living;
         }
-        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+        for (int i = 0; i < count; i++) {
+            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(picked.get(i), ticks, 0));
+        }
+        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.DARKNESS, ticks, 0));
     }
 
     /** 蒸汽：小而烫的伤害 + 击退。 */
-    private static void steam(Level level, HitResult hit, SpellParams params) {
+    private static void steam(Level level, Player player, HitResult hit, SpellParams params) {
         if (hit instanceof EntityHitResult entityHit) {
             Entity target = entityHit.getEntity();
             if (target instanceof net.minecraft.world.entity.LivingEntity living) {
                 living.hurt(level.damageSources().magic(), (float) (2.0D * params.intensity()));
-                living.knockback(0.6D, -living.getLookAngle().x, -living.getLookAngle().z);
+                var away = living.position().subtract(player.position());
+                if (away.lengthSqr() < 1.0E-4D) {
+                    away = living.getLookAngle();
+                }
+                living.knockback(0.6D, -away.x, -away.z);
             }
         }
     }
 
     /** 熔岩：在命中面放岩浆，并给附近的实体减速。 */
-    private static void lava(Level level, HitResult hit, SpellParams params) {
+    private static void lava(Level level, HitResult hit, Phenomenon phenomenon, SpellParams params) {
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
         if (hit instanceof BlockHitResult blockHit) {
             BlockPos place = blockHit.getBlockPos().relative(blockHit.getDirection());
             if (level.getBlockState(place).isAir()) {
@@ -432,16 +473,17 @@ public final class SpellCaster {
         }
         if (hit instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof net.minecraft.world.entity.LivingEntity living) {
-            living.setRemainingFireTicks(params.durationTicks());
+            living.setRemainingFireTicks(ticks);
             living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, params.durationTicks(), 0));
+                    net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, ticks, 0));
         }
     }
 
     /** 火焰保护：给自己一个抗火。 */
-    private static void fireResistance(Player player, SpellParams params) {
+    private static void fireResistance(Player player, Phenomenon phenomenon, SpellParams params) {
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
         player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, params.durationTicks(), 0));
+                net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, ticks, 0));
     }
 
     /** 灭火：把命中点附近的火清掉。 */
@@ -467,14 +509,18 @@ public final class SpellCaster {
      * <p>本期简化为**一次结算**（duration 用来说明"持续感"，还没有逐 tick 结算）。
      * 逐段结算等有了持续型法术框架再补 —— 现在先把闭环跑通。
      */
-    private static void strike(Level level, Player player, Phenomenon phenomenon, SpellParams params) {
-        HitResult hit = player.pick(RANGE, 1.0F, false);
+    private static void strike(Level level, Player player, Phenomenon phenomenon, SpellParams params,
+                               HitResult suppliedHit) {
+        HitResult hit = suppliedHit != null && suppliedHit.getType() != HitResult.Type.MISS
+                ? suppliedHit
+                : player.pick(RANGE, 1.0F, false);
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
         if (hit instanceof EntityHitResult entityHit) {
             Entity target = entityHit.getEntity();
             if (target instanceof LivingEntity living) {
                 living.hurt(level.damageSources().magic(),
                         (float) (phenomenon.amount() * params.intensity()));
-                living.setRemainingFireTicks(params.durationTicks());
+                living.setRemainingFireTicks(ticks);
             }
         } else if (hit instanceof BlockHitResult blockHit) {
             BlockPos place = blockHit.getBlockPos().relative(blockHit.getDirection());
@@ -490,28 +536,72 @@ public final class SpellCaster {
         if (axis == null) {
             return;
         }
-        // 通用兜底：正的火 → 点燃；正的水 → 灭火；其余暂时只给粒子提示
         switch (axis) {
             case FIRE -> ignite(level, player.pick(RANGE, 1.0F, false),
                     new Phenomenon("ignite", axis, 1.0, 40, 0.0), params);
             case WATER -> douse(level, player.pick(RANGE, 1.0F, false), params);
-            default -> level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                    SoundSource.PLAYERS, 0.6F, 1.4F);
+            default -> {
+                // 目前只为火 / 水实现了通用兜底；其余元素没有现象，调用方会在扣材料前拦下。
+            }
         }
     }
 
+    /** 没有精确配方时，主成分是否还有可执行的通用现象。 */
+    private static boolean hasFallback(ElementValue input) {
+        ElementAxis axis = input.dominant();
+        return axis == ElementAxis.FIRE || axis == ElementAxis.WATER;
+    }
+
     // ---------------------------------------------------------------- 材料
+
+    /**
+     * 施法需要消耗的元素：主料 + 辅料（态是写板时的一次性形，不再按次扣）。
+     * 同一种元素会合并计数，避免“主料 1 火 + 辅料 1 火”被拆成两次各扣 1 的漏洞。
+     */
+    private static Map<ElementType, Integer> requirements(Declaration declaration) {
+        Map<ElementType, Integer> required = new EnumMap<>(ElementType.class);
+        if (declaration.isDefined()) {
+            required.merge(declaration.element(), declaration.investCount(), Integer::sum);
+        }
+        int reagent = declaration.reagentCost();
+        if (reagent > 0 && declaration.reagentElement() != null
+                && !declaration.reagentElement().isEmpty()) {
+            required.merge(declaration.reagentElement(), reagent, Integer::sum);
+        }
+        return required;
+    }
+
+    /** 材料够不够；不够时在服务端提示缺哪种元素。 */
+    private static boolean checkMaterials(Level level, Player player, Declaration declaration) {
+        for (Map.Entry<ElementType, Integer> entry : requirements(declaration).entrySet()) {
+            if (countVials(player, entry.getKey()) < entry.getValue()) {
+                if (!level.isClientSide()) {
+                    player.displayClientMessage(Component.translatable(
+                            EVLang.MSG_NOT_ENOUGH, entry.getKey().displayName()), true);
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** 按上面算出的需求扣材料。 */
+    private static void consumeMaterials(Player player, Declaration declaration) {
+        requirements(declaration).forEach((element, cost) -> consumeVials(player, element, cost));
+    }
 
     private static int countVials(Player player, ElementType element) {
         int total = 0;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
 
-            // 元素小包：里面的元素也算（作者反馈：施法读不到小包）
+            // 元素小包：只数存放格，燃料格里的霜/冰是冷却剂，不是施法材料。
             if (stack.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
-                for (ItemStack inside : com.water2h2o.elementalverse.element.PouchContents.get(stack)) {
-                    if (!inside.isEmpty() && ElementVialItem.getElement(inside) == element) {
-                        total += inside.getCount();
+                var inside = com.water2h2o.elementalverse.element.PouchContents.get(stack);
+                for (int i = 0; i < com.water2h2o.elementalverse.element.PouchContents.STORAGE; i++) {
+                    ItemStack item = inside.get(i);
+                    if (!item.isEmpty() && ElementVialItem.getElement(item) == element) {
+                        total += item.getCount();
                     }
                 }
                 continue;

@@ -16,9 +16,13 @@ import net.minecraft.world.level.Level;
  *   <li>每 60 秒消耗一个冷却剂，先耗霜、后耗冰</li>
  * </ul>
  *
- * <p>消耗用"游戏时间取模"判定，因此不需要给每个小包存一个计时器 —— 无状态、可存档跳变也不出错。
+ * <p>冷却剂按**实际经过的时间**消耗：用这次 tick 覆盖的区间里跨过了几个 30/60 秒来算，
+ * 不依赖扫描发生在哪个 tick，因此大世界轮转 / 区块刚加载也不会漏烧。
  */
 public final class PouchDecay {
+
+    /** 新放入（timer = 0）的东西最多补一个扫描周期，避免大世界轮转造成一次性大幅衰变。 */
+    private static final int FRESH_GRACE_TICKS = 100;
 
     /** 推进一个小包里的内容。 */
     public static void tick(ItemStack pouch, Level level, BlockPos pos, int elapsedTicks) {
@@ -34,21 +38,37 @@ public final class PouchDecay {
                 continue;
             }
 
-            ItemStack replacement = DecayAdvance.advance(inside, level, pos, elapsedTicks, multiplier);
+            ElementType beforeType = ElementVialItem.getElement(inside);
+            int beforeTimer = ElementVialItem.getTimer(inside);
+            int stackElapsed = beforeTimer == 0
+                    ? Math.min(elapsedTicks, FRESH_GRACE_TICKS)
+                    : elapsedTicks;
+            ItemStack replacement = DecayAdvance.advance(inside, level, pos, stackElapsed, multiplier);
             if (replacement != null) {
                 items.set(slot, replacement);
+                changed = true;
+            } else if (ElementVialItem.getElement(inside) != beforeType
+                    || ElementVialItem.getTimer(inside) != beforeTimer) {
+                changed = true;
             }
-            changed = true;
         }
 
         // 烧冷却剂：霜 30 秒一个、冰 60 秒一个（作者定：一个霜 = 半个冰）
-        // 只在**真的有东西需要保护**时才烧
-        if (PouchContents.hasProtectedContents(items)) {
-            long period = PouchContents.burnInterval(items);
-            if (period > 0 && level.getGameTime() % period == 0L) {
-                if (PouchContents.consumeCoolant(items)) {
-                    changed = true;
+        // 只在**真的有东西需要保护**时才烧。按本次 tick 覆盖的时间段内跨过了几个周期来扣，
+        // 这样“每 100 tick 扫一批区块”也不会因为没扫在 600 的整数倍上而漏烧。
+        long period = PouchContents.burnInterval(items);
+        if (period > 0 && elapsedTicks > 0) {
+            long now = level.getGameTime();
+            long before = now - elapsedTicks;
+            long due = now / period - before / period;
+            for (long i = 0; i < due; i++) {
+                if (!PouchContents.hasProtectedContents(items)) {
+                    break;
                 }
+                if (!PouchContents.consumeCoolant(items)) {
+                    break;
+                }
+                changed = true;
             }
         }
 

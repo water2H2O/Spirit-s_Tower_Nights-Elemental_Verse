@@ -28,8 +28,11 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
 
     public static final int SIZE = 27;
 
-    /** 每 20 tick 消耗 1 点能量。 */
+    /** 每 20 tick（1 秒）扣 20 点能量；能量单位是 tick，所以 1 秒正好扣 1 秒。 */
     private static final int TICK_PER_ENERGY = 20;
+
+    /** 能量上限：8 游戏日（冰 3 档单块是 4 日，最多叠两块）。 */
+    public static final int MAX_ENERGY = 8 * 24000;
 
     private final net.minecraft.world.SimpleContainer items = new net.minecraft.world.SimpleContainer(SIZE) {
         @Override
@@ -73,32 +76,33 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
         if (!cold) {
             return false;
         }
-        // 霜：0.5 / 1 / 2 游戏日；冰：同档 x2
-        int days = switch (declaration.tier()) {
-            case 3 -> 2;
-            case 2 -> 1;
-            default -> 1;
-        };
-        double scale = switch (declaration.tier()) {
+        // 霜：0.5 / 1 / 2 游戏日；冰：同档 x2。喂多块会累加，封顶 8 日。
+        double days = switch (declaration.tier()) {
             case 3 -> 2.0D;
             case 2 -> 1.0D;
             default -> 0.5D;
         };
-        int ticks = (int) (days * 24000L * scale * (element == ElementType.ICE ? 2 : 1));
-        energy = Math.min(ticks, days * 24000 * 4);
+        if (element == ElementType.ICE) {
+            days *= 2.0D;
+        }
+        int ticks = (int) Math.round(days * 24000.0D);
+        energy = Math.min(MAX_ENERGY, energy + ticks);
         setChanged();
         return true;
     }
 
-    /** 每 20 tick 扣 1 点能量。 */
+    /** 每 20 tick 扣 20 点能量（能量单位是 tick）；不是每 20 tick 只扣 1 点。 */
     public void serverTick() {
         if (energy <= 0) {
             return;
         }
         if (++tickCounter >= TICK_PER_ENERGY) {
             tickCounter = 0;
-            energy--;
-            setChanged();
+            int before = energy;
+            energy = Math.max(0, energy - TICK_PER_ENERGY);
+            if (energy != before) {
+                setChanged();
+            }
         }
     }
 

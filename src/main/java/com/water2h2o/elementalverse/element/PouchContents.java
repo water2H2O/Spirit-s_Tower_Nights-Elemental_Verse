@@ -13,7 +13,8 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>作者 2026-10-17 的设计：
  * <ul>
- *   <li>小包可以**存放多种元素材料**，方便随身带着做东西</li>
+ *   <li>小包可以**存放多种元素材料**，方便随身带着做东西；
+ *       存放格只收装着元素的载体（空瓶、工具、小包自己都放不进去）</li>
  *   <li>另有一个**独立的燃料格**（像熔炉/酿造台那样），只能放霜或冰；
  *       放进去后会被消耗，换取其它内容物更慢的变质速度</li>
  * </ul>
@@ -50,6 +51,17 @@ public final class PouchContents {
         return 0;
     }
 
+    /**
+     * 小包存放格只收**真正装着元素**的载体。
+     *
+     * <p>空瓶、工具、小包自己都不能放进存放格；燃料格仍然只收霜/冰。
+     * 这样既符合“元素小包”的定位，也堵死了“把小包装进自己里面”的递归组件。
+     */
+    public static boolean isStorable(ItemStack stack) {
+        return !stack.isEmpty() && ElementCarrier.isCarrier(stack)
+                && !ElementVialItem.getElement(stack).isEmpty();
+    }
+
     private PouchContents() {
     }
 
@@ -67,11 +79,17 @@ public final class PouchContents {
 
     /** 写回内容（全空就把组件摘掉，省存档体积）。 */
     public static void set(ItemStack pouch, List<ItemStack> items) {
-        boolean empty = items.stream().allMatch(ItemStack::isEmpty);
+        // 最后一道保险：界面已经禁止把小包装进自己，但旧存档 / 命令仍可能塞进来。
+        // 组件里一旦包含自己，保存/同步时会递归序列化，直接 StackOverflow。
+        List<ItemStack> safe = new ArrayList<>(items.size());
+        for (ItemStack stack : items) {
+            safe.add(stack == pouch ? ItemStack.EMPTY : stack);
+        }
+        boolean empty = safe.stream().allMatch(ItemStack::isEmpty);
         if (empty) {
             pouch.remove(EVDataComponents.POUCH_CONTENTS.get());
         } else {
-            pouch.set(EVDataComponents.POUCH_CONTENTS.get(), new ArrayList<>(items));
+            pouch.set(EVDataComponents.POUCH_CONTENTS.get(), safe);
         }
     }
 

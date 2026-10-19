@@ -33,7 +33,8 @@ public final class ReactionManager {
 
     public static final String DIRECTORY = "reaction";
 
-    private static List<Reaction> reactions = List.of();
+    /** 资源重载在后台线程写、服务端线程读，所以用 volatile。 */
+    private static volatile List<Reaction> reactions = List.of();
 
     private ReactionManager() {
     }

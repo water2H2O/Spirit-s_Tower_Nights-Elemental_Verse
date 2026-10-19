@@ -56,11 +56,13 @@ public final class EVLang {
     public static final String MAGIC_NAME = "item.elemental_verse.magic";
     public static final String PLATE_STATE = "tooltip.elemental_verse.plate.state";
     public static final String MSG_NOT_ENOUGH = "message.elemental_verse.not_enough";
+    public static final String MSG_NO_REACTION = "message.elemental_verse.no_reaction";
     public static final String PLATE_WRITTEN = "item.elemental_verse.declaration_plate.written";
     public static final String PLATE_BLANK_HINT = "tooltip.elemental_verse.plate.blank";
     public static final String PLATE_ELEMENT = "tooltip.elemental_verse.plate.element";
     public static final String PLATE_TIER = "tooltip.elemental_verse.plate.tier";
     public static final String PLATE_OPERATION = "tooltip.elemental_verse.plate.operation";
+    public static final String RITUAL_TOOL_LABEL = "gui.elemental_verse.ritual_altar.tool";
 
     public static String config(String option) {
         return "elemental_verse.configuration." + option;

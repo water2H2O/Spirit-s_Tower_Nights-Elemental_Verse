@@ -34,8 +34,9 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
  * <ul>
  *   <li><b>只扫已加载区块</b>：与"世界停下，东西就停下"的语义一致；
  *       卸载的区块自然不推进，不需要额外判断。</li>
- *   <li><b>预算 + 轮转</b>：不扫全部，每次只处理 {@code decay.chunksPerSweep} 个，
- *       游标一路往前走。大基地也不会卡。</li>
+ *   <li><b>预算 + 轮转 + 时间补偿</b>：不扫全部，每次只处理 {@code decay.chunksPerSweep} 个，
+ *       游标一路往前走；但每个区块按“距离上次被扫过了多少 tick”推进，
+ *       所以轮转不会让箱子里的东西整体变慢。</li>
  *   <li><b>不在方块实体里各自 tick</b>：那样"箱子里也会坏"会有 N 份实现，
  *       而且普通箱子我们改不了。</li>
  * </ul>
@@ -56,22 +57,35 @@ public final class ContainerDecayTicker {
     /** 每个维度的轮转游标。 */
     private static final Map<ResourceKey<Level>, Integer> CURSOR = new HashMap<>();
 
+    /** 每个维度、每个区块上一次被扫描的 gameTime。轮转间隔要用它补偿，否则大世界会整体变慢。 */
+    private static final Map<ResourceKey<Level>, Map<ChunkPos, Long>> LAST_PROCESSED = new HashMap<>();
+
     // ------------------------------------------------------------ 区块跟踪
 
     @SubscribeEvent
     static void onChunkLoad(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel level) {
-            LOADED.computeIfAbsent(level.dimension(), key -> new LinkedHashSet<>())
-                    .add(event.getChunk().getPos());
+            ResourceKey<Level> dimension = level.dimension();
+            ChunkPos pos = event.getChunk().getPos();
+            LOADED.computeIfAbsent(dimension, key -> new LinkedHashSet<>()).add(pos);
+            // 卸载期间不推进；刚加载时从现在开始算，避免一次补上几小时的衰变。
+            LAST_PROCESSED.computeIfAbsent(dimension, key -> new HashMap<>())
+                    .put(pos, level.getGameTime());
         }
     }
 
     @SubscribeEvent
     static void onChunkUnload(ChunkEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel level) {
-            Set<ChunkPos> chunks = LOADED.get(level.dimension());
+            ResourceKey<Level> dimension = level.dimension();
+            ChunkPos pos = event.getChunk().getPos();
+            Set<ChunkPos> chunks = LOADED.get(dimension);
             if (chunks != null) {
-                chunks.remove(event.getChunk().getPos());
+                chunks.remove(pos);
+            }
+            Map<ChunkPos, Long> last = LAST_PROCESSED.get(dimension);
+            if (last != null) {
+                last.remove(pos);
             }
         }
     }
@@ -102,30 +116,42 @@ public final class ContainerDecayTicker {
         List<ChunkPos> snapshot = new ArrayList<>(chunks);
         int budget = Math.min(EVConfig.getChunksPerSweep(), snapshot.size());
         int start = Math.floorMod(CURSOR.getOrDefault(dimension, 0), snapshot.size());
+        long now = level.getGameTime();
+        Map<ChunkPos, Long> last = LAST_PROCESSED.computeIfAbsent(dimension, key -> new HashMap<>());
 
         for (int i = 0; i < budget; i++) {
-            processChunk(level, snapshot.get((start + i) % snapshot.size()));
+            processChunk(level, snapshot.get((start + i) % snapshot.size()), last, now);
         }
 
         CURSOR.put(dimension, (start + budget) % snapshot.size());
     }
 
-    private static void processChunk(ServerLevel level, ChunkPos pos) {
+    private static void processChunk(ServerLevel level, ChunkPos pos,
+                                     Map<ChunkPos, Long> lastProcessed, long now) {
         LevelChunk chunk = level.getChunkSource().getChunkNow(pos.x, pos.z);
         if (chunk == null) {
             // 区块在集合里但实际没加载（刚好卸载）——跳过，下次再说
             return;
         }
 
+        // 这个区块可能每 N 次扫描才轮到一次；把真正过去的时间补上，否则大基地整体变慢。
+        long last = lastProcessed.getOrDefault(pos, now - SWEEP_INTERVAL);
+        int elapsed = (int) Math.max(0L, Math.min(Integer.MAX_VALUE, now - last));
+        lastProcessed.put(pos, now);
+        if (elapsed <= 0) {
+            return;
+        }
+
         for (BlockPos blockPos : chunk.getBlockEntitiesPos()) {
             BlockEntity be = chunk.getBlockEntity(blockPos);
             if (be instanceof Container container) {
-                tickContainer(level, blockPos, container, be);
+                tickContainer(level, blockPos, container, be, elapsed);
             }
         }
     }
 
-    private static void tickContainer(ServerLevel level, BlockPos pos, Container container, BlockEntity be) {
+    private static void tickContainer(ServerLevel level, BlockPos pos, Container container, BlockEntity be,
+                                      int elapsed) {
         double multiplier = be instanceof SealedVaultBlockEntity vault ? vault.decayMultiplier() : 1.0D;
 
         // 符文柜通电时完全不衰变
@@ -138,9 +164,11 @@ public final class ContainerDecayTicker {
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             ItemStack stack = container.getItem(slot);
 
-            // 容器里也可能放着小包 —— 包里的东西按小包自己的规则推进
+            // 容器里也可能放着小包 —— 包里的东西按小包自己的规则推进；界面打开期间暂停
             if (stack.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
-                PouchDecay.tick(stack, level, pos, SWEEP_INTERVAL);
+                if (!com.water2h2o.elementalverse.menu.PouchMenu.isOpen(stack)) {
+                    PouchDecay.tick(stack, level, pos, elapsed);
+                }
                 touched = true;
                 continue;
             }
@@ -149,7 +177,12 @@ public final class ContainerDecayTicker {
                 continue;
             }
 
-            ItemStack replacement = DecayAdvance.advance(stack, level, pos, SWEEP_INTERVAL, multiplier);
+            // 刚放进去的东西（timer 还是 0）最多只吃一个扫描周期的“补时”，
+            // 避免大世界里轮转间隔很长时，新放的元素一进箱子就掉一大截。
+            int stackElapsed = ElementVialItem.getTimer(stack) == 0
+                    ? Math.min(elapsed, SWEEP_INTERVAL)
+                    : elapsed;
+            ItemStack replacement = DecayAdvance.advance(stack, level, pos, stackElapsed, multiplier);
             if (replacement != null) {
                 container.setItem(slot, replacement);
             }

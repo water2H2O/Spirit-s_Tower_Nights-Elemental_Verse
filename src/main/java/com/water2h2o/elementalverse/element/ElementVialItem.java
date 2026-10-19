@@ -68,6 +68,12 @@ public class ElementVialItem extends Item {
         stack.set(EVDataComponents.DECAY_TIMER.get(), timer);
     }
 
+    /** 这个堆叠是否应该画衰变条：空瓶、金、芽这类不衰变的不画。 */
+    public static boolean hasDecayBar(ItemStack stack) {
+        ElementType type = getElement(stack);
+        return DecayEngine.decays(type) && EVConfig.getThreshold(type) > 0;
+    }
+
     /** 衰变进度 0..100（给客户端的耐久条用）。 */
     public static int getProgress(ItemStack stack) {
         Integer progress = stack.get(EVDataComponents.DECAY_PROGRESS.get());
@@ -151,6 +157,36 @@ public class ElementVialItem extends Item {
             return Component.translatable(EVLang.vial(type));
         }
         return type.displayName();
+    }
+
+    /**
+     * 悬停：只给模糊的阶段描述，不给数字。
+     *
+     * <p>用**同步到客户端**的 {@code decay_progress} 判断阶段，而不是 {@code decay_timer}——
+     * 后者刻意不同步（同步会导致手持闪动），所以这里不能也不必读它。
+     */
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip,
+                                TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
+
+        ElementType type = getElement(stack);
+        if (type.isEmpty()) {
+            tooltip.add(Component.translatable(EVLang.TOOLTIP_EMPTY_VIAL)
+                    .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+        if (!type.decays()) {
+            tooltip.add(Component.translatable(EVLang.TOOLTIP_NO_DECAY)
+                    .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
+        int progress = getProgress(stack);
+        DecayStage stage = progress >= 80 ? DecayStage.DEAD
+                : progress >= 50 ? DecayStage.DERIVED
+                : DecayStage.STABLE;
+        tooltip.add(Component.translatable(stage.descriptionKey()).withStyle(ChatFormatting.GRAY));
     }
 
     /**

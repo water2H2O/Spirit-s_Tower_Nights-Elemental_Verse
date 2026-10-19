@@ -100,6 +100,21 @@ public record Declaration(ElementType element, int tier, String operation, Strin
 
     /** 给玩家看的强度（不会显示具体数字以外的东西）。 */
     public int investCount() {
+        return costOfTier(tier);
+    }
+
+    /** 主料（写入时）要扣几个元素。 */
+    public int stateCost() {
+        return stateElement != null && !stateElement.isEmpty() ? costOfTier(stateTier) : 0;
+    }
+
+    /** 辅料（写入时 / 施法时）要扣几个元素。 */
+    public int reagentCost() {
+        return reagentElement != null && !reagentElement.isEmpty() ? costOfTier(reagentTier) : 0;
+    }
+
+    /** 档位 1 / 2 / 3 对应的投入个数；不合法返回 0。 */
+    public static int costOfTier(int tier) {
         return switch (tier) {
             case 1 -> 1;
             case 2 -> 3;

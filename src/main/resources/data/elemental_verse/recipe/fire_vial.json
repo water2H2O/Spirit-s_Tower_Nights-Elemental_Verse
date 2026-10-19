@@ -14,7 +14,9 @@
     "id": "elemental_verse:element_vial",
     "count": 1,
     "components": {
-      "elemental_verse:element": "fire"
+      "elemental_verse:element": "fire",
+      "elemental_verse:decay_timer": 0,
+      "minecraft:custom_model_data": 5
     }
   }
 }

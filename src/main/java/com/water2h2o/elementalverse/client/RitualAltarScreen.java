@@ -1,6 +1,7 @@
 package com.water2h2o.elementalverse.client;
 
 import com.water2h2o.elementalverse.menu.RitualAltarMenu;
+import com.water2h2o.elementalverse.util.EVLang;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -9,10 +10,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 /**
- * 仪式台界面。
+ * 仪式台界面（作者提供的 176×166 底图）。
  *
- * <p>暂时复用发射器底图（3×3 布局一致），等作者给出专用界面再换。
- * 换的时候只改这一个常量。
+ * <p>底图原来的中间位置画的是“输入 → 输出”箭头，而代码在这里放的是剑槽；
+ * 所以屏幕上会补一个原版槽位底图盖住箭头，并标“剑槽”。
  */
 public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> {
 
@@ -38,5 +39,11 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
         // 于是作者画的槽位和代码里的槽位全部错开（作者在 layout 文件里专门提醒过）。
         graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight,
                 this.imageWidth, this.imageHeight);
+
+        // 作者的贴图在 (80,35) 画的是“输入 → 输出”箭头，但代码在这里放的是剑槽。
+        // 用原版物品栏的槽位底图盖住箭头，让它看起来真的是一个槽，并在下面标“剑槽”。
+        graphics.blit(INVENTORY_LOCATION, x + 79, y + 34, 7, 83, 18, 18);
+        graphics.drawString(this.font, Component.translatable(EVLang.RITUAL_TOOL_LABEL),
+                x + 80, y + 53, 0xFF404B44, false);
     }
 }

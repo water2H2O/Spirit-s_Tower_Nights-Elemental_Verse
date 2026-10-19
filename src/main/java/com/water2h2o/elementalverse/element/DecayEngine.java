@@ -17,16 +17,13 @@ import net.minecraft.world.level.Level;
  * 于是**永远到不了死寂物质**。改用绝对口径后：
  *
  * <pre>
- *   水 ：阈值 400            → 400 时变成冰（计时器仍是 400）
- *   冰 ：阈值 400+800=1200   → 1200 时变成死寂物质
+ *   水 ：阈值 400            → 400 时变成霜（计时器仍是 400）
+ *   霜 ：阈值 400+800=1200   → 1200 时变成死寂物质
  * </pre>
  *
  * 每条链的绝对阈值 = 父稳定元素的「阶段① + 阶段②」（见 {@link EVConfig#getThreshold}）。
  */
 public final class DecayEngine {
-
-    /** 单次推进的上限，防止有人把 tickInterval 调得离谱导致 int 溢出。 */
-    private static final int MAX_STEP = 200;
 
     /** 计时器的硬上限。到顶就不再累加，避免长时间放置把 int 撑爆。 */
     private static final int TIMER_CAP = Integer.MAX_VALUE / 2;
@@ -100,12 +97,13 @@ public final class DecayEngine {
         }
 
         double multiplier = EVConfig.getGlobalMultiplier() * environmentalFactor(type, level, pos);
-        int advanced = (int) Math.round(Math.min(elapsedTicks, MAX_STEP) * multiplier);
-        if (advanced < 1) {
+        // 容器扫描可能一次补上很长的时间（大世界轮转 / 区块刚加载），不能再截断到 200 tick。
+        long advanced = Math.round((double) Math.max(0, elapsedTicks) * multiplier);
+        if (advanced < 1L) {
             return false;
         }
 
-        int next = Math.min(TIMER_CAP, timer + advanced);
+        int next = (int) Math.min(TIMER_CAP, (long) timer + advanced);
         ElementVialItem.setTimer(stack, next);
 
         // 耐久条用的百分比：整数变了才写（所以每秒最多一次小小更新）

@@ -57,9 +57,11 @@ public final class VialDecayEvents {
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
 
-            // 元素小包：里面的东西用自己的冷却规则推进
+            // 元素小包：里面的东西用自己的冷却规则推进；界面打开期间暂停
             if (stack.is(EVItems.ELEMENT_POUCH.get())) {
-                PouchDecay.tick(stack, level, pos, interval);
+                if (!com.water2h2o.elementalverse.menu.PouchMenu.isOpen(stack)) {
+                    PouchDecay.tick(stack, level, pos, interval);
+                }
                 continue;
             }
 

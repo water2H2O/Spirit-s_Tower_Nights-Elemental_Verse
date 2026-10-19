@@ -37,19 +37,12 @@ public class DecayBarDecorator implements IItemDecorator {
 
     @Override
     public boolean render(GuiGraphics graphics, Font font, ItemStack stack, int x, int y) {
-        if (!ElementCarrier.isCarrier(stack)) {
+        if (!ElementCarrier.isCarrier(stack) || !ElementVialItem.hasDecayBar(stack)) {
             return false;
         }
 
-        // 0 = 刚装好，100 = 马上就要变了
-        int progress = ElementVialItem.getProgress(stack);
-        if (progress <= 0) {
-            // 空瓶、不衰变的元素（金、芽待定）都不画
-            return false;
-        }
-        if (progress > 100) {
-            progress = 100;
-        }
+        // 0 = 刚装好（画满格绿条），100 = 马上就要变了
+        int progress = Math.max(0, Math.min(100, ElementVialItem.getProgress(stack)));
 
         int width = BAR_RIGHT - BAR_LEFT;
         int filled = Math.max(1, Math.round(width * (100 - progress) / 100.0F));
