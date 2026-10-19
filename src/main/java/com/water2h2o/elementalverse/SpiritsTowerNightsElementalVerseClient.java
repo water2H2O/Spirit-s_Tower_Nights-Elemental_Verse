@@ -45,6 +45,20 @@ public class SpiritsTowerNightsElementalVerseClient {
                 com.water2h2o.elementalverse.client.RitualAltarScreen::new);
     }
 
+    /**
+     * 法术弹射物的渲染：直接复用原版的"投掷物"渲染器。
+     *
+     * <p>它会画出实体身上的物品栈 —— 也就是那瓶对应元素的元素瓶，
+     * 所以飞出去的是一瓶看得清的元素，而不是一个看不出是什么的光点。
+     */
+    @SubscribeEvent
+    static void onRegisterRenderers(
+            net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(
+                com.water2h2o.elementalverse.registry.EVEntities.SPELL_PROJECTILE.get(),
+                net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
+    }
+
     /** 给三种元素容器加"衰变期"横条（外观同耐久条，但不碰原版耐久系统）。 */
     @SubscribeEvent
     static void onRegisterItemDecorations(RegisterItemDecorationsEvent event) {

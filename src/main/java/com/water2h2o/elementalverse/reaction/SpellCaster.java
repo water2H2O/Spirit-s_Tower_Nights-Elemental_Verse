@@ -80,14 +80,19 @@ public final class SpellCaster {
         }
         consumeMaterials(player, declaration);
 
+        boolean flying = false;
         if (matched.isPresent()) {
-            apply(level, player, matched.get().phenomenon(), params, declaration.form(), null);
+            flying = apply(level, player, matched.get().phenomenon(), params, declaration, null);
         } else {
             applyFallback(level, player, input, params);
         }
 
-        // 表现：必须让人一眼看出"放了"
-        playCastFeedback(level, player, input, null);
+        // 表现：飞出去的法术自带拖尾，就不用再画一条连线了
+        if (flying) {
+            playLaunchSound(level, player, input);
+        } else {
+            playCastFeedback(level, player, input, null);
+        }
         return true;
     }
 
@@ -118,24 +123,82 @@ public final class SpellCaster {
         }
 
         consumeMaterials(player, declaration);
-        apply(level, player, matched.get().phenomenon(), params, declaration.form(), hit);
+        // 武器触发一定是"已经打中了"，所以不走弹射物形态，直接结算。
+        dispatch(level, player, matched.get().phenomenon(), params, hit);
         playCastFeedback(level, player, input, hit);
         return true;
     }
 
     // ---------------------------------------------------------------- 现象
 
-    private static void apply(Level level, Player player, Phenomenon phenomenon, SpellParams params,
-                              String form, HitResult providedHit) {
+    /**
+     * 按形态分派。
+     *
+     * <ul>
+     *   <li>{@code self}：直接落在施法者身上</li>
+     *   <li>{@code projectile}：**发射**，法术变成一颗会飞的弹射物，命中才结算</li>
+     *   <li>其它（{@code touch} 等老写法）：沿用射线，看向哪就在哪生效</li>
+     * </ul>
+     *
+     * @return 真的发射了弹射物返回 true（调用方据此跳过连线反馈）
+     */
+    private static boolean apply(Level level, Player player, Phenomenon phenomenon, SpellParams params,
+                                 Declaration declaration, HitResult providedHit) {
+        String form = declaration.form();
         // 自生：现象直接落在施法者自己身上（不射线）
         if ("self".equals(form)) {
             HitResult selfHit = new EntityHitResult(player);
             dispatch(level, player, phenomenon, params, selfHit);
-            return;
+            return false;
         }
-        // 触摸：射线命中。弹射物形态还没做，先按触摸跑
+        // 发射：飞出去，命中时由 SpellProjectile 回调 applyProjectileHit
+        if ("projectile".equals(form) && providedHit == null) {
+            return launchProjectile(level, player, declaration);
+        }
+        // 触摸：射线命中
         dispatch(level, player, phenomenon, params, providedHit != null
                 ? providedHit : player.pick(RANGE, 1.0F, false));
+        return false;
+    }
+
+    /**
+     * 发射一颗法术弹射物。
+     *
+     * <p>速度给 1.6：比箭略慢，让人看得清它飞过去 —— 这正是这次要的效果。
+     */
+    private static boolean launchProjectile(Level level, Player player, Declaration declaration) {
+        if (!(level instanceof ServerLevel server)) {
+            return false;
+        }
+        var projectile = new com.water2h2o.elementalverse.entity.SpellProjectile(
+                server, player, declaration);
+        projectile.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
+        // 不受重力：法术应该笔直飞向准星指向的地方，而不是像雪球那样掉下去
+        projectile.setNoGravity(true);
+        projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.6F, 0.4F);
+        server.addFreshEntity(projectile);
+        return true;
+    }
+
+    /**
+     * 弹射物命中时结算现象。
+     *
+     * <p>只有服务端调用；客户端从 {@code SpellProjectile} 里就被拦下了。
+     */
+    public static void applyProjectileHit(Level level, Player player, Declaration declaration,
+                                          HitResult hit) {
+        if (level.isClientSide()) {
+            return;
+        }
+        ElementValue input = declaration.inputValue();
+        SpellParams params = SpellParams.of(declaration);
+        var matched = ReactionManager.match(input);
+        if (matched.isPresent()) {
+            dispatch(level, player, matched.get().phenomenon(), params, hit);
+        } else {
+            applyFallback(level, player, input, params, hit);
+        }
+        playImpactFeedback(level, input, hit);
     }
 
     private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
@@ -329,14 +392,7 @@ public final class SpellCaster {
     private static void playCastFeedback(Level level, Player player, ElementValue input,
                                         HitResult providedHit) {
         var axis = input.dominant();
-        int color = switch (axis == null ? ElementAxis.FIRE : axis) {
-            case FIRE -> 0xFF6A00;
-            case WATER -> 0x3FA9F5;
-            case GRASS -> 0x4CD137;
-            case EARTH -> 0x9B7653;
-            case WIND -> 0xD9F0FF;
-            case LIGHT -> 0xFFE066;
-        };
+        int color = colorOf(axis);
 
         var hit = providedHit != null ? providedHit : player.pick(RANGE, 1.0F, false);
         var target = hit.getType() == HitResult.Type.MISS
@@ -381,6 +437,57 @@ public final class SpellCaster {
         // 再补一声"施法"底噪，保证任何时候都有明确反馈
         level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
                 SoundSource.PLAYERS, 0.45F, 1.4F);
+    }
+
+    /** 元素轴对应的颜色：火橙、水蓝、草绿、地褐、风白、光金。 */
+    public static int colorOf(ElementAxis axis) {
+        return switch (axis == null ? ElementAxis.FIRE : axis) {
+            case FIRE -> 0xFF6A00;
+            case WATER -> 0x3FA9F5;
+            case GRASS -> 0x4CD137;
+            case EARTH -> 0x9B7653;
+            case WIND -> 0xD9F0FF;
+            case LIGHT -> 0xFFE066;
+        };
+    }
+
+    /** 发射音：比命中音短促，让人知道"出去了"。 */
+    private static void playLaunchSound(Level level, Player player, ElementValue input) {
+        ElementAxis axis = input.dominant();
+        var sound = switch (axis == null ? ElementAxis.FIRE : axis) {
+            case FIRE -> SoundEvents.BLAZE_SHOOT;
+            case WATER -> SoundEvents.BOAT_PADDLE_WATER;
+            case GRASS -> SoundEvents.GRASS_BREAK;
+            case EARTH -> SoundEvents.STONE_PLACE;
+            case WIND -> SoundEvents.PHANTOM_FLAP;
+            case LIGHT -> SoundEvents.AMETHYST_BLOCK_CHIME;
+        };
+        level.playSound(null, player.blockPosition(), sound, SoundSource.PLAYERS, 0.55F, 1.5F);
+    }
+
+    /** 命中反馈：目标处爆一圈同色粒子 + 元素命中音。 */
+    private static void playImpactFeedback(Level level, ElementValue input, HitResult hit) {
+        if (!(level instanceof ServerLevel server) || hit == null
+                || hit.getType() == HitResult.Type.MISS) {
+            return;
+        }
+        ElementAxis axis = input.dominant();
+        int color = colorOf(axis);
+        var target = hit.getLocation();
+        server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(
+                        new org.joml.Vector3f(((color >> 16) & 0xFF) / 255.0F,
+                                ((color >> 8) & 0xFF) / 255.0F,
+                                (color & 0xFF) / 255.0F), 1.6F),
+                target.x, target.y, target.z, 18, 0.35D, 0.35D, 0.35D, 0.02D);
+        var sound = switch (axis == null ? ElementAxis.FIRE : axis) {
+            case FIRE -> SoundEvents.BLAZE_SHOOT;
+            case WATER -> SoundEvents.BUCKET_EMPTY;
+            case GRASS -> SoundEvents.GRASS_BREAK;
+            case EARTH -> SoundEvents.STONE_PLACE;
+            case WIND -> SoundEvents.PHANTOM_FLAP;
+            case LIGHT -> SoundEvents.AMETHYST_BLOCK_CHIME;
+        };
+        level.playSound(null, target.x, target.y, target.z, sound, SoundSource.PLAYERS, 0.8F, 1.1F);
     }
 
     /**
@@ -532,14 +639,22 @@ public final class SpellCaster {
 
     /** 没有精确配方 → 按主成分律给一个通用现象（保证"扔一堆火"总有反应）。 */
     private static void applyFallback(Level level, Player player, ElementValue input, SpellParams params) {
+        applyFallback(level, player, input, params, null);
+    }
+
+    /** 同上，但命中点已经确定（弹射物飞来时用这个，不再自己射线）。 */
+    private static void applyFallback(Level level, Player player, ElementValue input, SpellParams params,
+                                      HitResult suppliedHit) {
         var axis = input.dominant();
         if (axis == null) {
             return;
         }
+        HitResult target = suppliedHit != null && suppliedHit.getType() != HitResult.Type.MISS
+                ? suppliedHit
+                : player.pick(RANGE, 1.0F, false);
         switch (axis) {
-            case FIRE -> ignite(level, player.pick(RANGE, 1.0F, false),
-                    new Phenomenon("ignite", axis, 1.0, 40, 0.0), params);
-            case WATER -> douse(level, player.pick(RANGE, 1.0F, false), params);
+            case FIRE -> ignite(level, target, new Phenomenon("ignite", axis, 1.0, 40, 0.0), params);
+            case WATER -> douse(level, target, params);
             default -> {
                 // 目前只为火 / 水实现了通用兜底；其余元素没有现象，调用方会在扣材料前拦下。
             }
