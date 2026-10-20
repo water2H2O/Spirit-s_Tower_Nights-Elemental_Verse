@@ -87,9 +87,12 @@ public class RuneCabinetBlock extends BaseEntityBlock {
                     level.playSound(null, pos, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,
                             net.minecraft.sounds.SoundSource.BLOCKS, 0.8F, 1.3F);
                 } else {
+                    // 把手里那种元素的名字带出来，否则玩家不知道被拒的原因
                     player.displayClientMessage(
                             net.minecraft.network.chat.Component.translatable(
-                                    com.water2h2o.elementalverse.util.EVLang.MSG_ONLY_COLD), true);
+                                    com.water2h2o.elementalverse.util.EVLang.MSG_ONLY_COLD,
+                                    com.water2h2o.elementalverse.element.ElementVialItem
+                                            .getElement(stack).displayName()), true);
                 }
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());

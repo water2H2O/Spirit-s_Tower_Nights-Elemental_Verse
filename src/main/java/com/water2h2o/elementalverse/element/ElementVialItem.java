@@ -20,6 +20,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+
+import com.water2h2o.elementalverse.element.ElementAxis;
+import com.water2h2o.elementalverse.element.ElementValue;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -159,8 +162,28 @@ public class ElementVialItem extends Item {
         return type.displayName();
     }
 
+    /** 逐轴列出这条元素贡献的值（作者：要能看到"详细加的元素值"）。 */
+    public static void appendValueLines(ElementType type, List<Component> tooltip) {
+        if (type == null || type.isEmpty()) {
+            return;
+        }
+        ElementValue value = type.value();
+        for (ElementAxis axis : ElementAxis.values()) {
+            double amount = value.get(axis);
+            if (Math.abs(amount) < 1.0E-3D) {
+                continue;
+            }
+            String text = Component.translatable(
+                    "axis.elemental_verse." + axis.getSerializedName()).getString()
+                    + " " + (amount > 0 ? "+" : "-")
+                    + String.format(java.util.Locale.ROOT, "%.1f", Math.abs(amount));
+            tooltip.add(Component.literal(text)
+                    .withStyle(amount > 0 ? ChatFormatting.GREEN : ChatFormatting.RED));
+        }
+    }
+
     /**
-     * 悬停：只给模糊的阶段描述，不给数字。
+     * 悬停：阶段描述 + 六轴数值。
      *
      * <p>用**同步到客户端**的 {@code decay_progress} 判断阶段，而不是 {@code decay_timer}——
      * 后者刻意不同步（同步会导致手持闪动），所以这里不能也不必读它。
@@ -176,6 +199,10 @@ public class ElementVialItem extends Item {
                     .withStyle(ChatFormatting.GRAY));
             return;
         }
+
+        // 这条元素到底加了多少 —— 六轴逐条列出，正值绿、负值红（不衰变的也显示）
+        appendValueLines(type, tooltip);
+
         if (!type.decays()) {
             tooltip.add(Component.translatable(EVLang.TOOLTIP_NO_DECAY)
                     .withStyle(ChatFormatting.GRAY));

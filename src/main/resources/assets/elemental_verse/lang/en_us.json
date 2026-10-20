@@ -85,11 +85,17 @@
   "item.elemental_verse.magic": "%s Declaration",
   "effect.elemental_verse.vulnerable": "Vulnerable",
   "block.elemental_verse.rune_cabinet": "Rune Cabinet",
-  "message.elemental_verse.only_cold": "The rune cabinet only accepts frost or ice declarations",
+  "message.elemental_verse.only_cold": "The cabinet only accepts frost or ice, not %s",
   "item.elemental_verse.creative_pouch": "Creative Pouch",
   "tooltip.elemental_verse.creative_pouch": "Spells cost no elements",
   "tooltip.elemental_verse.creative_pouch_only": "Creative mode only",
   "gui.elemental_verse.rune_cabinet.unpowered": "Not cooled",
   "gui.elemental_verse.rune_cabinet.remaining": "Cooling %s m %s s",
-  "effect.elemental_verse.bound_hands": "Bound Hands"
+  "effect.elemental_verse.bound_hands": "Bound Hands",
+  "axis.elemental_verse.fire": "Fire",
+  "axis.elemental_verse.water": "Water",
+  "axis.elemental_verse.earth": "Earth",
+  "axis.elemental_verse.wind": "Wind",
+  "axis.elemental_verse.grass": "Grass",
+  "axis.elemental_verse.light": "Light"
 }

@@ -76,7 +76,9 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
      */
     public boolean feed(ItemStack stack) {
         ElementType type = com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack);
-        if (type != ElementType.ICE && type != ElementType.FROST) {
+        // 判定放得很宽：只要带**负火**（冰 = 火-1.0、霜 = 火-0.5）就算冷源。
+        // 之前写死 `type == ICE || type == FROST`，任何"看着像冰"的新元素都会被挡在外面。
+        if (!isCold(type)) {
             return false;
         }
         // 霜 = 半日，冰 = 一日（和小包燃料的 2:1 一致）。喂多个会累加，封顶 8 日。
@@ -86,6 +88,17 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
         energyMax = MAX_ENERGY;
         setChanged();
         return true;
+    }
+
+    /** 带负火的元素都算冷源（霜 / 冰，以及以后可能加的同类）。 */
+    public static boolean isCold(ElementType type) {
+        if (type == null || type.isEmpty()) {
+            return false;
+        }
+        if (type == ElementType.ICE || type == ElementType.FROST) {
+            return true;
+        }
+        return type.value().get(com.water2h2o.elementalverse.element.ElementAxis.FIRE) < 0.0D;
     }
 
     /** 每 20 tick 扣 20 点能量（能量单位是 tick）；不是每 20 tick 只扣 1 点。 */

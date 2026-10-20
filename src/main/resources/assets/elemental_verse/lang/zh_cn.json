@@ -85,11 +85,17 @@
   "item.elemental_verse.magic": "%s申明板",
   "effect.elemental_verse.vulnerable": "易伤",
   "block.elemental_verse.rune_cabinet": "符文柜",
-  "message.elemental_verse.only_cold": "符文柜只吃霜或冰的申明",
+  "message.elemental_verse.only_cold": "符文柜只认霜与冰，这个是 %s",
   "item.elemental_verse.creative_pouch": "创造小包",
   "tooltip.elemental_verse.creative_pouch": "施法不消耗元素",
   "tooltip.elemental_verse.creative_pouch_only": "仅创造模式可获得",
   "gui.elemental_verse.rune_cabinet.unpowered": "未冷却",
   "gui.elemental_verse.rune_cabinet.remaining": "冷却 %s 分 %s 秒",
-  "effect.elemental_verse.bound_hands": "缚手"
+  "effect.elemental_verse.bound_hands": "缚手",
+  "axis.elemental_verse.fire": "火",
+  "axis.elemental_verse.water": "水",
+  "axis.elemental_verse.earth": "地",
+  "axis.elemental_verse.wind": "风",
+  "axis.elemental_verse.grass": "草",
+  "axis.elemental_verse.light": "光"
 }
