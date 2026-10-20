@@ -126,7 +126,7 @@ public final class SpellCaster {
 
         consumeMaterials(player, declaration);
         // 武器触发一定是"已经打中了"，所以不走弹射物形态，直接结算。
-        dispatch(level, player, matched.get().phenomenon(), params, hit);
+        dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
         playCastFeedback(level, player, input, hit);
         return true;
     }
@@ -150,7 +150,7 @@ public final class SpellCaster {
         // 自生：现象直接落在施法者自己身上（不射线）
         if ("self".equals(form)) {
             HitResult selfHit = new EntityHitResult(player);
-            dispatch(level, player, phenomenon, params, selfHit);
+            dispatch(level, player, phenomenon, params, selfHit, declaration);
             return false;
         }
         // 发射：飞出去，命中时由 SpellProjectile 回调 applyProjectileHit
@@ -162,7 +162,7 @@ public final class SpellCaster {
         }
         // 触摸：射线命中
         dispatch(level, player, phenomenon, params, providedHit != null
-                ? providedHit : player.pick(RANGE, 1.0F, false));
+                ? providedHit : player.pick(RANGE, 1.0F, false), declaration);
         return false;
     }
 
@@ -199,7 +199,7 @@ public final class SpellCaster {
         SpellParams params = SpellParams.of(declaration);
         var matched = ReactionManager.match(input);
         if (matched.isPresent()) {
-            dispatch(level, player, matched.get().phenomenon(), params, hit);
+            dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
         } else {
             applyFallback(level, player, input, params, hit);
         }
@@ -207,7 +207,7 @@ public final class SpellCaster {
     }
 
     private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
-                                 HitResult hit) {
+                                 HitResult hit, Declaration declaration) {
 
         switch (phenomenon.type()) {
             case "ignite" -> ignite(level, hit, phenomenon, params);
@@ -217,7 +217,7 @@ public final class SpellCaster {
             case "lava" -> lava(level, hit, phenomenon, params);
             case "fire_resistance" -> fireResistance(player, phenomenon, params);
             case "chaos" -> chaos(level, player, hit, phenomenon, params);
-            default -> applyPrimitive(level, player, hit, phenomenon, params);
+            default -> applyPrimitive(level, player, hit, phenomenon, params, declaration);
         }
     }
 
@@ -227,8 +227,15 @@ public final class SpellCaster {
      * <p>打在方块上时只溅水花 —— 不破坏地形。
      */
     private static void lockInventory(Level level, Player player, Phenomenon phenomenon,
-                                      SpellParams params, HitResult hit) {
-        int ticks = effectTicks(phenomenon, params);
+                                      SpellParams params, HitResult hit, Declaration declaration) {
+        // 持续时间只看洪流的**档位**：1/2/3 档 = 3 / 5 / 10 秒。
+        // 不看光态，也不看 JSON 里的 duration —— 这条法术的"多久"由投入量决定。
+        int seconds = switch (Math.max(1, Math.min(3, declaration.tier()))) {
+            case 3 -> 10;
+            case 2 -> 5;
+            default -> 3;
+        };
+        int ticks = seconds * 20;
         if (hit instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof LivingEntity living) {
             // 中等击退：方向由施法者指向目标（以前只对玩家生效，打怪完全没反应）
@@ -239,8 +246,11 @@ public final class SpellCaster {
                         dir.z * 0.9D * params.intensity());
                 living.hurtMarked = true;
             }
-            living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    com.water2h2o.elementalverse.registry.EVMobEffects.BOUND_HANDS, ticks, 0),
+            // 先移除再挂 = **重置计时**。直接 addEffect 只会取剩余时间较长的那个，
+            // 连打第二发时不但不刷新，还可能完全不生效。
+            var boundHands = com.water2h2o.elementalverse.registry.EVMobEffects.BOUND_HANDS;
+            living.removeEffect(boundHands);
+            living.addEffect(new net.minecraft.world.effect.MobEffectInstance(boundHands, ticks, 0),
                     player);
             // 对玩家再额外压一层物品冷却，手感上就是"掏不出东西"
             if (living instanceof Player target) {
@@ -301,7 +311,8 @@ public final class SpellCaster {
      * <p>这样加一条反应基本只需要写 JSON —— 只有"全新机制"才需要在这里加分支。
      */
     private static void applyPrimitive(Level level, Player player, HitResult hit,
-                                       Phenomenon phenomenon, SpellParams params) {
+                                       Phenomenon phenomenon, SpellParams params,
+                                       Declaration declaration) {
         String type = phenomenon.type();
         BlockPos center;
         if (hit instanceof BlockHitResult blockHit) {
@@ -376,7 +387,7 @@ public final class SpellCaster {
                 player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                         net.minecraft.world.effect.MobEffects.GLOWING, ticks, 0));
             }
-            case "lock_inventory" -> lockInventory(level, player, phenomenon, params, hit);
+            case "lock_inventory" -> lockInventory(level, player, phenomenon, params, hit, declaration);
             case "freeze" -> {
                 if (hit instanceof EntityHitResult entityHit
                         && entityHit.getEntity() instanceof LivingEntity living) {
