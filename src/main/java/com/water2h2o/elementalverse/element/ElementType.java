@@ -41,7 +41,8 @@ public enum ElementType implements StringRepresentable {
      * 这样"冰"才有稀缺性（它以后是小包里的高级冷却剂）。
      */
     WATER("water", "frost", null, true),
-    WIND("wind", "lightning", null, true),
+    // 电暂时隐藏（作者 2026-10-21：后面专门做用途），所以风不再衰变成电
+    WIND("wind", null, null, true),
     FIRE("fire", "ember", null, true),
     GRASS("grass", "bud", null, true),
     LIGHT("light", "dawn", null, true),
@@ -307,7 +308,8 @@ public enum ElementType implements StringRepresentable {
         VALUES.put("bud", ElementValue.of(ElementAxis.EARTH, -0.5));
         VALUES.put("wood", ElementValue.of(ElementAxis.EARTH, -1.0));
         VALUES.put("lightning", ElementValue.of(ElementAxis.GRASS, -0.5));
-        VALUES.put("ember", ElementValue.of(ElementAxis.LIGHT, -0.5));
+        // 作者 2026-10-21：烬改成负风（原来负光）
+        VALUES.put("ember", ElementValue.of(ElementAxis.WIND, -0.5));
 
         // 光系例外：光是"没有天敌"的轴，所以它只有强弱之分
         VALUES.put("dawn", ElementValue.of(ElementAxis.LIGHT, 2.0));

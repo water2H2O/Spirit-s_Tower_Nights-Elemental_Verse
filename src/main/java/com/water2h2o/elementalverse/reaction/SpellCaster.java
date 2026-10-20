@@ -328,7 +328,7 @@ public final class SpellCaster {
             case "lava" -> lava(level, hit, phenomenon, params);
             case "fire_resistance" -> fireResistance(player, phenomenon, params);
             case "chaos" -> chaos(level, player, hit, phenomenon, params, declaration);
-            case "explode" -> explode(level, player, params, hit);
+            case "explode" -> explode(level, player, params, hit, declaration);
             case "flash" -> flash(level, player, hit, phenomenon, params, declaration);
             case "encase" -> encase(level, player, hit, phenomenon, params, declaration);
             default -> applyPrimitive(level, player, hit, phenomenon, params, declaration);
@@ -391,9 +391,11 @@ public final class SpellCaster {
     }
 
     /** 爆炸：火轴投满（> 2 点）就是把势能一次性放掉。 */
-    private static void explode(Level level, Player player, SpellParams params, HitResult hit) {
-        // 三级火专属：拆方块保留，但伤害压到 3.0（原本 4.0 会把自己一起炸死）
-        explodeAt(level, player, hit, 3.0F, true);
+    private static void explode(Level level, Player player, SpellParams params, HitResult hit,
+                                Declaration declaration) {
+        // 三级火专属：伤害压到 3.0（原本 4.0 会把自己一起炸死）。
+        // 拆不拆方块由**地**决定：带负地（木 / 芽）时只炸人不炸地形。
+        explodeAt(level, player, hit, 3.0F, canTouchBlocks(declaration));
     }
 
     private static void explodeAt(Level level, Player player, HitResult hit, float power, boolean destroy) {
@@ -486,8 +488,8 @@ public final class SpellCaster {
         var at = hitPoint(player, hit);
 
         switch (declaration.element()) {
-            case FIRE -> // 爆炸 power 1.5，破坏地形
-                    explodeAt(level, player, hit, 1.5F, true);
+            case FIRE -> // 爆炸 power 1.5；带负地时不破坏地形
+                    explodeAt(level, player, hit, 1.5F, canTouchBlocks(declaration));
             case WATER -> {
                 // 冻结 3 秒 + 缚手 3 秒
                 if (target != null) {
@@ -506,19 +508,9 @@ public final class SpellCaster {
                 }
             }
             case WIND -> {
-                // 追加 2 发**原版风弹**。
-                // 不能用 SpellProjectile —— 那等于把本法术又放了两遍，
-                // 玩家看到的就成了"莫名其妙多出两个法术"。
-                if (level instanceof ServerLevel server) {
-                    for (int i = 0; i < 2; i++) {
-                        var charge = new net.minecraft.world.entity.projectile.windcharge.WindCharge(
-                                player, server, player.getX(), player.getEyeY() - 0.2D, player.getZ());
-                        float spread = i == 0 ? -12.0F : 12.0F;
-                        charge.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
-                                0.0F, 1.6F, 1.0F);
-                        server.addFreshEntity(charge);
-                    }
-                }
+                // 作者 2026-10-21：改成"命中后立即追加一次同等效果的法术"。
+                // 同一个目标再结算一遍，但 allowTierBonus = false，否则会无限叠。
+                dispatch(level, player, phenomenon, params, hit, declaration, false);
             }
             case GRASS -> {
                 // 本法术的状态：持续 ×1.5、等级 +1

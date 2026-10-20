@@ -47,8 +47,8 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     public static final int SLOT_PLATE = 3;
     public static final int SLOT_OUTPUT = 4;
 
-    /** 工具槽：把剑放这里，就能把已写好的申明"刻"上去。 */
-    public static final int SLOT_TOOL = 5;
+    /** 命名槽：放一张写着名字的命名牌，产出的申明板就用那个名字。 */
+    public static final int SLOT_NAME = 5;
 
     public static final int SIZE = 6;
 
@@ -97,18 +97,9 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         if (plate.isEmpty() || !plate.is(EVItems.DECLARATION_PLATE.get())) {
             return ItemStack.EMPTY;
         }
-        // 已经写好的板子 + 工具槽里有剑 → 把申明刻到剑上（锻造模板式升级）
+        // 已经写好的板子 → 不再重复写
         if (DeclarationPlateItem.getDeclaration(plate).isDefined()) {
-            ItemStack tool = items.getItem(SLOT_TOOL);
-            if (tool.isEmpty() || !tool.is(net.minecraft.tags.ItemTags.SWORDS)) {
-                return ItemStack.EMPTY;
-            }
-            ItemStack enchanted = tool.copy();
-            enchanted.setCount(1);
-            // 剑是"接触"形态：砍谁生效在谁身上（板本身是"自身"）
-            enchanted.set(com.water2h2o.elementalverse.registry.EVDataComponents.DECLARATION.get(),
-                    DeclarationPlateItem.getDeclaration(plate).withForm("touch"));
-            return enchanted;
+            return ItemStack.EMPTY;
         }
 
         ElementSource source = findElementSource();
@@ -160,8 +151,10 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             magicName = matched.get().name();
         }
 
-        return DeclarationPlateItem.written(element, tier, stateElement, stateTier,
+        ItemStack result = DeclarationPlateItem.written(element, tier, stateElement, stateTier,
                 reagentElement, reagentTier, magicName);
+        applyNameFromSlot(result);
+        return result;
     }
 
     /** 主料优先从第 1 口取；没有就按水平方向找相邻容器（最多取第一个可用）。 */
@@ -211,17 +204,6 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             return false;
         }
 
-        // 刻印模式：剑是 base，板是 template。板不消耗，剑要被“吃”进产出。
-        if (DeclarationPlateItem.getDeclaration(plate).isDefined()) {
-            ItemStack tool = items.getItem(SLOT_TOOL);
-            if (tool.isEmpty() || !tool.is(net.minecraft.tags.ItemTags.SWORDS)) {
-                return false;
-            }
-            tool.shrink(1);
-            items.setChanged();
-            return true;
-        }
-
         ElementSource source = findElementSource();
         if (source == null) {
             return false;
@@ -237,12 +219,27 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         source.stack().shrink(Math.min(mainCost, source.stack().getCount()));
         shrinkSlot(SLOT_ELEMENT_B, reagentCost);
         shrinkSlot(SLOT_ELEMENT_C, stateCost);
+        // 命名牌只是一次性耗材
+        shrinkSlot(SLOT_NAME, 1);
 
         if (source.owner() != null) {
             source.owner().setChanged();
         }
         items.setChanged();
         return true;
+    }
+
+    /** 命名槽里如果有写了名字的命名牌，就把那个名字套到产物上。 */
+    private void applyNameFromSlot(ItemStack result) {
+        ItemStack tag = items.getItem(SLOT_NAME);
+        if (tag.isEmpty() || !tag.is(net.minecraft.world.item.Items.NAME_TAG)) {
+            return;
+        }
+        net.minecraft.network.chat.Component custom =
+                tag.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        if (custom != null) {
+            result.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, custom);
+        }
     }
 
     /** 某个投入口当前档位需要扣的数量；空口返回 0。 */
@@ -344,7 +341,7 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         return switch (slot) {
             case SLOT_ELEMENT_A, SLOT_ELEMENT_B, SLOT_ELEMENT_C -> isElementStack(stack);
             case SLOT_PLATE -> stack.is(EVItems.DECLARATION_PLATE.get());
-            case SLOT_TOOL -> stack.is(net.minecraft.tags.ItemTags.SWORDS);
+            case SLOT_NAME -> stack.is(net.minecraft.world.item.Items.NAME_TAG);
             default -> false;
         };
     }

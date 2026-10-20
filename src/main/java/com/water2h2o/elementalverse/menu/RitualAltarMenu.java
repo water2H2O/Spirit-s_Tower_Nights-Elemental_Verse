@@ -27,7 +27,8 @@ public class RitualAltarMenu extends AbstractContainerMenu {
 
     private static final int CELL = 18;
     private static final int GRID_LEFT = 62;
-    private static final int GRID_TOP = 17;
+    /** 三个配料口在第二行；第一行是命名槽，两行之间留一行空隙。 */
+    private static final int GRID_TOP = 35;
 
     private final RitualAltarBlockEntity altar;
 
@@ -65,19 +66,19 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         this.altar = altar;
 
         if (altar != null) {
-            // 三个元素投入口（上排）
+            // 命名槽（最上方，居中）
+            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_NAME,
+                    GRID_LEFT + CELL, GRID_TOP - CELL));
+            // 三个配料口：料 + 辅料 + 态
             for (int i = 0; i < 3; i++) {
                 this.addSlot(new Slot(altar, i, GRID_LEFT + i * CELL, GRID_TOP));
             }
-            // 申明板
-            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_PLATE, GRID_LEFT, GRID_TOP + CELL));
-            // 工具槽（剑）：放在申明板正下方那条空白带。
-            // 不能放在 (80,35) —— 贴图那里画的是"输入 → 输出"箭头，盖住就看不见流程了。
-            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_TOOL,
+            // 申明板（空隙下面）
+            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_PLATE,
                     GRID_LEFT, GRID_TOP + 2 * CELL));
             // 产出：只能拿，不能放
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_OUTPUT,
-                    GRID_LEFT + 2 * CELL, GRID_TOP + CELL) {
+                    GRID_LEFT + 2 * CELL, GRID_TOP + 2 * CELL) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return false;
@@ -89,11 +90,11 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9,
-                        8 + col * CELL, 84 + row * CELL));
+                        8 + col * CELL, 102 + row * CELL));
             }
         }
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * CELL, 142));
+            this.addSlot(new Slot(playerInventory, col, 8 + col * CELL, 160));
         }
     }
 

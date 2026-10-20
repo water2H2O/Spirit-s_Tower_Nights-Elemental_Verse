@@ -71,6 +71,10 @@ public final class EVCreativeTabs {
             if (type.isEmpty() || type.carrier() != carrier) {
                 continue;
             }
+            // 金 / 电暂时隐藏，等专门设计（作者 2026-10-21）
+            if (type == ElementType.METAL || type == ElementType.LIGHTNING) {
+                continue;
+            }
             output.accept(ElementVialItem.createStack(type));
         }
     }
