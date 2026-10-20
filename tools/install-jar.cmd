@@ -58,14 +58,14 @@ if not exist "%GAMEDIR%\versions\%VERSION%\mods" (
 )
 
 rem --- natives 自检：杀毒软件会反复删掉解压出来的 DLL ---
-set "NATIVES=%GAMEDIR%ersions\%VERSION%\%VERSION%-natives"
+set "NATIVES=%GAMEDIR%\versions\%VERSION%\%VERSION%-natives"
 set "DLLCOUNT=0"
 if exist "%NATIVES%\lwjgl_opengl.dll" set "DLLCOUNT=1"
 if exist "%NATIVES%\lwjgl_stb.dll" set "DLLCOUNT=2"
 if exist "%NATIVES%\lwjgl_tinyfd.dll" set "DLLCOUNT=3"
 if exist "%NATIVES%\OpenAL.dll" set "DLLCOUNT=4"
 if exist "%NATIVES%\jemalloc.dll" set "DLLCOUNT=5"
-if exist "%NATIVES%reetype.dll" set "DLLCOUNT=6"
+if exist "%NATIVES%\freetype.dll" set "DLLCOUNT=6"
 if "%DLLCOUNT%"=="6" goto natives_ok
 echo [!] Native DLLs are missing - repairing before install...
 call "%~dp0fix-game-natives.cmd" "%GAMEDIR%" "%VERSION%" <nul

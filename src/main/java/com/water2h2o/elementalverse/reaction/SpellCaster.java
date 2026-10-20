@@ -173,7 +173,8 @@ public final class SpellCaster {
             if (hardness < 0.0F || hardness >= 50.0F) {
                 continue;
             }
-            level.destroyBlock(spot, false);
+            // 挖掘应该掉方块（否则挖矿/挖箱子等于销毁资源）
+            level.destroyBlock(spot, true);
         }
     }
 
@@ -1152,8 +1153,9 @@ public final class SpellCaster {
      * 现在改成看**元素值**：
      * <ul>
      *   <li>轴：法术主料的主成分轴（洪流 = 水轴）</li>
-     *   <li>值：水 1.0 / 霜 1.0 / 冰 1.5 —— 冰一瓶顶一瓶半水</li>
-     *   <li>只认主成分同轴的载体，砂（主成分地）不能给水法术供能</li>
+     *   <li>值：只认**主成分同轴、且该轴为正**的载体；水 1.0 供 1 点</li>
+     *   <li>二级元素是纯负值（霜/冰 = 负火，砂/金 = 负水），只做克制剂，
+     *       不能给同轴法术供能 —— 2026-10-21 的简化口径</li>
      * </ul>
      *
      * <p>成本按档位 1 / 2 / 3 **点**（写入仍是 1/3/9 瓶，两码事）。
@@ -1162,8 +1164,7 @@ public final class SpellCaster {
     /**
      * 一次施法需要多少**点元素值**：1/2/3 档 = 4 / 8 / 16。
      *
-     * <p>比写入便宜（写入 1/3/9 瓶），但比最早的 1/2/3 点贵得多 ——
-     * 这是为了让"冰（1.5 点）替代水"有真正的代价。
+     * <p>成本只按**主轴**收；辅料/态在写板时已经付过，释放不按次扣。
      */
     private static double castCost(Declaration declaration) {
         return switch (Math.max(1, Math.min(3, declaration.tier()))) {
@@ -1262,10 +1263,10 @@ public final class SpellCaster {
     }
 
     /**
-     * 按元素值扣材料：**小瓶优先**。
+     * 按元素值扣材料：**只认主轴正向载体，小瓶优先**。
      *
-     * <p>需要 1 点时先吃水（1.0），不会拿冰（1.5）去凑。
-     * 实在只剩冰，也只能整瓶吃掉 —— 多出的 0.5 点就是"整瓶不可分"的代价。
+     * <p>二级元素是纯负值，不参与供能；需要 1 点时只吃主轴正向的元素瓶。
+     * 整瓶不可分，所以最后可能略超需求量 —— 这是有意的代价。
      */
     private static void consumeMaterials(Player player, Declaration declaration) {
         if (!declaration.isDefined()
