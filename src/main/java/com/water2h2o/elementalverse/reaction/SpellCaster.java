@@ -220,6 +220,45 @@ public final class SpellCaster {
     }
 
     /**
+     * 洪流：把目标推开，并让它的物品栏短暂"锁住"（不能使用物品、不能丢弃）。
+     *
+     * <p>打在方块上时只溅水花 —— 不破坏地形。
+     */
+    private static void lockInventory(Level level, Player player, Phenomenon phenomenon,
+                                      SpellParams params, HitResult hit) {
+        int ticks = effectTicks(phenomenon, params);
+        if (hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity living) {
+            // 中等击退：方向由施法者指向目标（以前只对玩家生效，打怪完全没反应）
+            var dir = living.position().subtract(player.position());
+            if (dir.lengthSqr() > 1.0E-4D) {
+                dir = dir.normalize();
+                living.push(dir.x * 0.9D * params.intensity(), 0.35D,
+                        dir.z * 0.9D * params.intensity());
+                living.hurtMarked = true;
+            }
+            living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    com.water2h2o.elementalverse.registry.EVMobEffects.INVENTORY_LOCK, ticks, 0),
+                    player);
+            // 对玩家再额外压一层物品冷却，手感上就是"掏不出东西"
+            if (living instanceof Player target) {
+                for (int i = 0; i < target.getInventory().getContainerSize(); i++) {
+                    ItemStack stack = target.getInventory().getItem(i);
+                    if (!stack.isEmpty()) {
+                        target.getCooldowns().addCooldown(stack.getItem(), ticks);
+                    }
+                }
+            }
+            return;
+        }
+        if (hit instanceof BlockHitResult blockHit && level instanceof ServerLevel server) {
+            var center = blockHit.getLocation();
+            server.sendParticles(net.minecraft.core.particles.ParticleTypes.SPLASH,
+                    center.x, center.y + 0.2D, center.z, 24, 0.4D, 0.2D, 0.4D, 0.1D);
+        }
+    }
+
+    /**
      * 现象持续时间。
      *
      * <p>JSON 的 {@code duration} 是基准（tick）；第三个投入口如果是光系，
@@ -335,18 +374,7 @@ public final class SpellCaster {
                 player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                         net.minecraft.world.effect.MobEffects.GLOWING, ticks, 0));
             }
-            case "lock_inventory" -> {
-                if (hit instanceof EntityHitResult entityHit
-                        && entityHit.getEntity() instanceof Player target) {
-                    for (int i = 0; i < target.getInventory().getContainerSize(); i++) {
-                        ItemStack stack = target.getInventory().getItem(i);
-                        if (!stack.isEmpty()) {
-                            target.getCooldowns().addCooldown(stack.getItem(), ticks);
-                        }
-                    }
-                    target.hurt(level.damageSources().magic(), (float) params.intensity());
-                }
-            }
+            case "lock_inventory" -> lockInventory(level, player, phenomenon, params, hit);
             case "freeze" -> {
                 if (hit instanceof EntityHitResult entityHit
                         && entityHit.getEntity() instanceof LivingEntity living) {
@@ -679,18 +707,19 @@ public final class SpellCaster {
     private static Map<ElementType, Integer> requirements(Declaration declaration) {
         Map<ElementType, Integer> required = new EnumMap<>(ElementType.class);
         if (declaration.isDefined()) {
-            required.merge(declaration.element(), declaration.investCount(), Integer::sum);
-        }
-        int reagent = declaration.reagentCost();
-        if (reagent > 0 && declaration.reagentElement() != null
-                && !declaration.reagentElement().isEmpty()) {
-            required.merge(declaration.reagentElement(), reagent, Integer::sum);
+            // 只收主料：辅料与态在**写入**时已经付过 1/3/9 了，释放时不再重复扣。
+            // 数量按档位 1 / 2 / 3，不是写入的 1 / 3 / 9。
+            required.merge(declaration.element(), Math.max(1, declaration.castCount()), Integer::sum);
         }
         return required;
     }
 
     /** 材料够不够；不够时在服务端提示缺哪种元素。 */
     private static boolean checkMaterials(Level level, Player player, Declaration declaration) {
+        // 创造小包：不用存元素，想放什么放什么
+        if (com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
+            return true;
+        }
         for (Map.Entry<ElementType, Integer> entry : requirements(declaration).entrySet()) {
             if (countVials(player, entry.getKey()) < entry.getValue()) {
                 if (!level.isClientSide()) {
@@ -705,6 +734,9 @@ public final class SpellCaster {
 
     /** 按上面算出的需求扣材料。 */
     private static void consumeMaterials(Player player, Declaration declaration) {
+        if (com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
+            return;
+        }
         requirements(declaration).forEach((element, cost) -> consumeVials(player, element, cost));
     }
 
@@ -761,12 +793,21 @@ public final class SpellCaster {
                     continue;
                 }
                 int take = Math.min(left, item.getCount());
-                item.shrink(take);
+                // 关键：写回**新的 ItemStack 对象**。
+                // 直接 item.shrink() 改的是组件里那个对象本身，新旧值相等，
+                // 变更检测认为没变，于是小包里的元素看起来没被扣掉。
+                ItemStack after = item.copy();
+                after.setCount(item.getCount() - take);
+                inside.set(i, after.getCount() <= 0 ? ItemStack.EMPTY : after);
                 left -= take;
                 changed = true;
             }
             if (changed) {
                 com.water2h2o.elementalverse.element.PouchContents.set(pouch, inside);
+                player.getInventory().setChanged();
+                if (player.containerMenu != null) {
+                    player.containerMenu.broadcastChanges();
+                }
             }
         }
 

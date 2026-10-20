@@ -85,5 +85,9 @@
   "item.elemental_verse.magic": "%s申明板",
   "effect.elemental_verse.vulnerable": "易伤",
   "block.elemental_verse.rune_cabinet": "符文柜",
-  "message.elemental_verse.only_cold": "符文柜只吃霜或冰的申明"
+  "message.elemental_verse.only_cold": "符文柜只吃霜或冰的申明",
+  "item.elemental_verse.creative_pouch": "创造小包",
+  "tooltip.elemental_verse.creative_pouch": "施法不消耗元素",
+  "tooltip.elemental_verse.creative_pouch_only": "仅创造模式可获得",
+  "effect.elemental_verse.inventory_lock": "物品栏封锁"
 }

@@ -40,10 +40,10 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
         graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight,
                 this.imageWidth, this.imageHeight);
 
-        // 作者的贴图在 (80,35) 画的是“输入 → 输出”箭头，但代码在这里放的是剑槽。
-        // 用原版物品栏的槽位底图盖住箭头，让它看起来真的是一个槽，并在下面标“剑槽”。
-        graphics.blit(INVENTORY_LOCATION, x + 79, y + 34, 7, 83, 18, 18);
+        // 剑槽在申明板正下方（内容坐标 62,53）。贴图那一带是空白，
+        // 补一个原版槽位底图 + 标注。中间的"输入 → 输出"箭头保持可见。
+        graphics.blit(INVENTORY_LOCATION, x + 61, y + 52, 7, 83, 18, 18);
         graphics.drawString(this.font, Component.translatable(EVLang.RITUAL_TOOL_LABEL),
-                x + 80, y + 53, 0xFF404B44, false);
+                x + 81, y + 57, 0xFF404B44, false);
     }
 }

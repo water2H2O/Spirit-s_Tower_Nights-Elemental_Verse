@@ -17,6 +17,10 @@ public final class EVMobEffects {
     public static final DeferredHolder<MobEffect, MobEffect> VULNERABLE =
             EFFECTS.register("vulnerable", VulnerableEffect::new);
 
+    /** 洪流：物品栏封锁。 */
+    public static final DeferredHolder<MobEffect, MobEffect> INVENTORY_LOCK =
+            EFFECTS.register("inventory_lock", com.water2h2o.elementalverse.effect.InventoryLockEffect::new);
+
     public static void register(IEventBus modEventBus) {
         EFFECTS.register(modEventBus);
     }

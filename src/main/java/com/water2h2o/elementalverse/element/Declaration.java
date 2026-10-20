@@ -103,6 +103,16 @@ public record Declaration(ElementType element, int tier, String operation, Strin
         return costOfTier(tier);
     }
 
+    /**
+     * **释放**这条申明时要扣几个元素。
+     *
+     * <p>和写入不同：写入是 1 / 3 / 9（把元素烧进板子里，贵），
+     * 释放只是再掏一次材料把法术放出去，所以按档位 1 / 2 / 3 收。
+     */
+    public int castCount() {
+        return Math.max(0, Math.min(3, tier));
+    }
+
     /** 主料（写入时）要扣几个元素。 */
     public int stateCost() {
         return stateElement != null && !stateElement.isEmpty() ? costOfTier(stateTier) : 0;

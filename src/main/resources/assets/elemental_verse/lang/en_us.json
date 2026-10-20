@@ -85,5 +85,9 @@
   "item.elemental_verse.magic": "%s Declaration",
   "effect.elemental_verse.vulnerable": "Vulnerable",
   "block.elemental_verse.rune_cabinet": "Rune Cabinet",
-  "message.elemental_verse.only_cold": "The rune cabinet only accepts frost or ice declarations"
+  "message.elemental_verse.only_cold": "The rune cabinet only accepts frost or ice declarations",
+  "item.elemental_verse.creative_pouch": "Creative Pouch",
+  "tooltip.elemental_verse.creative_pouch": "Spells cost no elements",
+  "tooltip.elemental_verse.creative_pouch_only": "Creative mode only",
+  "effect.elemental_verse.inventory_lock": "Inventory Lock"
 }

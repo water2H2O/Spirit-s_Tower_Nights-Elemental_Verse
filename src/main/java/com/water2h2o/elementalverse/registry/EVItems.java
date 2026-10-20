@@ -2,6 +2,7 @@ package com.water2h2o.elementalverse.registry;
 
 import com.water2h2o.elementalverse.element.ElementVialItem;
 import com.water2h2o.elementalverse.element.PouchItem;
+import com.water2h2o.elementalverse.element.PouchItemCreative;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -83,6 +84,11 @@ public final class EVItems {
     public static final DeferredItem<PouchItem> ELEMENT_POUCH = ITEMS.register(
             "element_pouch",
             () -> new PouchItem(new Item.Properties().stacksTo(1)));
+
+    /** 创造小包：只在创造模式出现，施法不用自己存元素。 */
+    public static final DeferredItem<PouchItemCreative> CREATIVE_POUCH = ITEMS.register(
+            "creative_pouch",
+            () -> new PouchItemCreative(new Item.Properties().stacksTo(1)));
 
     public static void register(IEventBus modEventBus) {
         ITEMS.register(modEventBus);

@@ -71,9 +71,10 @@ public class RitualAltarMenu extends AbstractContainerMenu {
             }
             // 申明板
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_PLATE, GRID_LEFT, GRID_TOP + CELL));
-            // 工具槽（剑）：放在申明板和产出中间
+            // 工具槽（剑）：放在申明板正下方那条空白带。
+            // 不能放在 (80,35) —— 贴图那里画的是"输入 → 输出"箭头，盖住就看不见流程了。
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_TOOL,
-                    GRID_LEFT + CELL, GRID_TOP + CELL));
+                    GRID_LEFT, GRID_TOP + 2 * CELL));
             // 产出：只能拿，不能放
             this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_OUTPUT,
                     GRID_LEFT + 2 * CELL, GRID_TOP + CELL) {
