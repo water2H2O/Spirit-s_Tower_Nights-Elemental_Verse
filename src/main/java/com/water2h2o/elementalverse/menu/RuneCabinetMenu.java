@@ -15,6 +15,9 @@ public class RuneCabinetMenu extends AbstractContainerMenu {
 
     private final RuneCabinetBlockEntity cabinet;
 
+    /** 电量同步通道；客户端拿不到方块实体时也能画。 */
+    private net.minecraft.world.inventory.ContainerData data;
+
     public RuneCabinetMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buffer) {
         this(containerId, playerInventory, resolve(playerInventory.player, buffer));
     }
@@ -38,12 +41,42 @@ public class RuneCabinetMenu extends AbstractContainerMenu {
         }
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 96 + row * 18));
             }
         }
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
+            this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 154));
         }
+
+        // 电量：0 = 剩余秒数，1 = 满电秒数。界面靠它画电量条。
+        this.addDataSlots(this.data = new net.minecraft.world.inventory.ContainerData() {
+            @Override
+            public int get(int index) {
+                if (cabinet == null) {
+                    return 0;
+                }
+                return index == 0 ? cabinet.getEnergySeconds() : cabinet.getMaxEnergySeconds();
+            }
+
+            @Override
+            public void set(int index, int value) {
+            }
+
+            @Override
+            public int getCount() {
+                return 2;
+            }
+        });
+    }
+
+    /** 剩余电量（秒）。 */
+    public int energySeconds() {
+        return this.data == null ? 0 : this.data.get(0);
+    }
+
+    /** 满电时有多少秒。 */
+    public int maxEnergySeconds() {
+        return this.data == null ? 1 : Math.max(1, this.data.get(1));
     }
 
     @Override

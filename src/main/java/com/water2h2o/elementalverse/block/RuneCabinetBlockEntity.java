@@ -45,6 +45,9 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
     /** 剩余能量（tick）。> 0 时不衰变。 */
     private int energy;
 
+    /** 这一轮充满时有多少 tick —— 界面用它算电量条比例。 */
+    private int energyMax = 1;
+
     private int tickCounter;
 
     public RuneCabinetBlockEntity(BlockPos pos, BlockState state) {
@@ -59,6 +62,11 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
 
     public int getEnergySeconds() {
         return energy / 20;
+    }
+
+    /** 满电上限（秒）—— 界面的电量条分母。 */
+    public int getMaxEnergySeconds() {
+        return Math.max(1, energyMax / 20);
     }
 
     /**
@@ -87,6 +95,8 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
         }
         int ticks = (int) Math.round(days * 24000.0D);
         energy = Math.min(MAX_ENERGY, energy + ticks);
+        // 电量条的分母永远取"满电上限"，喂多块不会把条撑爆
+        energyMax = MAX_ENERGY;
         setChanged();
         return true;
     }
@@ -165,6 +175,7 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt("Energy", energy);
+        tag.putInt("EnergyMax", energyMax);
         var list = new net.minecraft.nbt.ListTag();
         for (int i = 0; i < SIZE; i++) {
             ItemStack stack = items.getItem(i);
@@ -182,6 +193,7 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         energy = tag.getInt("Energy");
+        energyMax = Math.max(1, tag.getInt("EnergyMax"));
         items.clearContent();
         var list = tag.getList("Items", 10);
         for (int i = 0; i < list.size(); i++) {

@@ -52,6 +52,8 @@ public final class EVLang {
     /** 申明板与仪式台。 */
     public static final String BLOCK_RITUAL_ALTAR = "block.elemental_verse.ritual_altar";
     public static final String BLOCK_RUNE_CABINET = "block.elemental_verse.rune_cabinet";
+    public static final String RUNE_CABINET_UNPOWERED = "gui.elemental_verse.rune_cabinet.unpowered";
+    public static final String RUNE_CABINET_REMAINING = "gui.elemental_verse.rune_cabinet.remaining";
     public static final String MSG_ONLY_COLD = "message.elemental_verse.only_cold";
     public static final String CREATIVE_POUCH_HINT = "tooltip.elemental_verse.creative_pouch";
     public static final String CREATIVE_POUCH_ONLY = "tooltip.elemental_verse.creative_pouch_only";

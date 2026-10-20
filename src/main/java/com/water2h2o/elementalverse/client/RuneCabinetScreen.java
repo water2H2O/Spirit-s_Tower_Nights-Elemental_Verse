@@ -1,6 +1,7 @@
 package com.water2h2o.elementalverse.client;
 
 import com.water2h2o.elementalverse.menu.RuneCabinetMenu;
+import com.water2h2o.elementalverse.util.EVLang;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -8,15 +9,32 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-/** 符文柜界面：暂时沿用原版箱子贴图（3x9 布局一致）。 */
+/**
+ * 符文柜界面。
+ *
+ * <p>作者反馈"符文柜的 UI 有问题"：原来直接套了原版箱子贴图，
+ * 于是它看起来就是一个普通箱子 —— 看不出通没通电、还能撑多久。
+ *
+ * <p>现在换成专用底图（176×180，配色跟仪式台一致），并在槽位下方加一条电量条：
+ * 通电时按剩余比例填充并显示剩余时长，断电时整条变暗并写"未通电"。
+ */
 public class RuneCabinetScreen extends AbstractContainerScreen<RuneCabinetMenu> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/gui/container/generic_54.png");
+            ResourceLocation.fromNamespaceAndPath("elemental_verse", "textures/gui/rune_cabinet.png");
+
+    /** 底图尺寸；blit 必须显式传，否则会按 256×256 采样而整体错位。 */
+    private static final int TEX_W = 176;
+    private static final int TEX_H = 180;
+
+    private static final int BAR_X = 8;
+    private static final int BAR_Y = 74;
+    private static final int BAR_W = 88;
+    private static final int BAR_H = 8;
 
     public RuneCabinetScreen(RuneCabinetMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageHeight = 168;
+        this.imageHeight = TEX_H;
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
@@ -30,6 +48,25 @@ public class RuneCabinetScreen extends AbstractContainerScreen<RuneCabinetMenu> 
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
-        graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
+        graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, TEX_W, TEX_H);
+
+        int seconds = this.menu.energySeconds();
+        int max = this.menu.maxEnergySeconds();
+
+        // 电量条：按剩余比例填充，通电是青色，断电是暗灰
+        if (seconds > 0 && max > 0) {
+            int filled = Math.max(1, (int) Math.round(BAR_W * Math.min(1.0D, seconds / (double) max)));
+            graphics.fill(x + BAR_X, y + BAR_Y, x + BAR_X + filled, y + BAR_Y + BAR_H, 0xFF3FA9F5);
+        } else {
+            graphics.fill(x + BAR_X, y + BAR_Y, x + BAR_X + BAR_W, y + BAR_Y + BAR_H, 0x66303030);
+        }
+
+        // 右侧文字：剩余时长 / 未通电
+        Component label = seconds <= 0
+                ? Component.translatable(EVLang.RUNE_CABINET_UNPOWERED)
+                : Component.translatable(EVLang.RUNE_CABINET_REMAINING,
+                        seconds / 60, seconds % 60);
+        graphics.drawString(this.font, label, x + BAR_X + BAR_W + 6, y + BAR_Y + 1,
+                0xFF404B44, false);
     }
 }
