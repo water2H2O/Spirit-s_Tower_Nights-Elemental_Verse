@@ -5,7 +5,7 @@
     "grass": 1
   },
   "phenomenon": {
-    "type": "grow",
+    "type": "bonemeal",
     "element": "grass",
     "amount": 1.0,
     "duration": 100,

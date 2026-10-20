@@ -18,14 +18,21 @@ import com.water2h2o.elementalverse.element.ElementValue;
  * @param refund    返还的元素值（多数反应是空的）
  */
 public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue refund,
-                       String name) {
+                       String name, ElementValue max) {
 
     public static final Codec<Reaction> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ElementValue.CODEC.fieldOf("consume").forGetter(Reaction::consume),
             Phenomenon.CODEC.fieldOf("phenomenon").forGetter(Reaction::phenomenon),
             ElementValue.CODEC.optionalFieldOf("refund", ElementValue.ZERO).forGetter(Reaction::refund),
-            Codec.STRING.optionalFieldOf("name", "").forGetter(Reaction::name)
+            Codec.STRING.optionalFieldOf("name", "").forGetter(Reaction::name),
+            // "最多这么多"：超过就不匹配。冻结要求 火 ≤ 2 就靠这个
+            ElementValue.CODEC.optionalFieldOf("max", ElementValue.ZERO).forGetter(Reaction::max)
     ).apply(instance, Reaction::new));
+
+    /** 兼容旧写法（没有 max）。 */
+    public Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue refund, String name) {
+        this(consume, phenomenon, refund, name, ElementValue.ZERO);
+    }
 
     /**
      * 守恒三律之一：现象的**元素值当量**不能超过投入的强度。
@@ -42,6 +49,13 @@ public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue
         // 空要求 = 只匹配"净归零"的输入（光 + 暗 = 湮灭就靠这条）
         if (consume.asMap().isEmpty()) {
             return input.isZero();
+        }
+        // 上限：任一轴超过就否掉
+        for (var entry = max.asMap().entrySet().iterator(); entry.hasNext();) {
+            var limit = entry.next();
+            if (input.get(limit.getKey()) > limit.getValue() + ElementValue.EPSILON) {
+                return false;
+            }
         }
         for (var entry : consume.asMap().entrySet()) {
             double required = entry.getValue();

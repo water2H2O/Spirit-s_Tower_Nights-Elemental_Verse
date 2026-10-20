@@ -1,0 +1,16 @@
+{
+  "name": "冻结",
+  "consume": {
+    "water": 3
+  },
+  "max": {
+    "fire": 2
+  },
+  "phenomenon": {
+    "type": "encase",
+    "element": "water",
+    "amount": 2.0,
+    "duration": 120,
+    "cost": 3
+  }
+}

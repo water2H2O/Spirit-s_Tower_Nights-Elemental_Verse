@@ -4,7 +4,7 @@
     "light": 2
   },
   "phenomenon": {
-    "type": "effect:blindness",
+    "type": "flash",
     "element": "light",
     "amount": 2.0,
     "duration": 120,

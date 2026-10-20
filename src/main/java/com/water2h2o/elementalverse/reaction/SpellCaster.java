@@ -217,6 +217,9 @@ public final class SpellCaster {
             case "lava" -> lava(level, hit, phenomenon, params);
             case "fire_resistance" -> fireResistance(player, phenomenon, params);
             case "chaos" -> chaos(level, player, hit, phenomenon, params);
+            case "explode" -> explode(level, player, params, hit);
+            case "flash" -> flash(level, player, hit, phenomenon, params);
+            case "encase" -> encase(level, player, hit, phenomenon, params);
             default -> applyPrimitive(level, player, hit, phenomenon, params, declaration);
         }
     }
@@ -267,6 +270,73 @@ public final class SpellCaster {
             var center = blockHit.getLocation();
             server.sendParticles(net.minecraft.core.particles.ParticleTypes.SPLASH,
                     center.x, center.y + 0.2D, center.z, 24, 0.4D, 0.2D, 0.4D, 0.1D);
+        }
+    }
+
+    /** 爆炸：火轴投满（> 2 点）就是把势能一次性放掉。 */
+    private static void explode(Level level, Player player, SpellParams params, HitResult hit) {
+        var at = hit != null && hit.getType() != HitResult.Type.MISS
+                ? hit.getLocation()
+                : player.getEyePosition().add(player.getViewVector(1.0F).scale(2.5D));
+        float power = (float) Math.min(4.0D, 2.0D + params.intensity() * 0.6D);
+        if (!level.isClientSide()) {
+            level.explode(player, at.x, at.y, at.z, power, Level.ExplosionInteraction.TNT);
+        }
+    }
+
+    /** 强光：白得看不见，同时发光——在黑里也跑不掉。 */
+    private static void flash(Level level, Player player, HitResult hit,
+                              Phenomenon phenomenon, SpellParams params) {
+        int ticks = Math.max(20, effectTicks(phenomenon, params));
+        var at = hit != null && hit.getType() != HitResult.Type.MISS
+                ? hit.getLocation()
+                : player.getEyePosition().add(player.getViewVector(1.0F).scale(RANGE));
+
+        if (hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity living) {
+            blind(living, ticks);
+        } else if (level instanceof ServerLevel server) {
+            int radius = Math.max(1, (int) Math.round(params.radius()));
+            for (LivingEntity living : server.getEntitiesOfClass(LivingEntity.class,
+                    new net.minecraft.world.phys.AABB(at, at).inflate(radius + 1.0D))) {
+                blind(living, ticks);
+            }
+        }
+        if (level instanceof ServerLevel server) {
+            server.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
+                    at.x, at.y, at.z, 50, 0.7D, 0.7D, 0.7D, 0.3D);
+            server.sendParticles(net.minecraft.core.particles.ParticleTypes.FLASH,
+                    at.x, at.y, at.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+    }
+
+    private static void blind(LivingEntity living, int ticks) {
+        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.BLINDNESS, ticks, 0));
+        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.GLOWING, ticks * 2, 0));
+    }
+
+    /** 冻结：把目标冻在原地——走不动、挖不动、身上结满冰壳。 */
+    private static void encase(Level level, Player player, HitResult hit,
+                               Phenomenon phenomenon, SpellParams params) {
+        int ticks = Math.max(40, effectTicks(phenomenon, params));
+        if (!(hit instanceof EntityHitResult entityHit)
+                || !(entityHit.getEntity() instanceof LivingEntity living)) {
+            return;
+        }
+        living.setTicksFrozen(living.getTicksRequiredToFreeze() + ticks);
+        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, ticks, 5));
+        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.DIG_SLOWDOWN, ticks, 2));
+        living.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        living.hurtMarked = true;
+        if (level instanceof ServerLevel server) {
+            server.sendParticles(new net.minecraft.core.particles.DustParticleOptions(
+                            new org.joml.Vector3f(0.66F, 0.86F, 1.0F), 1.4F),
+                    living.getX(), living.getY() + 0.8D, living.getZ(),
+                    30, 0.4D, 0.7D, 0.4D, 0.02D);
         }
     }
 
@@ -349,6 +419,28 @@ public final class SpellCaster {
             }
             case "place_stone" -> fillSphere(level, center, radius, Blocks.STONE.defaultBlockState());
             case "place_grass" -> fillSphere(level, center, radius, Blocks.GRASS_BLOCK.defaultBlockState());
+            case "bonemeal" -> {
+                // 浇灌：等于撒了一把骨粉 —— 走原版的 BonemealableBlock 接口，
+                // 作物、树苗、草方块、水草全都按原版规则长
+                if (level instanceof ServerLevel server) {
+                    var random = level.getRandom();
+                    for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
+                            center.offset(radius, 1, radius))) {
+                        BlockPos spot = pos.immutable();
+                        var state = level.getBlockState(spot);
+                        if (!(state.getBlock() instanceof net.minecraft.world.level.block.BonemealableBlock growable)) {
+                            continue;
+                        }
+                        if (!growable.isValidBonemealTarget(level, spot, state)) {
+                            continue;
+                        }
+                        if (!growable.isBonemealSuccess(level, random, spot, state)) {
+                            continue;
+                        }
+                        growable.performBonemeal(server, random, spot, state);
+                    }
+                }
+            }
             case "grow" -> {
                 for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
                         center.offset(radius, 1, radius))) {
@@ -360,15 +452,29 @@ public final class SpellCaster {
                 }
             }
             case "push" -> {
+                // 风弹式：从命中点向外炸开，而不是用 intensity（风态给的是 radius，旧版几乎推不动）
                 if (level instanceof ServerLevel server) {
+                    var origin = new net.minecraft.world.phys.Vec3(
+                            center.getX() + 0.5D, center.getY() + 0.5D, center.getZ() + 0.5D);
+                    double strength = 1.6D + params.radius() * 0.35D;
                     for (Entity entity : server.getEntitiesOfClass(Entity.class,
-                            new net.minecraft.world.phys.AABB(center).inflate(radius))) {
+                            new net.minecraft.world.phys.AABB(origin, origin).inflate(radius + 1.0D))) {
                         if (entity == player) {
                             continue;
                         }
-                        var dir = entity.position().subtract(player.position()).normalize();
-                        entity.push(dir.x * params.intensity(), 0.35D, dir.z * params.intensity());
+                        var dir = entity.position().subtract(origin);
+                        if (dir.lengthSqr() < 1.0E-4D) {
+                            dir = player.getViewVector(1.0F);
+                        }
+                        dir = dir.normalize();
+                        entity.push(dir.x * strength, 0.55D, dir.z * strength);
+                        // 不加这一行，客户端看不到击退
+                        entity.hurtMarked = true;
                     }
+                    server.sendParticles(net.minecraft.core.particles.ParticleTypes.GUST,
+                            origin.x, origin.y, origin.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                    server.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                            origin.x, origin.y, origin.z, 20, 0.8D, 0.4D, 0.8D, 0.15D);
                 }
             }
             case "blink" -> {

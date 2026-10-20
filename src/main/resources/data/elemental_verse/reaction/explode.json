@@ -1,0 +1,13 @@
+{
+  "name": "爆炸",
+  "consume": {
+    "fire": 2.5
+  },
+  "phenomenon": {
+    "type": "explode",
+    "element": "fire",
+    "amount": 4.0,
+    "duration": 20,
+    "cost": 2.5
+  }
+}
