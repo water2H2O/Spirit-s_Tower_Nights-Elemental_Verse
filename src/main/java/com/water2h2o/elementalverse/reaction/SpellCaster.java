@@ -406,10 +406,25 @@ public final class SpellCaster {
     }
 
     private static void explodeAt(Level level, Player player, HitResult hit, float power, boolean destroy) {
-        var at = hitPoint(player, hit);
+        // 打实体时用**身体中心**，不要用命中点 —— 命中点常在脚底，
+        // 爆炸粒子会趴在地上（作者反馈"看着不舒服"）
+        var at = hit instanceof EntityHitResult entityHit
+                ? entityHit.getEntity().getBoundingBox().getCenter()
+                : hitPoint(player, hit);
         if (!level.isClientSide()) {
             level.explode(player, at.x, at.y, at.z, power,
                     destroy ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);
+
+            // 原版爆炸会把**来源实体**排除在伤害列表外，所以自爆永远不疼。
+            // 作者要求"自爆要能炸到自己"，这里按距离补一次。
+            double radius = power * 1.4D;
+            double dist = player.position().distanceTo(at);
+            if (dist <= radius) {
+                float selfDamage = (float) (power * 4.0D * (1.0D - dist / radius));
+                if (selfDamage > 0.5F) {
+                    player.hurt(level.damageSources().explosion(null), selfDamage);
+                }
+            }
         }
     }
 

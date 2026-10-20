@@ -35,7 +35,8 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
     public RitualAltarScreen(RitualAltarMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageHeight = TEX_H;
-        this.inventoryLabelY = this.imageHeight - 94;
+        // 背包标题要压在框下面，不能和产出槽重叠
+        this.inventoryLabelY = 102;
     }
 
     @Override
@@ -44,10 +45,12 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        nameField = new EditBox(this.font, x + 14, y + 21, 146, 10, Component.literal("name"));
+        nameField = new EditBox(this.font, x + 15, y + 24, 146, 10, Component.literal("name"));
         nameField.setBordered(false);
         nameField.setMaxLength(32);
-        nameField.setHint(Component.literal("命名（可选）").withStyle(ChatFormatting.DARK_GRAY));
+        nameField.setTextColor(0xFFFFFF);
+        nameField.setTextColorUneditable(0xBBBBBB);
+        nameField.setHint(Component.literal("命名（可选）").withStyle(ChatFormatting.GRAY));
         nameField.setValue(this.menu.customName());
         // 边打边同步：命名只在"取出产物"那一刻用得上，不需要提交按钮
         nameField.setResponder(text -> PacketDistributor.sendToServer(new EVNetwork.SetAltarName(text)));
