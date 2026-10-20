@@ -157,7 +157,7 @@ public class ElementVialItem extends Item {
             return Component.translatable(getDescriptionId());
         }
         if (this == EVItems.ELEMENT_VIAL.get()) {
-            return Component.translatable(EVLang.vial(type));
+            return Component.translatable(EVLang.vial(type)).withStyle(type.color());
         }
         return type.displayName();
     }

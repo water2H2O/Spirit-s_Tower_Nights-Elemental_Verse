@@ -174,7 +174,35 @@ public enum ElementType implements StringRepresentable {
 
     /** 「土元素瓶」里的「土元素」部分。 */
     public Component displayName() {
-        return Component.translatable(EVLang.element(this));
+        return Component.translatable(EVLang.element(this)).withStyle(color());
+    }
+
+    /**
+     * 这条元素的显示颜色（作者：元素字体要用对应的颜色）。
+     *
+     * <p>取的是"它看起来是什么颜色"，不是"它属于哪条轴"：
+     * 冰是水蓝、烬是暗红、影是紫、金是金色。
+     */
+    public net.minecraft.ChatFormatting color() {
+        return switch (this) {
+            case FIRE -> net.minecraft.ChatFormatting.RED;
+            case WATER -> net.minecraft.ChatFormatting.BLUE;
+            case EARTH -> net.minecraft.ChatFormatting.GOLD;
+            case WIND -> net.minecraft.ChatFormatting.WHITE;
+            case GRASS -> net.minecraft.ChatFormatting.GREEN;
+            case LIGHT -> net.minecraft.ChatFormatting.YELLOW;
+            case SHADOW -> net.minecraft.ChatFormatting.DARK_PURPLE;
+            case FROST, ICE -> net.minecraft.ChatFormatting.AQUA;
+            case LIGHTNING -> net.minecraft.ChatFormatting.YELLOW;
+            case SAND -> net.minecraft.ChatFormatting.YELLOW;
+            case EMBER -> net.minecraft.ChatFormatting.DARK_RED;
+            case BUD -> net.minecraft.ChatFormatting.GREEN;
+            case WOOD -> net.minecraft.ChatFormatting.DARK_GREEN;
+            case DAWN -> net.minecraft.ChatFormatting.YELLOW;
+            case SHADOW_ESSENCE -> net.minecraft.ChatFormatting.LIGHT_PURPLE;
+            case METAL -> net.minecraft.ChatFormatting.GOLD;
+            case EMPTY -> net.minecraft.ChatFormatting.GRAY;
+        };
     }
 
     public String id() {

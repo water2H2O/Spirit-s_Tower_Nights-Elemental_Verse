@@ -376,8 +376,8 @@ public final class SpellCaster {
 
     /** 爆炸：火轴投满（> 2 点）就是把势能一次性放掉。 */
     private static void explode(Level level, Player player, SpellParams params, HitResult hit) {
-        // 三级火专属：TNT 当量，且真的拆方块
-        explodeAt(level, player, hit, 4.0F, true);
+        // 三级火专属：拆方块保留，但伤害压到 3.0（原本 4.0 会把自己一起炸死）
+        explodeAt(level, player, hit, 3.0F, true);
     }
 
     private static void explodeAt(Level level, Player player, HitResult hit, float power, boolean destroy) {
@@ -470,8 +470,8 @@ public final class SpellCaster {
         var at = hitPoint(player, hit);
 
         switch (declaration.element()) {
-            case FIRE -> // 爆炸 power 2（TNT 当量），破坏地形
-                    explodeAt(level, player, hit, 2.0F, true);
+            case FIRE -> // 爆炸 power 1.5，破坏地形
+                    explodeAt(level, player, hit, 1.5F, true);
             case WATER -> {
                 // 冻结 3 秒 + 缚手 3 秒
                 if (target != null) {
