@@ -79,7 +79,7 @@ public class RuneCabinetBlock extends BaseEntityBlock {
                                               Player player, InteractionHand hand, BlockHitResult hit) {
         // 手持冷源右键 → 尝试喂冷却；空瓶/其它物品照常开界面。
         // 冷源可以是元素瓶（霜/冰），也可以是写好的霜/冰申明板。
-        if (isCarrierWithElement(stack) || isWrittenColdPlate(stack)) {
+        if (isCarrierWithElement(stack) || isWrittenPlate(stack)) {
             if (!level.isClientSide() && level.getBlockEntity(pos) instanceof RuneCabinetBlockEntity cabinet) {
                 if (cabinet.feed(stack)) {
                     if (!player.getAbilities().instabuild) {
@@ -105,12 +105,11 @@ public class RuneCabinetBlock extends BaseEntityBlock {
                 && !com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack).isEmpty();
     }
 
-    private static boolean isWrittenColdPlate(ItemStack stack) {
+    private static boolean isWrittenPlate(ItemStack stack) {
         if (!stack.is(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get())) {
             return false;
         }
-        var declaration = DeclarationPlateItem.getDeclaration(stack);
-        return declaration.isDefined() && RuneCabinetBlockEntity.isCold(declaration.element());
+        return DeclarationPlateItem.getDeclaration(stack).isDefined();
     }
 
     private static com.water2h2o.elementalverse.element.ElementType chargeElement(ItemStack stack) {
