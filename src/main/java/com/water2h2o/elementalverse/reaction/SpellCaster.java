@@ -240,7 +240,7 @@ public final class SpellCaster {
                 living.hurtMarked = true;
             }
             living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    com.water2h2o.elementalverse.registry.EVMobEffects.INVENTORY_LOCK, ticks, 0),
+                    com.water2h2o.elementalverse.registry.EVMobEffects.BOUND_HANDS, ticks, 0),
                     player);
             // 对玩家再额外压一层物品冷却，手感上就是"掏不出东西"
             if (living instanceof Player target) {

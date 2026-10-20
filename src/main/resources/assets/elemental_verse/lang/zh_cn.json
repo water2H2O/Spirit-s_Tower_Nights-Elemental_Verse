@@ -89,7 +89,7 @@
   "item.elemental_verse.creative_pouch": "创造小包",
   "tooltip.elemental_verse.creative_pouch": "施法不消耗元素",
   "tooltip.elemental_verse.creative_pouch_only": "仅创造模式可获得",
-  "effect.elemental_verse.inventory_lock": "物品栏封锁",
   "gui.elemental_verse.rune_cabinet.unpowered": "未冷却",
-  "gui.elemental_verse.rune_cabinet.remaining": "冷却 %s 分 %s 秒"
+  "gui.elemental_verse.rune_cabinet.remaining": "冷却 %s 分 %s 秒",
+  "effect.elemental_verse.bound_hands": "缚手"
 }

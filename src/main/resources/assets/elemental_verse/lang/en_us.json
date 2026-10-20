@@ -89,7 +89,7 @@
   "item.elemental_verse.creative_pouch": "Creative Pouch",
   "tooltip.elemental_verse.creative_pouch": "Spells cost no elements",
   "tooltip.elemental_verse.creative_pouch_only": "Creative mode only",
-  "effect.elemental_verse.inventory_lock": "Inventory Lock",
   "gui.elemental_verse.rune_cabinet.unpowered": "Not cooled",
-  "gui.elemental_verse.rune_cabinet.remaining": "Cooling %s m %s s"
+  "gui.elemental_verse.rune_cabinet.remaining": "Cooling %s m %s s",
+  "effect.elemental_verse.bound_hands": "Bound Hands"
 }

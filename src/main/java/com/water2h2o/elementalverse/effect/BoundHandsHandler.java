@@ -15,27 +15,27 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 /**
- * 物品栏封锁的具体限制：不能用物品、不能攻击、不能丢东西。
+ * 缚手的具体限制：不能用物品、不能攻击、不能丢东西。
  *
  * <p>**对生物同样生效** —— 骷髅拉不开弓、女巫灌不了药、僵尸拍不出伤害。
  * 玩家走的是交互事件；生物没有"右键"，所以走的是更底层的那几条：
  * <ul>
  *   <li>用物品：{@link LivingEntityUseItemEvent.Start}（弓、药水、食物、盾牌都从这里过）</li>
- *   <li>攻击：{@link LivingIncomingDamageEvent} 里取消"由被封锁者造成"的伤害</li>
- *   <li>远程：拦掉它刚生成、主人正被封锁的弹射物</li>
+ *   <li>攻击：{@link LivingIncomingDamageEvent} 里取消"由被缚手者造成"的伤害</li>
+ *   <li>远程：拦掉它刚生成、主人正被缚手的弹射物</li>
  * </ul>
  */
 @EventBusSubscriber(modid = "elemental_verse")
-public final class InventoryLockHandler {
+public final class BoundHandsHandler {
 
-    private InventoryLockHandler() {
+    private BoundHandsHandler() {
     }
 
     // ---------------------------------------------------------------- 玩家
 
     @SubscribeEvent
     static void onUseItem(PlayerInteractEvent.RightClickItem event) {
-        if (event.getEntity().hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+        if (event.getEntity().hasEffect(EVMobEffects.BOUND_HANDS)) {
             event.setCanceled(true);
         }
     }
@@ -43,7 +43,7 @@ public final class InventoryLockHandler {
     /** 被洪流糊住的时候连手都抬不起来 —— 攻击一律取消。 */
     @SubscribeEvent
     static void onAttack(AttackEntityEvent event) {
-        if (event.getEntity().hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+        if (event.getEntity().hasEffect(EVMobEffects.BOUND_HANDS)) {
             event.setCanceled(true);
         }
     }
@@ -51,7 +51,7 @@ public final class InventoryLockHandler {
     /** 放方块也算"使用物品"，同样锁住。 */
     @SubscribeEvent
     static void onUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getEntity().hasEffect(EVMobEffects.INVENTORY_LOCK)
+        if (event.getEntity().hasEffect(EVMobEffects.BOUND_HANDS)
                 && !event.getItemStack().isEmpty()) {
             event.setCanceled(true);
         }
@@ -59,7 +59,7 @@ public final class InventoryLockHandler {
 
     @SubscribeEvent
     static void onToss(ItemTossEvent event) {
-        if (!event.getPlayer().hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+        if (!event.getPlayer().hasEffect(EVMobEffects.BOUND_HANDS)) {
             return;
         }
         event.setCanceled(true);
@@ -76,13 +76,13 @@ public final class InventoryLockHandler {
      */
     @SubscribeEvent
     static void onUseItemStart(LivingEntityUseItemEvent.Start event) {
-        if (event.getEntity().hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+        if (event.getEntity().hasEffect(EVMobEffects.BOUND_HANDS)) {
             event.setCanceled(true);
         }
     }
 
     /**
-     * 攻击：把"由被封锁者造成"的伤害直接取消。
+     * 攻击：把"由被缚手者造成"的伤害直接取消。
      *
      * <p>玩家已经有 {@link AttackEntityEvent} 拦在前面；这一条是为了生物 ——
      * 僵尸、铁傀儡、凋灵骷髅的近战都算在这里。
@@ -91,13 +91,13 @@ public final class InventoryLockHandler {
     static void onDealDamage(LivingIncomingDamageEvent event) {
         Entity attacker = event.getSource().getEntity();
         if (attacker instanceof LivingEntity living
-                && living.hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+                && living.hasEffect(EVMobEffects.BOUND_HANDS)) {
             event.setCanceled(true);
         }
     }
 
     /**
-     * 远程：拦掉"主人正被封锁"的弹射物。
+     * 远程：拦掉"主人正被缚手"的弹射物。
      *
      * <p>兜底用 —— 有些生物不走 useItem（比如烈焰人的火球、恶魂的火球）。
      */
@@ -108,7 +108,7 @@ public final class InventoryLockHandler {
         }
         if (event.getEntity() instanceof Projectile projectile
                 && projectile.getOwner() instanceof LivingEntity living
-                && living.hasEffect(EVMobEffects.INVENTORY_LOCK)) {
+                && living.hasEffect(EVMobEffects.BOUND_HANDS)) {
             event.setCanceled(true);
         }
     }
