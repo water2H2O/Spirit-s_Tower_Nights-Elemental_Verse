@@ -85,6 +85,12 @@ public record Declaration(ElementType element, int tier, String operation, Strin
     }
 
     /** 写过了没有。 */
+    /** 换一个形态（板 = 自身 / 剑 = 接触 / 书 = 发射）。 */
+    public Declaration withForm(String newForm) {
+        return new Declaration(element, tier, operation, newForm, stateElement, stateTier,
+                reagentElement, reagentTier, magic);
+    }
+
     public boolean isDefined() {
         return element != null && !element.isEmpty() && tier > 0;
     }

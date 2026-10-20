@@ -11,6 +11,7 @@ import com.water2h2o.elementalverse.registry.EVBlocks;
 import com.water2h2o.elementalverse.registry.EVCreativeTabs;
 import com.water2h2o.elementalverse.registry.EVDataComponents;
 import com.water2h2o.elementalverse.registry.EVEntities;
+import com.water2h2o.elementalverse.registry.EVRecipes;
 import com.water2h2o.elementalverse.registry.EVItems;
 import com.water2h2o.elementalverse.registry.EVMenus;
 import com.water2h2o.elementalverse.registry.EVMobEffects;
@@ -46,6 +47,7 @@ public class SpiritsTowerNightsElementalVerse {
         EVItems.register(modEventBus);
         EVBlockEntities.register(modEventBus);
         EVEntities.register(modEventBus);
+        EVRecipes.register(modEventBus);
         EVMenus.register(modEventBus);
         EVCreativeTabs.register(modEventBus);
         EVSounds.register(modEventBus);

@@ -105,8 +105,9 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             }
             ItemStack enchanted = tool.copy();
             enchanted.setCount(1);
+            // 剑是"接触"形态：砍谁生效在谁身上（板本身是"自身"）
             enchanted.set(com.water2h2o.elementalverse.registry.EVDataComponents.DECLARATION.get(),
-                    DeclarationPlateItem.getDeclaration(plate));
+                    DeclarationPlateItem.getDeclaration(plate).withForm("touch"));
             return enchanted;
         }
 

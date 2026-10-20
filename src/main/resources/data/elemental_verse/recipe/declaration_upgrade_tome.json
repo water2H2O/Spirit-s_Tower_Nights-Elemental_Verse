@@ -1,0 +1,13 @@
+{
+  "type": "elemental_verse:declaration_upgrade",
+  "template": {
+    "item": "elemental_verse:declaration_plate"
+  },
+  "base": {
+    "item": "minecraft:book"
+  },
+  "addition": {
+    "item": "minecraft:slime_ball"
+  },
+  "form": "projectile"
+}

@@ -42,6 +42,18 @@ public enum ElementAxis implements StringRepresentable {
     }
 
     /** 这条路是不是"负向"更常见的轴（用于给现象表生成提示，不参与计算）。 */
+    /** 轴名在悬浮框里用的颜色。 */
+    public net.minecraft.ChatFormatting color() {
+        return switch (this) {
+            case FIRE -> net.minecraft.ChatFormatting.RED;
+            case WATER -> net.minecraft.ChatFormatting.BLUE;
+            case EARTH -> net.minecraft.ChatFormatting.GOLD;
+            case WIND -> net.minecraft.ChatFormatting.WHITE;
+            case GRASS -> net.minecraft.ChatFormatting.GREEN;
+            case LIGHT -> net.minecraft.ChatFormatting.YELLOW;
+        };
+    }
+
     public boolean isNegativeFriendly() {
         return this == FIRE || this == GRASS || this == LIGHT;
     }

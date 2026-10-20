@@ -173,12 +173,14 @@ public class ElementVialItem extends Item {
             if (Math.abs(amount) < 1.0E-3D) {
                 continue;
             }
-            String text = Component.translatable(
-                    "axis.elemental_verse." + axis.getSerializedName()).getString()
-                    + " " + (amount > 0 ? "+" : "-")
-                    + String.format(java.util.Locale.ROOT, "%.1f", Math.abs(amount));
-            tooltip.add(Component.literal(text)
-                    .withStyle(amount > 0 ? ChatFormatting.GREEN : ChatFormatting.RED));
+            // 轴名用自己的颜色，数值按正负（绿加红减）
+            Component label = Component.translatable(
+                    "axis.elemental_verse." + axis.getSerializedName()).withStyle(axis.color());
+            Component number = Component.literal(
+                            " " + (amount > 0 ? "+" : "-")
+                                    + String.format(java.util.Locale.ROOT, "%.1f", Math.abs(amount)))
+                    .withStyle(amount > 0 ? ChatFormatting.GREEN : ChatFormatting.RED);
+            tooltip.add(Component.empty().append(label).append(number));
         }
     }
 

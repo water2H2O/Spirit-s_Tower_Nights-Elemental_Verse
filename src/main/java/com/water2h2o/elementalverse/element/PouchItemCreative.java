@@ -24,6 +24,13 @@ public class PouchItemCreative extends Item {
         super(properties);
     }
 
+    /** 创造小包的名字用紫红，和普通元素小包区分（作者 2026-10-20 指名）。 */
+    @Override
+    public Component getName(ItemStack stack) {
+        return Component.translatable(EVLang.ITEM_CREATIVE_POUCH)
+                .withStyle(ChatFormatting.LIGHT_PURPLE);
+    }
+
     /** 背包里（含快捷栏、副手、装备）有没有这个小包。 */
     public static boolean carriedBy(Player player) {
         var inventory = player.getInventory();

@@ -27,12 +27,6 @@ public class PouchItem extends Item {
         super(properties);
     }
 
-    /** 小包的名字用紫红色，和元素瓶区分开（作者 2026-10-20）。 */
-    @Override
-    public Component getName(ItemStack stack) {
-        return Component.translatable(EVLang.ITEM_POUCH)
-                .withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE);
-    }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -43,8 +37,7 @@ public class PouchItem extends Item {
             player.openMenu(
                     new SimpleMenuProvider(
                             (id, inventory, p) -> new PouchMenu(id, inventory, stack),
-                            Component.translatable(EVLang.ITEM_POUCH)
-                                    .withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE)),
+                            Component.translatable(EVLang.ITEM_POUCH)),
                     buffer -> buffer.writeEnum(hand));
         }
 
