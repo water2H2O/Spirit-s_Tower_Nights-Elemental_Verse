@@ -136,8 +136,12 @@ public class DeclarationPlateItem extends Item {
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable(EVLang.PLATE_TIER, declaration.tier())
                 .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable(EVLang.PLATE_OPERATION)
-                .withStyle(ChatFormatting.DARK_GRAY));
+        String form = declaration.form() == null ? "" : declaration.form();
+        tooltip.add(Component.translatable(switch (form) {
+            case "self" -> "tooltip.elemental_verse.form.self";
+            case "touch" -> "tooltip.elemental_verse.form.touch";
+            default -> "tooltip.elemental_verse.form.projectile";
+        }).withStyle(ChatFormatting.DARK_GRAY));
 
         if (declaration.stateElement() != null && !declaration.stateElement().isEmpty()) {
             tooltip.add(Component.translatable(EVLang.PLATE_STATE,

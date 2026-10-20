@@ -47,10 +47,7 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     public static final int SLOT_PLATE = 3;
     public static final int SLOT_OUTPUT = 4;
 
-    /** 命名槽：放一张写着名字的命名牌，产出的申明板就用那个名字。 */
-    public static final int SLOT_NAME = 5;
-
-    public static final int SIZE = 6;
+    public static final int SIZE = 5;
 
     /** 主料口；辅料口/态口分别在 B / C。 */
     public static final int ACTIVE_ELEMENT_SLOT = SLOT_ELEMENT_A;
@@ -219,8 +216,7 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         source.stack().shrink(Math.min(mainCost, source.stack().getCount()));
         shrinkSlot(SLOT_ELEMENT_B, reagentCost);
         shrinkSlot(SLOT_ELEMENT_C, stateCost);
-        // 命名牌只是一次性耗材
-        shrinkSlot(SLOT_NAME, 1);
+
 
         if (source.owner() != null) {
             source.owner().setChanged();
@@ -229,17 +225,26 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         return true;
     }
 
-    /** 命名槽里如果有写了名字的命名牌，就把那个名字套到产物上。 */
+    /** 界面上那个命名框里写的名字（空 = 不给名字）。 */
+    private String customName = "";
+
+    public void setCustomName(String name) {
+        this.customName = name == null ? "" : name.trim();
+        refreshResult();
+    }
+
+    public String getCustomName() {
+        return customName;
+    }
+
+    /** 把命名框里的文字套到产物上。 */
     private void applyNameFromSlot(ItemStack result) {
-        ItemStack tag = items.getItem(SLOT_NAME);
-        if (tag.isEmpty() || !tag.is(net.minecraft.world.item.Items.NAME_TAG)) {
+        if (customName.isEmpty()) {
             return;
         }
-        net.minecraft.network.chat.Component custom =
-                tag.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-        if (custom != null) {
-            result.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, custom);
-        }
+        result.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal(customName)
+                        .withStyle(net.minecraft.ChatFormatting.WHITE));
     }
 
     /** 某个投入口当前档位需要扣的数量；空口返回 0。 */
@@ -341,7 +346,6 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         return switch (slot) {
             case SLOT_ELEMENT_A, SLOT_ELEMENT_B, SLOT_ELEMENT_C -> isElementStack(stack);
             case SLOT_PLATE -> stack.is(EVItems.DECLARATION_PLATE.get());
-            case SLOT_NAME -> stack.is(net.minecraft.world.item.Items.NAME_TAG);
             default -> false;
         };
     }
@@ -383,6 +387,9 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
         }
         // 用 vanilla 的扁平 ItemStack 格式，保证 /data、结构方块与其它 mod 能读懂。
         ContainerHelper.saveAllItems(tag, list, registries);
+        if (!customName.isEmpty()) {
+            tag.putString("CustomName", customName);
+        }
     }
 
     @Override
@@ -406,6 +413,7 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
                 items.setItem(i, loaded.get(i));
             }
         }
+        customName = tag.getString("CustomName");
         refreshResult();
     }
 

@@ -28,7 +28,7 @@ public class RitualAltarMenu extends AbstractContainerMenu {
     private static final int CELL = 18;
     private static final int GRID_LEFT = 62;
     /** 三个配料口在第二行；第一行是命名槽，两行之间留一行空隙。 */
-    private static final int GRID_TOP = 35;
+    private static final int GRID_TOP = 45;
 
     private final RitualAltarBlockEntity altar;
 
@@ -66,9 +66,6 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         this.altar = altar;
 
         if (altar != null) {
-            // 命名槽（最上方，居中）
-            this.addSlot(new Slot(altar, RitualAltarBlockEntity.SLOT_NAME,
-                    GRID_LEFT + CELL, GRID_TOP - CELL));
             // 三个配料口：料 + 辅料 + 态
             for (int i = 0; i < 3; i++) {
                 this.addSlot(new Slot(altar, i, GRID_LEFT + i * CELL, GRID_TOP));
@@ -90,18 +87,34 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9,
-                        8 + col * CELL, 102 + row * CELL));
+                        8 + col * CELL, 112 + row * CELL));
             }
         }
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * CELL, 160));
+            this.addSlot(new Slot(playerInventory, col, 8 + col * CELL, 170));
         }
+    }
+
+    /** 界面上的命名框改了字 → 交给方块实体。 */
+    public void setCustomName(String name) {
+        if (altar != null) {
+            altar.setCustomName(name);
+        }
+    }
+
+    /** 命名框当前的内容（客户端留空即可，服务端才是权威）。 */
+    public String customName() {
+        return altar == null ? "" : altar.getCustomName();
     }
 
     @Override
     public void removed(Player player) {
         super.removed(player);
         if (!player.level().isClientSide()) {
+            // 名字只在这一轮里有效，关界面就清掉，下次打开不会出现"框里空但产物带名"
+            if (altar != null) {
+                altar.setCustomName("");
+            }
             com.water2h2o.elementalverse.element.ElementStackMerger.mergeAll(player);
         }
     }

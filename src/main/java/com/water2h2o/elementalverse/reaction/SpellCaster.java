@@ -138,7 +138,14 @@ public final class SpellCaster {
      * 所以"火 + 风 + 负地"的爆燃只烧人，不引燃地面。
      */
     private static boolean canTouchBlocks(Declaration declaration) {
-        return declaration.inputValue().get(ElementAxis.EARTH) >= -ElementValue.EPSILON;
+        // 注意要把**态**也算进来：木 / 芽 当态时是负地，
+        // 只算 inputValue（主料+辅料）会漏掉它，于是"火 3 档 + 木态"照样拆方块。
+        double earth = declaration.inputValue().get(ElementAxis.EARTH);
+        ElementType state = declaration.stateElement();
+        if (state != null && !state.isEmpty() && declaration.stateTier() > 0) {
+            earth += state.value().get(ElementAxis.EARTH) * declaration.stateTier();
+        }
+        return earth >= -ElementValue.EPSILON;
     }
 
     /** 主轴有且只有地：这时候地法术不是造物，而是**挖掘**。 */
