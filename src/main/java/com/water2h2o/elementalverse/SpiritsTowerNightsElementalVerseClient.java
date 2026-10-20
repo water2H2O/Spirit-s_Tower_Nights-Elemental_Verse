@@ -56,7 +56,7 @@ public class SpiritsTowerNightsElementalVerseClient {
             net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(
                 com.water2h2o.elementalverse.registry.EVEntities.SPELL_PROJECTILE.get(),
-                net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
+                com.water2h2o.elementalverse.client.ElementProjectileRenderer::new);
     }
 
     /** 给三种元素容器加"衰变期"横条（外观同耐久条，但不碰原版耐久系统）。 */

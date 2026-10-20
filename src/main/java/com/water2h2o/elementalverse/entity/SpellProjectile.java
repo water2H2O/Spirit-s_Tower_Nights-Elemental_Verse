@@ -50,8 +50,24 @@ public class SpellProjectile extends ThrowableItemProjectile {
      */
     private boolean bonusProjectile;
 
+    /** 客户端要用来选贴图和粒子颜色，所以必须同步。 */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<String> DATA_ELEMENT =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(SpellProjectile.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.STRING);
+
     public SpellProjectile(EntityType<? extends SpellProjectile> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ELEMENT, "");
+    }
+
+    /** 这条弹射物是什么元素（空 = 未知）。 */
+    public String elementId() {
+        return this.entityData.get(DATA_ELEMENT);
     }
 
     public SpellProjectile(Level level, LivingEntity shooter, Declaration declaration) {
@@ -63,7 +79,10 @@ public class SpellProjectile extends ThrowableItemProjectile {
         super(EVEntities.SPELL_PROJECTILE.get(), shooter, level);
         this.declaration = declaration;
         this.bonusProjectile = bonusProjectile;
-        this.setItem(iconFor(declaration));
+        ElementType element = declaration.element();
+        this.entityData.set(DATA_ELEMENT, element == null ? "" : element.getSerializedName());
+        // 不再渲染物品：外观交给 ElementProjectileRenderer 画元素本体
+        this.setItem(ItemStack.EMPTY);
     }
 
     public boolean isBonusProjectile() {
@@ -142,7 +161,10 @@ public class SpellProjectile extends ThrowableItemProjectile {
     }
 
     private ElementAxis axis() {
-        ElementType element = ElementVialItem.getElement(getItem());
+        ElementType element = com.water2h2o.elementalverse.element.ElementType.byName(elementId());
+        if (element == null || element.isEmpty()) {
+            element = ElementVialItem.getElement(getItem());
+        }
         if (element == null || element.isEmpty()) {
             element = declaration.element();
         }
