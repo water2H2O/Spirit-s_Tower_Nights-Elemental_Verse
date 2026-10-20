@@ -268,30 +268,22 @@ public enum ElementType implements StringRepresentable {
         // 暗 = 负的光（不是第七条第轴）
         VALUES.put("shadow", ElementValue.of(ElementAxis.LIGHT, -1));
 
-        // 二级元素 = 分子：组合式决定它为什么有那种效果
-        VALUES.put("frost", ElementValue.of(java.util.Map.of(
-                ElementAxis.WATER, 1.0, ElementAxis.FIRE, -0.5)));
-        VALUES.put("ice", ElementValue.of(java.util.Map.of(
-                ElementAxis.WATER, 1.5, ElementAxis.FIRE, -1.0)));   // 强度 2.5，主成分=水
-        VALUES.put("sand", ElementValue.of(java.util.Map.of(
-                ElementAxis.EARTH, 1.0, ElementAxis.WATER, -0.5)));
-        // 风克草：风系二级 = 风 + 负草
-        VALUES.put("lightning", ElementValue.of(java.util.Map.of(
-                ElementAxis.WIND, 1.5, ElementAxis.GRASS, -0.5)));   // 强度 2.0
-        VALUES.put("ember", ElementValue.of(java.util.Map.of(
-                ElementAxis.FIRE, 1.0, ElementAxis.LIGHT, -0.5)));
-        // 木克土：草系二级 = 草 + 负地
-        VALUES.put("bud", ElementValue.of(java.util.Map.of(
-                ElementAxis.GRASS, 1.0, ElementAxis.EARTH, -0.5)));
-        VALUES.put("wood", ElementValue.of(java.util.Map.of(
-                ElementAxis.GRASS, 2.0, ElementAxis.EARTH, -1.0)));
-        VALUES.put("dawn", ElementValue.of(java.util.Map.of(
-                ElementAxis.LIGHT, 1.5, ElementAxis.FIRE, 0.5)));    // 强度 2.0
-        VALUES.put("shadow_essence", ElementValue.of(java.util.Map.of(
-                ElementAxis.LIGHT, -1.5, ElementAxis.GRASS, -0.5))); // 强度 2.0
-        // 金 = 地系的高阶：和砂同一条克制（土克水），只是更浓
-        VALUES.put("metal", ElementValue.of(java.util.Map.of(
-                ElementAxis.EARTH, 2.0, ElementAxis.WATER, -1.0)));  // 强度 2.5
+        // 二级元素 = **纯克制剂**（作者 2026-10-20）：
+        // 只有一条轴、而且是负值 —— 它们不提供任何正面分量，只用来抵消。
+        //   ？克火 → 霜/冰      水克？(砂/金 抵消水)
+        // 因此"火 + 冰"会互相抵消，净值为零。
+        VALUES.put("frost", ElementValue.of(ElementAxis.FIRE, -0.5));
+        VALUES.put("ice", ElementValue.of(ElementAxis.FIRE, -1.0));
+        VALUES.put("sand", ElementValue.of(ElementAxis.WATER, -0.5));
+        VALUES.put("metal", ElementValue.of(ElementAxis.WATER, -1.0));
+        VALUES.put("bud", ElementValue.of(ElementAxis.EARTH, -0.5));
+        VALUES.put("wood", ElementValue.of(ElementAxis.EARTH, -1.0));
+        VALUES.put("lightning", ElementValue.of(ElementAxis.GRASS, -0.5));
+        VALUES.put("ember", ElementValue.of(ElementAxis.LIGHT, -0.5));
+
+        // 光系例外：光是"没有天敌"的轴，所以它只有强弱之分
+        VALUES.put("dawn", ElementValue.of(ElementAxis.LIGHT, 2.0));
+        VALUES.put("shadow_essence", ElementValue.of(ElementAxis.LIGHT, -1.5));
     }
 
     /** 这种元素的元素值（空元素返回零向量）。 */
