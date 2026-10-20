@@ -39,6 +39,9 @@ public class SpellProjectile extends ThrowableItemProjectile {
     /** 这条弹射物携带的申明。客户端不参与结算，所以只在存档里保留。 */
     private Declaration declaration = Declaration.EMPTY;
 
+    /** 是否追踪最近的生物（水元素的正向参数）。 */
+    private boolean homing;
+
     public SpellProjectile(EntityType<? extends SpellProjectile> type, Level level) {
         super(type, level);
     }
@@ -63,14 +66,45 @@ public class SpellProjectile extends ThrowableItemProjectile {
         return EVItems.ELEMENT_VIAL.get();
     }
 
+    public void setHoming(boolean homing) {
+        this.homing = homing;
+    }
+
+    /** 追踪：每 tick 把速度往最近的生物身上掰一点。 */
+    private void steer() {
+        var target = level().getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class,
+                        getBoundingBox().inflate(12.0D),
+                        e -> e != getOwner() && e.isAlive())
+                .stream()
+                .min(java.util.Comparator.comparingDouble(this::distanceToSqr))
+                .orElse(null);
+        if (target == null) {
+            return;
+        }
+        var aim = target.getBoundingBox().getCenter().subtract(position());
+        if (aim.lengthSqr() < 1.0E-4D) {
+            return;
+        }
+        var blended = getDeltaMovement().scale(0.55D).add(aim.normalize().scale(0.45D));
+        if (blended.lengthSqr() < 1.0E-6D) {
+            return;
+        }
+        setDeltaMovement(blended.normalize().scale(0.55D));
+        hurtMarked = true;
+    }
+
     /** 拖尾：与元素同色的粒子，让人看见它飞过去。 */
     @Override
     public void tick() {
         super.tick();
-        // 没有命中就飞满 5 秒自动消失，避免留下永远在飞的实体
+        // 服务端：追踪 + 超时回收
         if (!level().isClientSide()) {
             if (tickCount > 100) {
                 discard();
+                return;
+            }
+            if (homing) {
+                steer();
             }
             return;
         }
@@ -117,6 +151,7 @@ public class SpellProjectile extends ThrowableItemProjectile {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
+        tag.putBoolean("Homing", homing);
         Declaration.CODEC.encodeStart(NbtOps.INSTANCE, declaration)
                 .result()
                 .ifPresent(encoded -> tag.put("Declaration", encoded));
@@ -125,6 +160,7 @@ public class SpellProjectile extends ThrowableItemProjectile {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        homing = tag.getBoolean("Homing");
         Declaration.CODEC.parse(NbtOps.INSTANCE, tag.get("Declaration"))
                 .result()
                 .ifPresent(parsed -> declaration = parsed);

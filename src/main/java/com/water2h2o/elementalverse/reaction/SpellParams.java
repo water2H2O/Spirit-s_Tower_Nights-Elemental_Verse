@@ -18,10 +18,17 @@ import com.water2h2o.elementalverse.element.ElementType;
  * @param polarity    极性（草）：把伤害转成治疗的比例 0~1
  */
 public record SpellParams(double intensity, double radius, int durationSec,
-                          int buildRadius, int chain, double polarity) {
+                          int buildRadius, int chain, double polarity,
+                          boolean homing, int shots) {
 
     /** 什么都没放时的默认态。 */
-    public static final SpellParams DEFAULT = new SpellParams(1.0D, 1.5D, 1, 0, 0, 0.0D);
+    public static final SpellParams DEFAULT = new SpellParams(1.0D, 1.5D, 1, 0, 0, 0.0D, false, 1);
+
+    /** 兼容旧写法（没有追踪/散射）。 */
+    public SpellParams(double intensity, double radius, int durationSec,
+                       int buildRadius, int chain, double polarity) {
+        this(intensity, radius, durationSec, buildRadius, chain, polarity, false, 1);
+    }
 
     /** 火：烈度。留递减，避免"投满 9 个 = 3.5 倍"变成唯一最优解。 */
     private static final double[] FIRE_INTENSITY = {1.0D, 2.0D, 3.5D};
@@ -59,6 +66,8 @@ public record SpellParams(double intensity, double radius, int durationSec,
         int build = 0;
         int chain = 0;
         double polarity = 0.0D;
+        boolean homing = false;
+        int shots = 1;
 
         if (axis != null) {
             switch (axis) {
@@ -66,7 +75,16 @@ public record SpellParams(double intensity, double radius, int durationSec,
                 case WIND -> radius = WIND_RADIUS[index];
                 case LIGHT -> duration = LIGHT_SECONDS[index];
                 case EARTH -> build = (int) (EARTH_RADIUS[index] * sign);
-                case WATER -> chain = WATER_CHAIN[index];
+                case WATER -> {
+                    chain = WATER_CHAIN[index];
+                    if (sign >= 0) {
+                        // 正水：弹道自动追踪生物
+                        homing = true;
+                    } else {
+                        // 负水：不发追踪弹，改成多发散射（等级越高子弹越多）
+                        shots = index + 1;
+                    }
+                }
                 case GRASS -> polarity = GRASS_POLARITY[index];
             }
         }
@@ -77,7 +95,7 @@ public record SpellParams(double intensity, double radius, int durationSec,
             intensity = Math.max(0.5D, intensity * 0.5D);
         }
 
-        return new SpellParams(intensity, radius, duration, build, chain, polarity);
+        return new SpellParams(intensity, radius, duration, build, chain, polarity, homing, shots);
     }
 
     /** 持续时间的 tick 形式。 */

@@ -69,7 +69,7 @@ public final class SpellCaster {
 
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
-        Optional<Reaction> matched = ReactionManager.match(input);
+        Optional<Reaction> matched = ReactionManager.match(input, bothSlotsSame(declaration));
 
         // 没有精确配方、也没有主成分兜底 → 不扣材料，直接提示。
         if (matched.isEmpty() && !hasFallback(input)) {
@@ -113,7 +113,7 @@ public final class SpellCaster {
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
         var hit = new EntityHitResult(target);
-        var matched = ReactionManager.match(input);
+        var matched = ReactionManager.match(input, bothSlotsSame(declaration));
 
         // 武器触发没有“主成分兜底”：凑不出反应就不扣材料、也不触发。
         if (matched.isEmpty()) {
@@ -129,6 +129,56 @@ public final class SpellCaster {
         dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
         playCastFeedback(level, player, input, hit);
         return true;
+    }
+
+    /**
+     * 地元素决定"能不能动方块"。
+     *
+     * <p>作者 2026-10-20：主轴不是地的时候，**正数的地**才允许改方块，**负数的地**一律不碰 ——
+     * 所以"火 + 风 + 负地"的爆燃只烧人，不引燃地面。
+     */
+    private static boolean canTouchBlocks(Declaration declaration) {
+        return declaration.inputValue().get(ElementAxis.EARTH) >= -ElementValue.EPSILON;
+    }
+
+    /** 主轴有且只有地：这时候地法术不是造物，而是**挖掘**。 */
+    private static boolean isPureEarth(ElementValue value) {
+        for (var entry : value.asMap().entrySet()) {
+            if (entry.getKey() != ElementAxis.EARTH
+                    && Math.abs(entry.getValue()) > ElementValue.EPSILON) {
+                return false;
+            }
+        }
+        return value.get(ElementAxis.EARTH) > ElementValue.EPSILON;
+    }
+
+    /**
+     * 挖掘：清掉边长 n 的正方体。
+     *
+     * <p>硬度 ≥ 50（黑曜石）或 &lt; 0（基岩）的方块不动 —— 作者要求"破坏强度黑曜石以下"。
+     */
+    private static void digCube(Level level, BlockPos center, int n) {
+        int half = Math.max(0, (n - 1) / 2);
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-half, -half, -half),
+                center.offset(half, half, half))) {
+            BlockPos spot = pos.immutable();
+            var state = level.getBlockState(spot);
+            if (state.isAir()) {
+                continue;
+            }
+            float hardness = state.getDestroySpeed(level, spot);
+            if (hardness < 0.0F || hardness >= 50.0F) {
+                continue;
+            }
+            level.destroyBlock(spot, false);
+        }
+    }
+
+    /** 主料与辅料是不是同一种元素（单元素魔法的书写前提）。 */
+    private static boolean bothSlotsSame(Declaration declaration) {
+        return declaration.reagentElement() != null
+                && !declaration.reagentElement().isEmpty()
+                && declaration.reagentElement() == declaration.element();
     }
 
     // ---------------------------------------------------------------- 现象
@@ -175,13 +225,23 @@ public final class SpellCaster {
         if (!(level instanceof ServerLevel server)) {
             return false;
         }
-        var projectile = new com.water2h2o.elementalverse.entity.SpellProjectile(
-                server, player, declaration);
-        projectile.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
-        // 不受重力：法术应该笔直飞向准星指向的地方，而不是像雪球那样掉下去
-        projectile.setNoGravity(true);
-        projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.6F, 0.4F);
-        server.addFreshEntity(projectile);
+        SpellParams params = SpellParams.of(declaration);
+        int shots = Math.max(1, Math.min(4, params.shots()));
+
+        for (int i = 0; i < shots; i++) {
+            var projectile = new com.water2h2o.elementalverse.entity.SpellProjectile(
+                    server, player, declaration);
+            projectile.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
+            // 不受重力：法术应该笔直飞向准星指向的地方，而不是像雪球那样掉下去
+            projectile.setNoGravity(true);
+            // 正水：自动追生物；负水：多发散射
+            projectile.setHoming(params.homing());
+
+            float spread = shots == 1 ? 0.0F : (i - (shots - 1) / 2.0F) * 9.0F;
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
+                    0.0F, 1.6F, shots == 1 ? 0.4F : 2.0F);
+            server.addFreshEntity(projectile);
+        }
         return true;
     }
 
@@ -197,7 +257,7 @@ public final class SpellCaster {
         }
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
-        var matched = ReactionManager.match(input);
+        var matched = ReactionManager.match(input, bothSlotsSame(declaration));
         if (matched.isPresent()) {
             dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
         } else {
@@ -397,12 +457,22 @@ public final class SpellCaster {
 
         switch (type) {
             case "area_fire" -> {
-                for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
-                        center.offset(radius, 1, radius))) {
-                    BlockPos spot = pos.immutable();
-                    if (level.getBlockState(spot).isAir()
-                            && center.distSqr(spot) <= (double) radius * radius + 0.5D) {
-                        level.setBlockAndUpdate(spot, BaseFireBlock.getState(level, spot));
+                // 爆燃 = 一次恶魂火球大小的爆炸，然后点燃周围
+                if (level instanceof ServerLevel server) {
+                    var at = new net.minecraft.world.phys.Vec3(
+                            center.getX() + 0.5D, center.getY() + 0.5D, center.getZ() + 0.5D);
+                    // 不破坏方块（只冲击 + 点燃），避免一发法术把家拆了
+                    server.explode(player, at.x, at.y, at.z, 1.0F,
+                            Level.ExplosionInteraction.NONE);
+                }
+                if (canTouchBlocks(declaration)) {
+                    for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
+                            center.offset(radius, 1, radius))) {
+                        BlockPos spot = pos.immutable();
+                        if (level.getBlockState(spot).isAir()
+                                && center.distSqr(spot) <= (double) radius * radius + 0.5D) {
+                            level.setBlockAndUpdate(spot, BaseFireBlock.getState(level, spot));
+                        }
                     }
                 }
             }
@@ -417,12 +487,26 @@ public final class SpellCaster {
                             (int) Math.round(ticks * 0.5D), 0));
                 }
             }
-            case "place_stone" -> fillSphere(level, center, radius, Blocks.STONE.defaultBlockState());
-            case "place_grass" -> fillSphere(level, center, radius, Blocks.GRASS_BLOCK.defaultBlockState());
+            case "place_stone" -> {
+                if (!canTouchBlocks(declaration)) {
+                    break;
+                }
+                // 纯地 = 挖掘：边长 n 的正方体，硬度低于黑曜石才能破
+                if (isPureEarth(declaration.inputValue())) {
+                    digCube(level, center, Math.max(1, Math.min(3, declaration.tier())));
+                } else {
+                    fillSphere(level, center, radius, Blocks.STONE.defaultBlockState());
+                }
+            }
+            case "place_grass" -> {
+                if (canTouchBlocks(declaration)) {
+                    fillSphere(level, center, radius, Blocks.GRASS_BLOCK.defaultBlockState());
+                }
+            }
             case "bonemeal" -> {
                 // 浇灌：等于撒了一把骨粉 —— 走原版的 BonemealableBlock 接口，
                 // 作物、树苗、草方块、水草全都按原版规则长
-                if (level instanceof ServerLevel server) {
+                if (level instanceof ServerLevel server && canTouchBlocks(declaration)) {
                     var random = level.getRandom();
                     for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -1, -radius),
                             center.offset(radius, 1, radius))) {
@@ -833,9 +917,18 @@ public final class SpellCaster {
      * <p>成本按档位 1 / 2 / 3 **点**（写入仍是 1/3/9 瓶，两码事）。
      */
 
-    /** 一次施法需要多少点元素值。 */
+    /**
+     * 一次施法需要多少**点元素值**：1/2/3 档 = 4 / 8 / 16。
+     *
+     * <p>比写入便宜（写入 1/3/9 瓶），但比最早的 1/2/3 点贵得多 ——
+     * 这是为了让"冰（1.5 点）替代水"有真正的代价。
+     */
     private static double castCost(Declaration declaration) {
-        return Math.max(1, declaration.castCount());
+        return switch (Math.max(1, Math.min(3, declaration.tier()))) {
+            case 3 -> 16.0D;
+            case 2 -> 8.0D;
+            default -> 4.0D;
+        };
     }
 
     /** 这条申明认的轴。 */

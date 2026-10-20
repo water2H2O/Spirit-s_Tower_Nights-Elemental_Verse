@@ -72,19 +72,43 @@ public final class ReactionManager {
      * 条件匹配：优先命中"要求更多分量"的那条（更特殊的配方优先）。
      */
     public static Optional<Reaction> match(ElementValue input) {
+        return match(input, true);
+    }
+
+    /**
+     * 条件匹配。
+     *
+     * <p>两条规则（作者 2026-10-20 定）：
+     * <ol>
+     *   <li>**双元素反应优先于单元素反应** —— 不管 consume 谁大。否则"3 水 + 1 风"会被
+     *       单元素的冻结（水≥3）抢走，而不是走暴风雪。</li>
+     *   <li>单元素反应要求**两个投入口是同一种元素**，这样"单元素魔法"才是一门真正的手艺。</li>
+     * </ol>
+     *
+     * @param bothSlotsSame 主料与辅料是不是同一种元素
+     */
+    public static Optional<Reaction> match(ElementValue input, boolean bothSlotsSame) {
         Reaction best = null;
         double bestSize = -1;
         for (Reaction reaction : reactions) {
             if (!reaction.accepts(input)) {
                 continue;
             }
-            double size = reaction.consume().magnitude();
+            if (reaction.isSingleElement() && !bothSlotsSame) {
+                continue;
+            }
+            double size = ranking(reaction);
             if (size > bestSize) {
                 bestSize = size;
                 best = reaction;
             }
         }
         return Optional.ofNullable(best);
+    }
+
+    /** 排序键：双元素永远压过单元素，同类别里再比 consume 强度。 */
+    private static double ranking(Reaction reaction) {
+        return (reaction.isSingleElement() ? 0.0D : 1.0E6D) + reaction.consume().magnitude();
     }
 
     public static List<Reaction> all() {

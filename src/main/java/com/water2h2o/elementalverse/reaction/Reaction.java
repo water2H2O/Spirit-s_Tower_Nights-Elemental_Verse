@@ -72,6 +72,11 @@ public record Reaction(ElementValue consume, Phenomenon phenomenon, ElementValue
         return true;
     }
 
+    /** 只要求一条轴 = 单元素魔法（要在双元素之后判定）。 */
+    public boolean isSingleElement() {
+        return consume.asMap().size() == 1;
+    }
+
     public boolean isBalanced() {
         return phenomenon.cost() <= consume.magnitude() + ElementValue.EPSILON;
     }
