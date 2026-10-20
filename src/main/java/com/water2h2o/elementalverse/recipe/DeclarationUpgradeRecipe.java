@@ -46,12 +46,20 @@ public class DeclarationUpgradeRecipe implements SmithingRecipe {
                     Codec.STRING.optionalFieldOf("form", "touch").forGetter(r -> r.form)
             ).apply(instance, DeclarationUpgradeRecipe::new));
 
-    /** 这条配方被标记为 special，不会同步给客户端，所以流编解码器只是占位。 */
-    public static final DeclarationUpgradeRecipe PLACEHOLDER = new DeclarationUpgradeRecipe(
-            Ingredient.EMPTY, Ingredient.EMPTY, Ingredient.EMPTY, "touch");
-
+    /**
+     * 流编解码器：**必须真的编解码**。
+     *
+     * <p>踩过一次：以为 isSpecial() 就不会同步，用了占位 codec，结果客户端在
+     * {@code clientbound/minecraft:update_recipes} 上直接断线。
+     * 配方表是会整包同步的，占位 codec 编出来的包解不开。
+     */
     public static final StreamCodec<RegistryFriendlyByteBuf, DeclarationUpgradeRecipe> STREAM_CODEC =
-            StreamCodec.unit(PLACEHOLDER);
+            StreamCodec.composite(
+                    Ingredient.CONTENTS_STREAM_CODEC, r -> r.template,
+                    Ingredient.CONTENTS_STREAM_CODEC, r -> r.base,
+                    Ingredient.CONTENTS_STREAM_CODEC, r -> r.addition,
+                    net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8, r -> r.form,
+                    DeclarationUpgradeRecipe::new);
 
     private final Ingredient template;
     private final Ingredient base;
