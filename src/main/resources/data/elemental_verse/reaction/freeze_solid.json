@@ -1,7 +1,8 @@
 {
   "name": "冻结",
   "consume": {
-    "water": 3
+    "water": 3,
+    "fire": -0.5
   },
   "max": {
     "fire": 2

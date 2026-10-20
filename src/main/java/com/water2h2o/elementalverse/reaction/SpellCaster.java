@@ -181,6 +181,38 @@ public final class SpellCaster {
                 && declaration.reagentElement() == declaration.element();
     }
 
+    /** 档位 1 / 2 / 3。 */
+    private static int tierOf(Declaration declaration) {
+        return Math.max(1, Math.min(3, declaration.tier()));
+    }
+
+    /** 投入向量里有两条以上轴 = 双元素法术（才吃"三级附加"）。 */
+    private static boolean isDualInput(Declaration declaration) {
+        return declaration.inputValue().asMap().size() > 1;
+    }
+
+    /** 给目标挂缚手（统一走抗性规则）。 */
+    private static void boundHands(LivingEntity target, Player source, int seconds) {
+        var effect = com.water2h2o.elementalverse.registry.EVMobEffects.BOUND_HANDS;
+        int ticks = boundHandsTicks(target, seconds);
+        // 先移除再挂 = 重置计时，否则只会取剩余时间长的那个
+        target.removeEffect(effect);
+        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(effect, ticks, 0), source);
+    }
+
+    /** 命中点（打空时用视线前方）。 */
+    private static net.minecraft.world.phys.Vec3 hitPoint(Player player, HitResult hit) {
+        return hit != null && hit.getType() != HitResult.Type.MISS
+                ? hit.getLocation()
+                : player.getEyePosition().add(player.getViewVector(1.0F).scale(2.5D));
+    }
+
+    /** 命中到的活体（没有就是 null）。 */
+    private static LivingEntity hitLiving(HitResult hit) {
+        return hit instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity living ? living : null;
+    }
+
     // ---------------------------------------------------------------- 现象
 
     /**
@@ -269,19 +301,28 @@ public final class SpellCaster {
     private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
                                  HitResult hit, Declaration declaration) {
 
+        // 水的附属效果：任何带水的法术都顺带灭火（作者：灭火不再单独成招）
+        if (declaration.inputValue().get(ElementAxis.WATER) > 0.0D
+                && !"douse".equals(phenomenon.type())) {
+            douse(level, hit, params);
+        }
+
         switch (phenomenon.type()) {
-            case "ignite" -> ignite(level, hit, phenomenon, params);
+            case "ignite" -> ignite(level, hit, phenomenon, params, declaration);
             case "douse" -> douse(level, hit, params);
             case "sustained_element_damage" -> strike(level, player, phenomenon, params, hit);
             case "steam" -> steam(level, player, hit, params);
             case "lava" -> lava(level, hit, phenomenon, params);
             case "fire_resistance" -> fireResistance(player, phenomenon, params);
-            case "chaos" -> chaos(level, player, hit, phenomenon, params);
+            case "chaos" -> chaos(level, player, hit, phenomenon, params, declaration);
             case "explode" -> explode(level, player, params, hit);
-            case "flash" -> flash(level, player, hit, phenomenon, params);
-            case "encase" -> encase(level, player, hit, phenomenon, params);
+            case "flash" -> flash(level, player, hit, phenomenon, params, declaration);
+            case "encase" -> encase(level, player, hit, phenomenon, params, declaration);
             default -> applyPrimitive(level, player, hit, phenomenon, params, declaration);
         }
+
+        // 双元素法术的三级附加（主料决定附加什么）
+        applyTierThreeBonus(level, player, declaration, params, hit, phenomenon);
     }
 
     /**
@@ -335,31 +376,38 @@ public final class SpellCaster {
 
     /** 爆炸：火轴投满（> 2 点）就是把势能一次性放掉。 */
     private static void explode(Level level, Player player, SpellParams params, HitResult hit) {
-        var at = hit != null && hit.getType() != HitResult.Type.MISS
-                ? hit.getLocation()
-                : player.getEyePosition().add(player.getViewVector(1.0F).scale(2.5D));
-        float power = (float) Math.min(4.0D, 2.0D + params.intensity() * 0.6D);
+        // 三级火专属：TNT 当量，且真的拆方块
+        explodeAt(level, player, hit, 4.0F, true);
+    }
+
+    private static void explodeAt(Level level, Player player, HitResult hit, float power, boolean destroy) {
+        var at = hitPoint(player, hit);
         if (!level.isClientSide()) {
-            level.explode(player, at.x, at.y, at.z, power, Level.ExplosionInteraction.TNT);
+            level.explode(player, at.x, at.y, at.z, power,
+                    destroy ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);
         }
     }
 
     /** 强光：白得看不见，同时发光——在黑里也跑不掉。 */
     private static void flash(Level level, Player player, HitResult hit,
-                              Phenomenon phenomenon, SpellParams params) {
-        int ticks = Math.max(20, effectTicks(phenomenon, params));
-        var at = hit != null && hit.getType() != HitResult.Type.MISS
-                ? hit.getLocation()
-                : player.getEyePosition().add(player.getViewVector(1.0F).scale(RANGE));
+                              Phenomenon phenomenon, SpellParams params, Declaration declaration) {
+        // 1 级：失明 6 秒；2 级：失明 + 发光 10 秒；3 级：15 秒 + 缚手 3 秒
+        int tier = tierOf(declaration);
+        int ticks = (tier == 3 ? 15 : tier == 2 ? 10 : 6) * 20;
+        boolean glow = tier >= 2;
+        var at = hitPoint(player, hit);
 
-        if (hit instanceof EntityHitResult entityHit
-                && entityHit.getEntity() instanceof LivingEntity living) {
-            blind(living, ticks);
+        LivingEntity single = hitLiving(hit);
+        if (single != null) {
+            blind(single, ticks, glow);
+            if (tier == 3) {
+                boundHands(single, player, 3);
+            }
         } else if (level instanceof ServerLevel server) {
             int radius = Math.max(1, (int) Math.round(params.radius()));
             for (LivingEntity living : server.getEntitiesOfClass(LivingEntity.class,
                     new net.minecraft.world.phys.AABB(at, at).inflate(radius + 1.0D))) {
-                blind(living, ticks);
+                blind(living, ticks, glow);
             }
         }
         if (level instanceof ServerLevel server) {
@@ -370,20 +418,27 @@ public final class SpellCaster {
         }
     }
 
-    private static void blind(LivingEntity living, int ticks) {
+    private static void blind(LivingEntity living, int ticks, boolean glow) {
         living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.BLINDNESS, ticks, 0));
-        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.GLOWING, ticks * 2, 0));
+        if (glow) {
+            living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.GLOWING, ticks, 0));
+        }
     }
 
     /** 冻结：把目标冻在原地——走不动、挖不动、身上结满冰壳。 */
     private static void encase(Level level, Player player, HitResult hit,
-                               Phenomenon phenomenon, SpellParams params) {
-        int ticks = Math.max(40, effectTicks(phenomenon, params));
-        if (!(hit instanceof EntityHitResult entityHit)
-                || !(entityHit.getEntity() instanceof LivingEntity living)) {
+                               Phenomenon phenomenon, SpellParams params, Declaration declaration) {
+        // 1/2/3 级 = 3 / 5 / 7 秒；三级额外送 3 秒缚手
+        int tier = tierOf(declaration);
+        int ticks = (tier == 3 ? 7 : tier == 2 ? 5 : 3) * 20;
+        LivingEntity living = hitLiving(hit);
+        if (living == null) {
             return;
+        }
+        if (tier == 3) {
+            boundHands(living, player, 3);
         }
         living.setTicksFrozen(living.getTicksRequiredToFreeze() + ticks);
         living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
@@ -397,6 +452,108 @@ public final class SpellCaster {
                             new org.joml.Vector3f(0.66F, 0.86F, 1.0F), 1.4F),
                     living.getX(), living.getY() + 0.8D, living.getZ(),
                     30, 0.4D, 0.7D, 0.4D, 0.02D);
+        }
+    }
+
+    /**
+     * 双元素法术的**三级附加**（作者 2026-10-20 定稿）。
+     *
+     * <p>同一对元素，主料是谁就附加谁的效果 —— 这是三级才有的"质变"，
+     * 也是 16 点消耗的回报。
+     */
+    private static void applyTierThreeBonus(Level level, Player player, Declaration declaration,
+                                            SpellParams params, HitResult hit, Phenomenon phenomenon) {
+        if (tierOf(declaration) < 3 || !isDualInput(declaration)) {
+            return;
+        }
+        LivingEntity target = hitLiving(hit);
+        var at = hitPoint(player, hit);
+
+        switch (declaration.element()) {
+            case FIRE -> // 爆炸 power 2（TNT 当量），破坏地形
+                    explodeAt(level, player, hit, 2.0F, true);
+            case WATER -> {
+                // 冻结 3 秒 + 缚手 3 秒
+                if (target != null) {
+                    target.setTicksFrozen(target.getTicksRequiredToFreeze() + 60);
+                    target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 5));
+                    boundHands(target, player, 3);
+                }
+            }
+            case EARTH -> {
+                // 缓慢 + 缚手
+                if (target != null) {
+                    target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
+                    boundHands(target, player, 3);
+                }
+            }
+            case WIND -> {
+                // 追加 2 发风弹
+                if (level instanceof ServerLevel server) {
+                    for (int i = 0; i < 2; i++) {
+                        var extra = new com.water2h2o.elementalverse.entity.SpellProjectile(
+                                server, player, declaration);
+                        extra.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
+                        extra.setNoGravity(true);
+                        float spread = i == 0 ? -14.0F : 14.0F;
+                        extra.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
+                                0.0F, 1.6F, 1.5F);
+                        server.addFreshEntity(extra);
+                    }
+                }
+            }
+            case GRASS -> {
+                // 本法术的状态：持续 ×1.5、等级 +1
+                if (!phenomenon.type().startsWith("effect:")) {
+                    break;
+                }
+                var id = net.minecraft.resources.ResourceLocation.tryParse(
+                        phenomenon.type().substring("effect:".length()));
+                if (id == null) {
+                    break;
+                }
+                var holder = net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getHolder(id);
+                if (holder.isEmpty()) {
+                    break;
+                }
+                LivingEntity who = holder.get().value().isBeneficial() ? player : target;
+                if (who != null) {
+                    int ticks = (int) Math.round(Math.max(20, effectTicks(phenomenon, params)) * 1.5D);
+                    who.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            holder.get(), ticks, 1));
+                }
+            }
+            case LIGHT -> {
+                // 失明 5 秒 + 范围发光
+                if (level instanceof ServerLevel server) {
+                    for (LivingEntity living : server.getEntitiesOfClass(LivingEntity.class,
+                            new net.minecraft.world.phys.AABB(at, at).inflate(6.0D))) {
+                        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                net.minecraft.world.effect.MobEffects.BLINDNESS, 100, 0));
+                        living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                net.minecraft.world.effect.MobEffects.GLOWING, 200, 0));
+                    }
+                }
+            }
+            case SHADOW -> {
+                // 5 个负面 + 黑暗 5 秒
+                if (target != null) {
+                    for (var effect : java.util.List.of(
+                            net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
+                            net.minecraft.world.effect.MobEffects.WEAKNESS,
+                            net.minecraft.world.effect.MobEffects.DIG_SLOWDOWN,
+                            net.minecraft.world.effect.MobEffects.CONFUSION,
+                            net.minecraft.world.effect.MobEffects.POISON)) {
+                        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(effect, 100, 0));
+                    }
+                    target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.DARKNESS, 100, 0));
+                }
+            }
+            default -> {
+            }
         }
     }
 
@@ -448,10 +605,16 @@ public final class SpellCaster {
     }
 
     /** 点燃：命中的实体着火，或者命中方块的面上一格起火。 */
-    private static void ignite(Level level, HitResult hit, Phenomenon phenomenon, SpellParams params) {
-        int fireTicks = (int) Math.round(effectTicks(phenomenon, params) * params.intensity());
+    private static void ignite(Level level, HitResult hit, Phenomenon phenomenon, SpellParams params,
+                               Declaration declaration) {
+        // 1 级：着火 5 秒；2 级：额外 5 点火焰伤害；3 级已经不走到这里（变成爆炸）
+        int fireTicks = 100;
+        int tier = tierOf(declaration);
 
         if (hit instanceof EntityHitResult entityHit) {
+            if (entityHit.getEntity() instanceof LivingEntity living && tier >= 2) {
+                living.hurt(level.damageSources().magic(), 5.0F);
+            }
             entityHit.getEntity().setRemainingFireTicks(fireTicks);
             return;
         }
@@ -574,7 +737,14 @@ public final class SpellCaster {
                 if (level instanceof ServerLevel server) {
                     var origin = new net.minecraft.world.phys.Vec3(
                             center.getX() + 0.5D, center.getY() + 0.5D, center.getZ() + 0.5D);
-                    double strength = 1.6D + params.radius() * 0.35D;
+                    // 1/2/3 级 = 中等 / 大力 / 超大力
+                    int tier = tierOf(declaration);
+                    double strength = switch (tier) {
+                        case 3 -> 3.2D;
+                        case 2 -> 2.4D;
+                        default -> 1.7D;
+                    } + params.radius() * 0.2D;
+                    double lift = tier >= 3 ? 0.95D : 0.55D;
                     for (Entity entity : server.getEntitiesOfClass(Entity.class,
                             new net.minecraft.world.phys.AABB(origin, origin).inflate(radius + 1.0D))) {
                         if (entity == player) {
@@ -585,7 +755,7 @@ public final class SpellCaster {
                             dir = player.getViewVector(1.0F);
                         }
                         dir = dir.normalize();
-                        entity.push(dir.x * strength, 0.55D, dir.z * strength);
+                        entity.push(dir.x * strength, lift, dir.z * strength);
                         // 不加这一行，客户端看不到击退
                         entity.hurtMarked = true;
                     }
@@ -620,16 +790,28 @@ public final class SpellCaster {
                 }
             }
             case "annihilate" -> {
-                // 光 + 暗：正负抵消，什么都不发生，但很脏（余热以后接）
+                // 净值归零：什么都不发生，但很脏
                 level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK,
                         SoundSource.PLAYERS, 0.8F, 0.6F);
+                // 1/2/3 级 = 少量 / 更多 / 最多的余热（"推进一阶"要等阶段 06）
+                if (!level.isClientSide()) {
+                    com.water2h2o.elementalverse.heat.ChunkHeat.add(
+                            level, player.blockPosition(), 20.0D * tierOf(declaration));
+                }
             }
             case "extend_effects" -> {
+                // 1 级 ×1.2；2 级 ×1.5 且等级 +1；3 级 ×2、等级 +2、再瞬回 4 点
+                int tier = tierOf(declaration);
+                double mul = tier == 3 ? 2.0D : tier == 2 ? 1.5D : 1.2D;
+                int addLevel = tier == 3 ? 2 : tier == 2 ? 1 : 0;
                 player.getActiveEffects().stream().toList().forEach(effect ->
                         player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                                 effect.getEffect(),
-                                effect.getDuration() * 2,
-                                Math.min(3, effect.getAmplifier() + 1))));
+                                (int) Math.round(effect.getDuration() * mul),
+                                Math.min(3, effect.getAmplifier() + addLevel))));
+                if (tier == 3) {
+                    player.heal(4.0F);
+                }
             }
             default -> applyNamedEffect(level, player, hit, phenomenon, params);
         }
@@ -797,7 +979,7 @@ public final class SpellCaster {
 
     /** 暗渊：随机给几个负面状态 + 固定黑暗（打在命中的实体上；没命中才落在施法者身上）。 */
     private static void chaos(Level level, Player player, HitResult hit, Phenomenon phenomenon,
-                              SpellParams params) {
+                              SpellParams params, Declaration declaration) {
         var pool = java.util.List.of(
                 net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
                 net.minecraft.world.effect.MobEffects.WEAKNESS,
@@ -807,8 +989,10 @@ public final class SpellCaster {
         var random = level.getRandom();
         var picked = new java.util.ArrayList<>(pool);
         java.util.Collections.shuffle(picked, new java.util.Random(random.nextLong()));
-        int count = Math.min(5, picked.size());
-        int ticks = Math.max(20, effectTicks(phenomenon, params));
+        int tier = tierOf(declaration);
+        // 1 级 3 个负面；2 级起 5 个；3 级再加缚手与易伤
+        int count = Math.min(tier == 1 ? 3 : 5, picked.size());
+        int ticks = 100;
         LivingEntity target = player;
         if (hit instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof LivingEntity living) {
@@ -819,6 +1003,11 @@ public final class SpellCaster {
         }
         target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.DARKNESS, ticks, 0));
+        if (tier == 3) {
+            boundHands(target, player, 3);
+            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    com.water2h2o.elementalverse.registry.EVMobEffects.VULNERABLE, 200, 0));
+        }
     }
 
     /** 蒸汽：小而烫的伤害 + 击退。 */
@@ -921,7 +1110,8 @@ public final class SpellCaster {
                 ? suppliedHit
                 : player.pick(RANGE, 1.0F, false);
         switch (axis) {
-            case FIRE -> ignite(level, target, new Phenomenon("ignite", axis, 1.0, 40, 0.0), params);
+            case FIRE -> ignite(level, target, new Phenomenon("ignite", axis, 1.0, 40, 0.0), params,
+                    Declaration.EMPTY);
             case WATER -> douse(level, target, params);
             default -> {
                 // 目前只为火 / 水实现了通用兜底；其余元素没有现象，调用方会在扣材料前拦下。
