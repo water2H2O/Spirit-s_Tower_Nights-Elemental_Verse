@@ -1,6 +1,8 @@
 package com.water2h2o.elementalverse.reaction;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -701,117 +703,168 @@ public final class SpellCaster {
     // ---------------------------------------------------------------- 材料
 
     /**
-     * 施法需要消耗的元素：主料 + 辅料（态是写板时的一次性形，不再按次扣）。
-     * 同一种元素会合并计数，避免“主料 1 火 + 辅料 1 火”被拆成两次各扣 1 的漏洞。
+     * 施法的材料判定：**认轴、算值、小瓶优先**。
+     *
+     * <p>以前是按"瓶子里的元素种类"精确匹配（洪流只收 water），于是霜和冰明明主成分都是水却用不了。
+     * 现在改成看**元素值**：
+     * <ul>
+     *   <li>轴：法术主料的主成分轴（洪流 = 水轴）</li>
+     *   <li>值：水 1.0 / 霜 1.0 / 冰 1.5 —— 冰一瓶顶一瓶半水</li>
+     *   <li>只认主成分同轴的载体，砂（主成分地）不能给水法术供能</li>
+     * </ul>
+     *
+     * <p>成本按档位 1 / 2 / 3 **点**（写入仍是 1/3/9 瓶，两码事）。
      */
-    private static Map<ElementType, Integer> requirements(Declaration declaration) {
-        Map<ElementType, Integer> required = new EnumMap<>(ElementType.class);
-        if (declaration.isDefined()) {
-            // 只收主料：辅料与态在**写入**时已经付过 1/3/9 了，释放时不再重复扣。
-            // 数量按档位 1 / 2 / 3，不是写入的 1 / 3 / 9。
-            required.merge(declaration.element(), Math.max(1, declaration.castCount()), Integer::sum);
-        }
-        return required;
+
+    /** 一次施法需要多少点元素值。 */
+    private static double castCost(Declaration declaration) {
+        return Math.max(1, declaration.castCount());
     }
 
-    /** 材料够不够；不够时在服务端提示缺哪种元素。 */
-    private static boolean checkMaterials(Level level, Player player, Declaration declaration) {
-        // 创造小包：不用存元素，想放什么放什么
-        if (com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
-            return true;
-        }
-        for (Map.Entry<ElementType, Integer> entry : requirements(declaration).entrySet()) {
-            if (countVials(player, entry.getKey()) < entry.getValue()) {
-                if (!level.isClientSide()) {
-                    player.displayClientMessage(Component.translatable(
-                            EVLang.MSG_NOT_ENOUGH, entry.getKey().displayName()), true);
-                }
-                return false;
-            }
-        }
-        return true;
+    /** 这条申明认的轴。 */
+    private static ElementAxis castAxis(Declaration declaration) {
+        return declaration.element().value().dominant();
     }
 
-    /** 按上面算出的需求扣材料。 */
-    private static void consumeMaterials(Player player, Declaration declaration) {
-        if (com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
-            return;
+    /** 一个载体能提供多少点"该轴"的值；主成分不同轴或为负则不供能。 */
+    private static double pointsOf(ItemStack stack, ElementAxis axis) {
+        if (stack.isEmpty() || !ElementCarrier.isCarrier(stack)) {
+            return 0.0D;
         }
-        requirements(declaration).forEach((element, cost) -> consumeVials(player, element, cost));
+        ElementType type = ElementVialItem.getElement(stack);
+        if (type == null || type.isEmpty()) {
+            return 0.0D;
+        }
+        ElementValue value = type.value();
+        if (value.dominant() != axis) {
+            return 0.0D;
+        }
+        double amount = value.get(axis);
+        return amount > 0.0D ? amount : 0.0D;
     }
 
-    private static int countVials(Player player, ElementType element) {
-        int total = 0;
-        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
+    /** 一个可供能的位置：inner >= 0 表示在小包的第 inner 格。 */
+    private record Vial(int slot, int inner, double unit) {
+    }
 
-            // 元素小包：只数存放格，燃料格里的霜/冰是冷却剂，不是施法材料。
+    /** 收集玩家身上所有能供这条轴的元素（含小包存放格，不含燃料格）。 */
+    private static List<Vial> vialsFor(Player player, ElementAxis axis) {
+        List<Vial> list = new ArrayList<>();
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
             if (stack.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
                 var inside = com.water2h2o.elementalverse.element.PouchContents.get(stack);
                 for (int i = 0; i < com.water2h2o.elementalverse.element.PouchContents.STORAGE; i++) {
-                    ItemStack item = inside.get(i);
-                    if (!item.isEmpty() && ElementVialItem.getElement(item) == element) {
-                        total += item.getCount();
+                    double unit = pointsOf(inside.get(i), axis);
+                    if (unit > 0.0D) {
+                        list.add(new Vial(slot, i, unit));
                     }
                 }
                 continue;
             }
-
-            if (!ElementCarrier.isCarrier(stack) || ElementVialItem.getElement(stack) != element) {
-                continue;
+            double unit = pointsOf(stack, axis);
+            if (unit > 0.0D) {
+                list.add(new Vial(slot, -1, unit));
             }
-            total += stack.getCount();
+        }
+        return list;
+    }
+
+    private static int countAt(Player player, Vial vial) {
+        if (vial.inner() < 0) {
+            return player.getInventory().getItem(vial.slot()).getCount();
+        }
+        ItemStack pouch = player.getInventory().getItem(vial.slot());
+        return com.water2h2o.elementalverse.element.PouchContents.get(pouch).get(vial.inner()).getCount();
+    }
+
+    /** 身上这条轴一共有多少元素值。 */
+    private static double availableValue(Player player, ElementAxis axis) {
+        double total = 0.0D;
+        for (Vial vial : vialsFor(player, axis)) {
+            total += vial.unit() * countAt(player, vial);
         }
         return total;
     }
 
-    private static void consumeVials(Player player, ElementType element, int needed) {
-        int left = needed;
-
-        // 先扣背包里的
-        for (int slot = 0; slot < player.getInventory().getContainerSize() && left > 0; slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            if (!ElementCarrier.isCarrier(stack) || ElementVialItem.getElement(stack) != element) {
-                continue;
-            }
-            int take = Math.min(left, stack.getCount());
-            stack.shrink(take);
-            left -= take;
+    /** 材料够不够；不够时在服务端提示缺哪种元素。 */
+    private static boolean checkMaterials(Level level, Player player, Declaration declaration) {
+        if (!declaration.isDefined()) {
+            return true;
         }
+        // 创造小包：不用存元素，想放什么放什么
+        if (com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
+            return true;
+        }
+        double need = castCost(declaration);
+        double have = availableValue(player, castAxis(declaration));
+        if (have + 1.0E-6D < need) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                        EVLang.MSG_NOT_ENOUGH, declaration.element().displayName()), true);
+            }
+            return false;
+        }
+        return true;
+    }
 
-        // 不够再从小包里扣
-        for (int slot = 0; slot < player.getInventory().getContainerSize() && left > 0; slot++) {
-            ItemStack pouch = player.getInventory().getItem(slot);
-            if (!pouch.is(com.water2h2o.elementalverse.registry.EVItems.ELEMENT_POUCH.get())) {
-                continue;
+    /**
+     * 按元素值扣材料：**小瓶优先**。
+     *
+     * <p>需要 1 点时先吃水（1.0），不会拿冰（1.5）去凑。
+     * 实在只剩冰，也只能整瓶吃掉 —— 多出的 0.5 点就是"整瓶不可分"的代价。
+     */
+    private static void consumeMaterials(Player player, Declaration declaration) {
+        if (!declaration.isDefined()
+                || com.water2h2o.elementalverse.element.PouchItemCreative.carriedBy(player)) {
+            return;
+        }
+        ElementAxis axis = castAxis(declaration);
+        double need = castCost(declaration);
+        double spent = 0.0D;
+
+        List<Vial> candidates = vialsFor(player, axis);
+        candidates.sort(java.util.Comparator.comparingDouble(Vial::unit));
+
+        boolean pouchTouched = false;
+        for (Vial vial : candidates) {
+            if (spent + 1.0E-6D >= need) {
+                break;
             }
-            var inside = com.water2h2o.elementalverse.element.PouchContents.get(pouch);
-            boolean changed = false;
-            for (int i = 0; i < com.water2h2o.elementalverse.element.PouchContents.STORAGE && left > 0; i++) {
-                ItemStack item = inside.get(i);
-                if (item.isEmpty() || ElementVialItem.getElement(item) != element) {
-                    continue;
-                }
-                int take = Math.min(left, item.getCount());
-                // 关键：写回**新的 ItemStack 对象**。
-                // 直接 item.shrink() 改的是组件里那个对象本身，新旧值相等，
-                // 变更检测认为没变，于是小包里的元素看起来没被扣掉。
-                ItemStack after = item.copy();
-                after.setCount(item.getCount() - take);
-                inside.set(i, after.getCount() <= 0 ? ItemStack.EMPTY : after);
-                left -= take;
-                changed = true;
-            }
-            if (changed) {
-                com.water2h2o.elementalverse.element.PouchContents.set(pouch, inside);
-                player.getInventory().setChanged();
-                if (player.containerMenu != null) {
-                    player.containerMenu.broadcastChanges();
-                }
+            int count = countAt(player, vial);
+            while (count > 0 && spent + 1.0E-6D < need) {
+                pouchTouched |= takeOne(player, vial);
+                spent += vial.unit();
+                count--;
             }
         }
+        if (pouchTouched) {
+            player.getInventory().setChanged();
+            if (player.containerMenu != null) {
+                player.containerMenu.broadcastChanges();
+            }
+        }
+    }
 
-        player.getInventory().setChanged();
+    /** 消耗一个；返回 true 表示动到的是小包（需要回写组件并同步）。 */
+    private static boolean takeOne(Player player, Vial vial) {
+        if (vial.inner() < 0) {
+            player.getInventory().getItem(vial.slot()).shrink(1);
+            return false;
+        }
+        ItemStack pouch = player.getInventory().getItem(vial.slot());
+        var inside = com.water2h2o.elementalverse.element.PouchContents.get(pouch);
+        ItemStack item = inside.get(vial.inner());
+        if (item.isEmpty()) {
+            return false;
+        }
+        // 写回**新对象**，否则组件里那个对象被原地改动、equality 认为没变
+        ItemStack after = item.copy();
+        after.setCount(item.getCount() - 1);
+        inside.set(vial.inner(), after.getCount() <= 0 ? ItemStack.EMPTY : after);
+        com.water2h2o.elementalverse.element.PouchContents.set(pouch, inside);
+        return true;
     }
 
     /** 给"没瞄准任何东西"留个空实现，避免调用方判空。 */

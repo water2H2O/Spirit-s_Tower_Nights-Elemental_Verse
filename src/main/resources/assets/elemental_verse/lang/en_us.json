@@ -90,6 +90,6 @@
   "tooltip.elemental_verse.creative_pouch": "Spells cost no elements",
   "tooltip.elemental_verse.creative_pouch_only": "Creative mode only",
   "effect.elemental_verse.inventory_lock": "Inventory Lock",
-  "gui.elemental_verse.rune_cabinet.unpowered": "Not powered",
-  "gui.elemental_verse.rune_cabinet.remaining": "%s m %s s left"
+  "gui.elemental_verse.rune_cabinet.unpowered": "Not cooled",
+  "gui.elemental_verse.rune_cabinet.remaining": "Cooling %s m %s s"
 }

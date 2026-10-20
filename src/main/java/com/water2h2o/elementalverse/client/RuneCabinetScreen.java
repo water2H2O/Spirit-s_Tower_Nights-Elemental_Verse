@@ -51,14 +51,18 @@ public class RuneCabinetScreen extends AbstractContainerScreen<RuneCabinetMenu> 
         graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, TEX_W, TEX_H);
 
         int seconds = this.menu.energySeconds();
-        int max = this.menu.maxEnergySeconds();
 
-        // 电量条：按剩余比例填充，通电是青色，断电是暗灰
-        if (seconds > 0 && max > 0) {
-            int filled = Math.max(1, (int) Math.round(BAR_W * Math.min(1.0D, seconds / (double) max)));
-            graphics.fill(x + BAR_X, y + BAR_Y, x + BAR_X + filled, y + BAR_Y + BAR_H, 0xFF3FA9F5);
-        } else {
-            graphics.fill(x + BAR_X, y + BAR_Y, x + BAR_X + BAR_W, y + BAR_Y + BAR_H, 0x66303030);
+        // 冷却条：一格 = 1 游戏日（1200 秒），共 8 格。
+        // 用"格"而不是比例条 —— 0.5 日的余量在比例条上只有 6%，看着像坏了。
+        double days = seconds / 1200.0D;
+        for (int i = 0; i < 8; i++) {
+            int sx = x + BAR_X + i * 11;
+            graphics.fill(sx, y + BAR_Y, sx + 10, y + BAR_Y + BAR_H, 0xFF2B2B2B);
+            double frac = Math.max(0.0D, Math.min(1.0D, days - i));
+            if (frac > 0.0D) {
+                int width = Math.max(1, (int) Math.round(10 * frac));
+                graphics.fill(sx, y + BAR_Y, sx + width, y + BAR_Y + BAR_H, 0xFF3FA9F5);
+            }
         }
 
         // 右侧文字：剩余时长 / 未通电

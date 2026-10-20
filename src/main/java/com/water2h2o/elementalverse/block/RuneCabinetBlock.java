@@ -76,8 +76,9 @@ public class RuneCabinetBlock extends BaseEntityBlock {
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
-        // 手持霜/冰的申明板 → 喂能量（右键优先算"喂"，不算"开柜"）
-        if (stack.getItem() instanceof DeclarationPlateItem) {
+        // 手持**装着的元素**右键 → 尝试喂冷却；空瓶/其它物品照常开界面
+        if (com.water2h2o.elementalverse.element.ElementCarrier.isCarrier(stack)
+                && !com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack).isEmpty()) {
             if (!level.isClientSide() && level.getBlockEntity(pos) instanceof RuneCabinetBlockEntity cabinet) {
                 if (cabinet.feed(stack)) {
                     if (!player.getAbilities().instabuild) {

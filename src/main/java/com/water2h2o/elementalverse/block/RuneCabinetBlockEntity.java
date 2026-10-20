@@ -21,8 +21,8 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * 符文柜：27 格，**通电时柜内完全不衰变**。
  *
- * <p>作者定：只吃**霜/冰**的申明 —— 原理是维持低温。
- * 霜/冰的元素值档位越高，维持越久。
+ * <p>只吃**霜/冰元素**（直接喂元素瓶，不用先写成申明板）—— 原理是维持低温。
+ * 霜 = 半日，冰 = 一日。
  */
 public class RuneCabinetBlockEntity extends BlockEntity implements Container, MenuProvider {
 
@@ -74,28 +74,15 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
      *
      * @return 吃下去了返回 true（不是霜/冰的申明一律拒绝）
      */
-    public boolean feed(ItemStack plate) {
-        Declaration declaration = DeclarationPlateItem.getDeclaration(plate);
-        if (!declaration.isDefined()) {
+    public boolean feed(ItemStack stack) {
+        ElementType type = com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack);
+        if (type != ElementType.ICE && type != ElementType.FROST) {
             return false;
         }
-        ElementType element = declaration.element();
-        boolean cold = element == ElementType.FROST || element == ElementType.ICE;
-        if (!cold) {
-            return false;
-        }
-        // 霜：0.5 / 1 / 2 游戏日；冰：同档 x2。喂多块会累加，封顶 8 日。
-        double days = switch (declaration.tier()) {
-            case 3 -> 2.0D;
-            case 2 -> 1.0D;
-            default -> 0.5D;
-        };
-        if (element == ElementType.ICE) {
-            days *= 2.0D;
-        }
-        int ticks = (int) Math.round(days * 24000.0D);
+        // 霜 = 半日，冰 = 一日（和小包燃料的 2:1 一致）。喂多个会累加，封顶 8 日。
+        int ticks = type == ElementType.ICE ? 24000 : 12000;
         energy = Math.min(MAX_ENERGY, energy + ticks);
-        // 电量条的分母永远取"满电上限"，喂多块不会把条撑爆
+        // 冷却条的分母永远取上限，喂多块不会把条撑爆
         energyMax = MAX_ENERGY;
         setChanged();
         return true;
