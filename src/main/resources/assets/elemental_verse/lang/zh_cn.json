@@ -99,5 +99,8 @@
   "axis.elemental_verse.grass": "草",
   "axis.elemental_verse.light": "光",
   "item.elemental_verse.declaration_sword": "申明剑 · %s",
-  "item.elemental_verse.declaration_tome": "申明书 · %s"
+  "item.elemental_verse.declaration_tome": "申明书 · %s",
+  "tooltip.elemental_verse.form.self": "形：释放 · 自身",
+  "tooltip.elemental_verse.form.touch": "形：释放 · 接触",
+  "tooltip.elemental_verse.form.projectile": "形：释放 · 发射"
 }

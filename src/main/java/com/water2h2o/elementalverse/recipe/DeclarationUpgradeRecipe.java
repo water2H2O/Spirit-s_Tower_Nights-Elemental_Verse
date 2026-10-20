@@ -99,6 +99,8 @@ public class DeclarationUpgradeRecipe implements SmithingRecipe {
         out.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
                 net.minecraft.network.chat.Component.translatable(key, magicName)
                         .withStyle(net.minecraft.ChatFormatting.GOLD));
+        // 附魔光泽：一眼看出这不是普通剑/书
+        out.set(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         return out;
     }
 

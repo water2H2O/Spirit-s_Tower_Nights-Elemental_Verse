@@ -95,6 +95,11 @@ public class DeclarationPlateItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
+        // 铁砧改过名就用铁砧那个名字（否则玩家改的名字会被魔法名盖掉）
+        Component custom = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        if (custom != null) {
+            return custom;
+        }
         Declaration declaration = getDeclaration(stack);
         if (!declaration.isDefined()) {
             return Component.translatable(getDescriptionId());

@@ -1122,7 +1122,8 @@ public final class SpellCaster {
     private static void applyFallback(Level level, Player player, ElementValue input, SpellParams params,
                                       HitResult suppliedHit) {
         var axis = input.dominant();
-        if (axis == null) {
+        // 负主成分不兜底：冰/霜/砂这些克制剂不该放出对应轴的法术
+        if (axis == null || input.dominantSign() <= 0) {
             return;
         }
         HitResult target = suppliedHit != null && suppliedHit.getType() != HitResult.Type.MISS
@@ -1141,7 +1142,10 @@ public final class SpellCaster {
     /** 没有精确配方时，主成分是否还有可执行的通用现象。 */
     private static boolean hasFallback(ElementValue input) {
         ElementAxis axis = input.dominant();
-        return axis == ElementAxis.FIRE || axis == ElementAxis.WATER;
+        // 必须是**正的**主成分。冰是纯负火，主成分仍然是火 ——
+        // 以前只看轴不看符号，于是冰元素申明板会点火（作者 2026-10-21 问到的那一幕）。
+        return input.dominantSign() > 0
+                && (axis == ElementAxis.FIRE || axis == ElementAxis.WATER);
     }
 
     // ---------------------------------------------------------------- 材料
