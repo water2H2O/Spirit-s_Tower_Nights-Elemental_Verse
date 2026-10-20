@@ -126,7 +126,7 @@ public final class SpellCaster {
 
         consumeMaterials(player, declaration);
         // 武器触发一定是"已经打中了"，所以不走弹射物形态，直接结算。
-        dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
+        dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, true);
         playCastFeedback(level, player, input, hit);
         return true;
     }
@@ -158,9 +158,12 @@ public final class SpellCaster {
      * <p>硬度 ≥ 50（黑曜石）或 &lt; 0（基岩）的方块不动 —— 作者要求"破坏强度黑曜石以下"。
      */
     private static void digCube(Level level, BlockPos center, int n) {
-        int half = Math.max(0, (n - 1) / 2);
-        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-half, -half, -half),
-                center.offset(half, half, half))) {
+        // 1 级 = 1x1x1，2 级 = 2x2x2，3 级 = 3x3x3。
+        // 注意不能再用 (n - 1) / 2：n = 1/2 时它都是 0，会让 1/2 级挖到 0 格。
+        int low = Math.max(0, (n - 1) / 2);
+        int high = Math.max(low, n / 2);
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-low, -low, -low),
+                center.offset(high, high, high))) {
             BlockPos spot = pos.immutable();
             var state = level.getBlockState(spot);
             if (state.isAir()) {
@@ -232,7 +235,7 @@ public final class SpellCaster {
         // 自生：现象直接落在施法者自己身上（不射线）
         if ("self".equals(form)) {
             HitResult selfHit = new EntityHitResult(player);
-            dispatch(level, player, phenomenon, params, selfHit, declaration);
+            dispatch(level, player, phenomenon, params, selfHit, declaration, true);
             return false;
         }
         // 发射：飞出去，命中时由 SpellProjectile 回调 applyProjectileHit
@@ -244,7 +247,7 @@ public final class SpellCaster {
         }
         // 触摸：射线命中
         dispatch(level, player, phenomenon, params, providedHit != null
-                ? providedHit : player.pick(RANGE, 1.0F, false), declaration);
+                ? providedHit : player.pick(RANGE, 1.0F, false), declaration, true);
         return false;
     }
 
@@ -284,6 +287,15 @@ public final class SpellCaster {
      */
     public static void applyProjectileHit(Level level, Player player, Declaration declaration,
                                           HitResult hit) {
+        applyProjectileHit(level, player, declaration, hit, true);
+    }
+
+    /**
+     * @param allowTierBonus 是否允许再触发一次三级附加。
+     *                       三级附加生成的风弹命中时必须传 false，否则会指数级分裂。
+     */
+    public static void applyProjectileHit(Level level, Player player, Declaration declaration,
+                                          HitResult hit, boolean allowTierBonus) {
         if (level.isClientSide()) {
             return;
         }
@@ -291,7 +303,7 @@ public final class SpellCaster {
         SpellParams params = SpellParams.of(declaration);
         var matched = ReactionManager.match(input, bothSlotsSame(declaration));
         if (matched.isPresent()) {
-            dispatch(level, player, matched.get().phenomenon(), params, hit, declaration);
+            dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, allowTierBonus);
         } else {
             applyFallback(level, player, input, params, hit);
         }
@@ -299,7 +311,7 @@ public final class SpellCaster {
     }
 
     private static void dispatch(Level level, Player player, Phenomenon phenomenon, SpellParams params,
-                                 HitResult hit, Declaration declaration) {
+                                 HitResult hit, Declaration declaration, boolean allowTierBonus) {
 
         // 水的附属效果：任何带水的法术都顺带灭火（作者：灭火不再单独成招）
         if (declaration.inputValue().get(ElementAxis.WATER) > 0.0D
@@ -321,8 +333,11 @@ public final class SpellCaster {
             default -> applyPrimitive(level, player, hit, phenomenon, params, declaration);
         }
 
-        // 双元素法术的三级附加（主料决定附加什么）
-        applyTierThreeBonus(level, player, declaration, params, hit, phenomenon);
+        // 双元素法术的三级附加（主料决定附加什么）。
+        // 附加风弹自己命中时 allowTierBonus = false，避免 2^n 分裂。
+        if (allowTierBonus) {
+            applyTierThreeBonus(level, player, declaration, params, hit, phenomenon);
+        }
     }
 
     /**
@@ -490,11 +505,11 @@ public final class SpellCaster {
                 }
             }
             case WIND -> {
-                // 追加 2 发风弹
+                // 追加 2 发风弹（只追加这一层；附加弹命中时不再触发三级附加）
                 if (level instanceof ServerLevel server) {
                     for (int i = 0; i < 2; i++) {
                         var extra = new com.water2h2o.elementalverse.entity.SpellProjectile(
-                                server, player, declaration);
+                                server, player, declaration, true);
                         extra.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
                         extra.setNoGravity(true);
                         float spread = i == 0 ? -14.0F : 14.0F;
@@ -688,9 +703,12 @@ public final class SpellCaster {
                 if (!canTouchBlocks(declaration)) {
                     break;
                 }
-                // 纯地 = 挖掘：边长 n 的正方体，硬度低于黑曜石才能破
+                // 纯地 = 挖掘：边长 n 的正方体，硬度低于黑曜石才能破。
+                // 注意中心要用**被命中的方块**，不能用它外侧的空气格 —— 否则 1/2 级会挖空气。
                 if (isPureEarth(declaration.inputValue())) {
-                    digCube(level, center, Math.max(1, Math.min(3, declaration.tier())));
+                    BlockPos target = hit instanceof BlockHitResult blockHit
+                            ? blockHit.getBlockPos() : center;
+                    digCube(level, target, Math.max(1, Math.min(3, declaration.tier())));
                 } else {
                     fillSphere(level, center, radius, Blocks.STONE.defaultBlockState());
                 }

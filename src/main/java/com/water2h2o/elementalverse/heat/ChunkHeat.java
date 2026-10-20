@@ -31,8 +31,8 @@ public class ChunkHeat extends SavedData {
     /** 每个块区的余热上限，防止无限堆。 */
     public static final double MAX_HEAT = 1000.0D;
 
-    private final Map<Long, Double> heat = new HashMap<>();
-    private final Map<Long, Long> updatedAt = new HashMap<>();
+    private final Map<String, Double> heat = new HashMap<>();
+    private final Map<String, Long> updatedAt = new HashMap<>();
 
     public static final SavedData.Factory<ChunkHeat> FACTORY = new SavedData.Factory<>(
             ChunkHeat::new,
@@ -47,7 +47,7 @@ public class ChunkHeat extends SavedData {
             return;
         }
         ChunkHeat data = server.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
-        long key = server.getChunk(pos).getPos().toLong();
+        String key = key(server, pos);
         double current = data.decayed(key, server.getGameTime());
         data.heat.put(key, Math.min(MAX_HEAT, current + amount));
         data.updatedAt.put(key, server.getGameTime());
@@ -60,10 +60,20 @@ public class ChunkHeat extends SavedData {
             return 0.0D;
         }
         ChunkHeat data = server.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
-        return data.decayed(server.getChunk(pos).getPos().toLong(), server.getGameTime());
+        return data.decayed(key(server, pos), server.getGameTime());
     }
 
-    private double decayed(long key, long now) {
+    /**
+     * 余热 key 必须带维度。
+     *
+     * <p>1.21.1 里所有 ServerLevel 共用主世界的 data storage，只用 chunkPos 会让
+     * 主世界和下界同坐标互相串余热。
+     */
+    private static String key(ServerLevel level, BlockPos pos) {
+        return level.dimension().location() + "@" + level.getChunk(pos).getPos().toLong();
+    }
+
+    private double decayed(String key, long now) {
         Double value = heat.get(key);
         if (value == null) {
             return 0.0D;
@@ -88,8 +98,15 @@ public class ChunkHeat extends SavedData {
         ListTag list = tag.getList("heat", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            data.heat.put(entry.getLong("k"), entry.getDouble("v"));
-            data.updatedAt.put(entry.getLong("k"), entry.getLong("t"));
+            String key;
+            if (entry.contains("k", Tag.TAG_STRING)) {
+                key = entry.getString("k");
+            } else {
+                // 旧存档只有 chunkPos。旧数据存在主世界 storage 里，按主世界迁移。
+                key = "minecraft:overworld@" + entry.getLong("k");
+            }
+            data.heat.put(key, entry.getDouble("v"));
+            data.updatedAt.put(key, entry.getLong("t"));
         }
         return data;
     }
@@ -99,7 +116,7 @@ public class ChunkHeat extends SavedData {
         ListTag list = new ListTag();
         heat.forEach((key, value) -> {
             CompoundTag entry = new CompoundTag();
-            entry.putLong("k", key);
+            entry.putString("k", key);
             entry.putDouble("v", value);
             entry.putLong("t", updatedAt.getOrDefault(key, 0L));
             list.add(entry);

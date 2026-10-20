@@ -4,7 +4,9 @@ import com.water2h2o.elementalverse.registry.EVMobEffects;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -62,9 +64,27 @@ public final class BoundHandsHandler {
         if (!event.getPlayer().hasEffect(EVMobEffects.BOUND_HANDS)) {
             return;
         }
+        // 服务端才是权威；客户端交给同步处理。
+        if (event.getPlayer().level().isClientSide()) {
+            return;
+        }
+        // 取消事件时物品已经从格子里拿出来了，必须还回去，否则等于凭空吞掉。
+        // 但 Inventory.add 可能因为背包满而只加进去一部分，所以把“没加进去的”
+        // 直接生成一个新的 ItemEntity，不能再用 player.drop（它会再次触发本事件）。
+        ItemStack remaining = event.getEntity().getItem().copy();
+        event.getPlayer().getInventory().add(remaining);
+        if (!remaining.isEmpty()) {
+            ItemEntity dropped = new ItemEntity(event.getPlayer().level(),
+                    event.getPlayer().getX(), event.getPlayer().getY() + 0.5D,
+                    event.getPlayer().getZ(), remaining);
+            dropped.setPickUpDelay(40);
+            event.getPlayer().level().addFreshEntity(dropped);
+        }
         event.setCanceled(true);
-        // 取消事件时物品已经从格子里拿出来了，必须还回去，否则等于凭空吞掉
-        event.getPlayer().getInventory().add(event.getEntity().getItem());
+        event.getPlayer().getInventory().setChanged();
+        if (event.getPlayer().containerMenu != null) {
+            event.getPlayer().containerMenu.broadcastChanges();
+        }
     }
 
     // ---------------------------------------------------------------- 所有生物

@@ -3,13 +3,17 @@ package com.water2h2o.elementalverse.block;
 import com.water2h2o.elementalverse.element.Declaration;
 import com.water2h2o.elementalverse.element.DeclarationPlateItem;
 import com.water2h2o.elementalverse.element.ElementType;
+import com.water2h2o.elementalverse.element.ElementVialItem;
 import com.water2h2o.elementalverse.menu.RuneCabinetMenu;
+import com.water2h2o.elementalverse.registry.EVItems;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -21,8 +25,8 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * 符文柜：27 格，**通电时柜内完全不衰变**。
  *
- * <p>只吃**霜/冰元素**（直接喂元素瓶，不用先写成申明板）—— 原理是维持低温。
- * 霜 = 半日，冰 = 一日。
+ * <p>喂冷源两种写法都收：**元素瓶**（霜/冰）或**已写好的申明板**。
+ * 原理是维持低温；霜 = 半日、冰 = 一日，申明板按档位放大（霜 0.5/1/2 日、冰 1/2/4 日）。
  */
 public class RuneCabinetBlockEntity extends BlockEntity implements Container, MenuProvider {
 
@@ -70,24 +74,54 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
     }
 
     /**
-     * 吃一块申明板。
+     * 吃一份冷源：元素瓶（霜/冰）或已写好的霜/冰申明板。
      *
-     * @return 吃下去了返回 true（不是霜/冰的申明一律拒绝）
+     * <p>申明板按档位放大（霜 0.5/1/2 日、冰 1/2/4 日），元素瓶按 1 档算。
+     *
+     * @return 吃下去了返回 true（不是霜/冰一律拒绝）
      */
     public boolean feed(ItemStack stack) {
-        ElementType type = com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack);
+        ElementType type = ElementVialItem.getElement(stack);
+        int tier = 1;
+
+        // 设计文档（04 第九节）写的是喂“声明霜/冰的申明板”；
+        // 这里同时保留直接喂元素瓶的旧行为，两种都支持。
+        if (stack.is(EVItems.DECLARATION_PLATE.get())) {
+            Declaration declaration = DeclarationPlateItem.getDeclaration(stack);
+            if (declaration.isDefined()) {
+                type = declaration.element();
+                tier = Math.max(1, Math.min(3, declaration.tier()));
+            }
+        }
+
         // 判定放得很宽：只要带**负火**（冰 = 火-1.0、霜 = 火-0.5）就算冷源。
         // 之前写死 `type == ICE || type == FROST`，任何"看着像冰"的新元素都会被挡在外面。
         if (!isCold(type)) {
             return false;
         }
-        // 霜 = 半日，冰 = 一日（和小包燃料的 2:1 一致）。喂多个会累加，封顶 8 日。
-        int ticks = type == ElementType.ICE ? 24000 : 12000;
-        energy = Math.min(MAX_ENERGY, energy + ticks);
+        energy = Math.min(MAX_ENERGY, energy + energyTicks(type, tier));
         // 冷却条的分母永远取上限，喂多块不会把条撑爆
         energyMax = MAX_ENERGY;
         setChanged();
         return true;
+    }
+
+    /** 一份冷源能撑多少 tick：霜 0.5/1/2 日，冰 1/2/4 日。 */
+    private static int energyTicks(ElementType type, int tier) {
+        int level = Math.max(1, Math.min(3, tier));
+        if (type == ElementType.ICE) {
+            return switch (level) {
+                case 3 -> 4 * 24000;
+                case 2 -> 2 * 24000;
+                default -> 24000;
+            };
+        }
+        // 霜（以及以后任何带负火的冷源）按“半日”为 1 档基数
+        return switch (level) {
+            case 3 -> 2 * 24000;
+            case 2 -> 24000;
+            default -> 12000;
+        };
     }
 
     /** 带负火的元素都算冷源（霜 / 冰，以及以后可能加的同类）。 */
@@ -176,17 +210,11 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
         super.saveAdditional(tag, registries);
         tag.putInt("Energy", energy);
         tag.putInt("EnergyMax", energyMax);
-        var list = new net.minecraft.nbt.ListTag();
+        NonNullList<ItemStack> list = NonNullList.withSize(SIZE, ItemStack.EMPTY);
         for (int i = 0; i < SIZE; i++) {
-            ItemStack stack = items.getItem(i);
-            if (!stack.isEmpty()) {
-                CompoundTag entry = new CompoundTag();
-                entry.putByte("Slot", (byte) i);
-                entry.put("Item", stack.save(registries));
-                list.add(entry);
-            }
+            list.set(i, items.getItem(i));
         }
-        tag.put("Items", list);
+        ContainerHelper.saveAllItems(tag, list, registries);
     }
 
     @Override
@@ -195,12 +223,21 @@ public class RuneCabinetBlockEntity extends BlockEntity implements Container, Me
         energy = tag.getInt("Energy");
         energyMax = Math.max(1, tag.getInt("EnergyMax"));
         items.clearContent();
-        var list = tag.getList("Items", 10);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            int slot = entry.getByte("Slot") & 255;
-            if (slot < SIZE) {
-                items.setItem(slot, ItemStack.parseOptional(registries, entry.getCompound("Item")));
+        var listTag = tag.getList("Items", 10);
+        if (!listTag.isEmpty() && listTag.getCompound(0).contains("Item")) {
+            // 兼容旧版存档：旧代码写的是 {Slot, Item:{...}} 嵌套格式。
+            for (int i = 0; i < listTag.size(); i++) {
+                CompoundTag entry = listTag.getCompound(i);
+                int slot = entry.getByte("Slot") & 255;
+                if (slot < SIZE) {
+                    items.setItem(slot, ItemStack.parseOptional(registries, entry.getCompound("Item")));
+                }
+            }
+        } else {
+            NonNullList<ItemStack> loaded = NonNullList.withSize(SIZE, ItemStack.EMPTY);
+            ContainerHelper.loadAllItems(tag, loaded, registries);
+            for (int i = 0; i < SIZE; i++) {
+                items.setItem(i, loaded.get(i));
             }
         }
     }

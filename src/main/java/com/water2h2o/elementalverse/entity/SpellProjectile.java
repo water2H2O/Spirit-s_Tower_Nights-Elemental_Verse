@@ -42,14 +42,32 @@ public class SpellProjectile extends ThrowableItemProjectile {
     /** 是否追踪最近的生物（水元素的正向参数）。 */
     private boolean homing;
 
+    /**
+     * 是不是「三级附加」生成的风弹。
+     *
+     * <p>附加弹命中时**不能再触发一次三级附加** —— 否则同一发法术会在每次命中时
+     * 再分裂 2 发，实体数按 2^n 增长，几秒内就能把服务器卡死。
+     */
+    private boolean bonusProjectile;
+
     public SpellProjectile(EntityType<? extends SpellProjectile> type, Level level) {
         super(type, level);
     }
 
     public SpellProjectile(Level level, LivingEntity shooter, Declaration declaration) {
+        this(level, shooter, declaration, false);
+    }
+
+    public SpellProjectile(Level level, LivingEntity shooter, Declaration declaration,
+                           boolean bonusProjectile) {
         super(EVEntities.SPELL_PROJECTILE.get(), shooter, level);
         this.declaration = declaration;
+        this.bonusProjectile = bonusProjectile;
         this.setItem(iconFor(declaration));
+    }
+
+    public boolean isBonusProjectile() {
+        return bonusProjectile;
     }
 
     /** 飞出去的那个东西：对应元素的瓶子，一眼能看出这发是什么。 */
@@ -141,7 +159,8 @@ public class SpellProjectile extends ThrowableItemProjectile {
             return;
         }
         if (getOwner() instanceof Player player) {
-            SpellCaster.applyProjectileHit(level(), player, declaration, result);
+            // 附加风弹命中时不再触发三级附加，避免指数级分裂。
+            SpellCaster.applyProjectileHit(level(), player, declaration, result, !bonusProjectile);
         }
         discard();
     }
@@ -152,6 +171,7 @@ public class SpellProjectile extends ThrowableItemProjectile {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("Homing", homing);
+        tag.putBoolean("BonusProjectile", bonusProjectile);
         Declaration.CODEC.encodeStart(NbtOps.INSTANCE, declaration)
                 .result()
                 .ifPresent(encoded -> tag.put("Declaration", encoded));
@@ -161,6 +181,7 @@ public class SpellProjectile extends ThrowableItemProjectile {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         homing = tag.getBoolean("Homing");
+        bonusProjectile = tag.getBoolean("BonusProjectile");
         Declaration.CODEC.parse(NbtOps.INSTANCE, tag.get("Declaration"))
                 .result()
                 .ifPresent(parsed -> declaration = parsed);

@@ -25,7 +25,8 @@ import net.minecraft.world.phys.BlockHitResult;
 /**
  * 符文柜：27 格，通电时**完全不衰变**。
  *
- * <p>喂法：手持**霜/冰**的申明板右键。其它元素的申明一律拒绝。
+ * <p>喂法：手持**霜/冰元素瓶**或写好的**霜/冰申明板**右键；其它元素一律拒绝。
+ * 申明板按档位放大维持时间（霜 0.5/1/2 日、冰 1/2/4 日）。
  */
 public class RuneCabinetBlock extends BaseEntityBlock {
 
@@ -76,9 +77,9 @@ public class RuneCabinetBlock extends BaseEntityBlock {
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
-        // 手持**装着的元素**右键 → 尝试喂冷却；空瓶/其它物品照常开界面
-        if (com.water2h2o.elementalverse.element.ElementCarrier.isCarrier(stack)
-                && !com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack).isEmpty()) {
+        // 手持冷源右键 → 尝试喂冷却；空瓶/其它物品照常开界面。
+        // 冷源可以是元素瓶（霜/冰），也可以是写好的霜/冰申明板。
+        if (isCarrierWithElement(stack) || isWrittenColdPlate(stack)) {
             if (!level.isClientSide() && level.getBlockEntity(pos) instanceof RuneCabinetBlockEntity cabinet) {
                 if (cabinet.feed(stack)) {
                     if (!player.getAbilities().instabuild) {
@@ -91,13 +92,32 @@ public class RuneCabinetBlock extends BaseEntityBlock {
                     player.displayClientMessage(
                             net.minecraft.network.chat.Component.translatable(
                                     com.water2h2o.elementalverse.util.EVLang.MSG_ONLY_COLD,
-                                    com.water2h2o.elementalverse.element.ElementVialItem
-                                            .getElement(stack).displayName()), true);
+                                    chargeElement(stack).displayName()), true);
                 }
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
+    }
+
+    private static boolean isCarrierWithElement(ItemStack stack) {
+        return com.water2h2o.elementalverse.element.ElementCarrier.isCarrier(stack)
+                && !com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack).isEmpty();
+    }
+
+    private static boolean isWrittenColdPlate(ItemStack stack) {
+        if (!stack.is(com.water2h2o.elementalverse.registry.EVItems.DECLARATION_PLATE.get())) {
+            return false;
+        }
+        var declaration = DeclarationPlateItem.getDeclaration(stack);
+        return declaration.isDefined() && RuneCabinetBlockEntity.isCold(declaration.element());
+    }
+
+    private static com.water2h2o.elementalverse.element.ElementType chargeElement(ItemStack stack) {
+        if (com.water2h2o.elementalverse.element.ElementCarrier.isCarrier(stack)) {
+            return com.water2h2o.elementalverse.element.ElementVialItem.getElement(stack);
+        }
+        return DeclarationPlateItem.getDeclaration(stack).element();
     }
 
     @Override

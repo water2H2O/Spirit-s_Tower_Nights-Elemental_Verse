@@ -10,9 +10,11 @@ import com.water2h2o.elementalverse.registry.EVItems;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -143,11 +145,16 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
 
         // 写入时就把"这是什么魔法"算出来存好 —— 客户端没有反应表，
         // 不能指望它在运行时再匹配一次。
+        // 注意：必须和释放时用同一套 bothSlotsSame 规则，否则会出现
+        // "板子上写着洪流，但右键放不出来"的错位。
+        boolean bothSlotsSame = reagentElement != null && !reagentElement.isEmpty()
+                && reagentElement == element;
         String magicName = "";
         var preview = DeclarationPlateItem.written(element, tier, stateElement, stateTier,
                 reagentElement, reagentTier);
         var declaration = DeclarationPlateItem.getDeclaration(preview);
-        var matched = com.water2h2o.elementalverse.reaction.ReactionManager.match(declaration.inputValue());
+        var matched = com.water2h2o.elementalverse.reaction.ReactionManager
+                .match(declaration.inputValue(), bothSlotsSame);
         if (matched.isPresent()) {
             magicName = matched.get().name();
         }
@@ -372,31 +379,36 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        var list = new net.minecraft.nbt.ListTag();
+        NonNullList<ItemStack> list = NonNullList.withSize(SIZE, ItemStack.EMPTY);
         for (int i = 0; i < SIZE; i++) {
-            ItemStack stack = items.getItem(i);
-            if (!stack.isEmpty()) {
-                CompoundTag entry = new CompoundTag();
-                entry.putByte("Slot", (byte) i);
-                entry.put("Item", stack.save(registries));
-                list.add(entry);
-            }
+            list.set(i, items.getItem(i));
         }
-        tag.put("Items", list);
+        // 用 vanilla 的扁平 ItemStack 格式，保证 /data、结构方块与其它 mod 能读懂。
+        ContainerHelper.saveAllItems(tag, list, registries);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         items.clearContent();
-        var list = tag.getList("Items", 10);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            int slot = entry.getByte("Slot") & 255;
-            if (slot < SIZE) {
-                items.setItem(slot, ItemStack.parseOptional(registries, entry.getCompound("Item")));
+        var listTag = tag.getList("Items", 10);
+        if (!listTag.isEmpty() && listTag.getCompound(0).contains("Item")) {
+            // 兼容旧版存档：旧代码写的是 {Slot, Item:{...}} 嵌套格式。
+            for (int i = 0; i < listTag.size(); i++) {
+                CompoundTag entry = listTag.getCompound(i);
+                int slot = entry.getByte("Slot") & 255;
+                if (slot < SIZE) {
+                    items.setItem(slot, ItemStack.parseOptional(registries, entry.getCompound("Item")));
+                }
+            }
+        } else {
+            NonNullList<ItemStack> loaded = NonNullList.withSize(SIZE, ItemStack.EMPTY);
+            ContainerHelper.loadAllItems(tag, loaded, registries);
+            for (int i = 0; i < SIZE; i++) {
+                items.setItem(i, loaded.get(i));
             }
         }
+        refreshResult();
     }
 
     /**

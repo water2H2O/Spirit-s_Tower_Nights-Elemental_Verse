@@ -100,7 +100,7 @@ public class BlockUses extends SavedData {
             return;
         }
 
-        String key = key(kind, pos);
+        String key = key(server, kind, pos);
         int left = data.remaining.getOrDefault(key, capacity) - 1;
 
         if (left > 0) {
@@ -189,8 +189,12 @@ public class BlockUses extends SavedData {
         return null;
     }
 
-    private static String key(Kind kind, BlockPos pos) {
-        return kind.name() + "@" + pos.asLong();
+    /**
+     * 记录 key 必须带维度：1.21.1 里所有 ServerLevel 共用主世界的 data storage，
+     * 只用 kind@pos 会让主世界和下界同坐标互相串次数。
+     */
+    private static String key(ServerLevel level, Kind kind, BlockPos pos) {
+        return kind.name() + "@" + level.dimension().location() + "@" + pos.asLong();
     }
 
     private static BlockUses load(CompoundTag tag, HolderLookup.Provider registries) {
@@ -198,7 +202,13 @@ public class BlockUses extends SavedData {
         ListTag list = tag.getList("uses", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            data.remaining.put(entry.getString("key"), entry.getInt("left"));
+            String key = entry.getString("key");
+            int firstAt = key.indexOf('@');
+            if (firstAt >= 0 && firstAt == key.lastIndexOf('@')) {
+                // 旧存档没有维度：旧数据存在主世界 storage 里，按主世界迁移。
+                key = key.substring(0, firstAt + 1) + "minecraft:overworld@" + key.substring(firstAt + 1);
+            }
+            data.remaining.put(key, entry.getInt("left"));
         }
         return data;
     }
