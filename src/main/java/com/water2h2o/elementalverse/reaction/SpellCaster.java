@@ -291,16 +291,16 @@ public final class SpellCaster {
      */
     private static void lockInventory(Level level, Player player, Phenomenon phenomenon,
                                       SpellParams params, HitResult hit, Declaration declaration) {
-        // 持续时间只看洪流的**档位**：1/2/3 档 = 3 / 5 / 10 秒。
+        // 持续时间只看洪流的**档位**：1/2/3 档 = 3 / 5 / 8 秒。
         // 不看光态，也不看 JSON 里的 duration —— 这条法术的"多久"由投入量决定。
         int seconds = switch (Math.max(1, Math.min(3, declaration.tier()))) {
-            case 3 -> 10;
+            case 3 -> 8;
             case 2 -> 5;
             default -> 3;
         };
-        int ticks = seconds * 20;
         if (hit instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof LivingEntity living) {
+            int ticks = boundHandsTicks(living, seconds);
             // 中等击退：方向由施法者指向目标（以前只对玩家生效，打怪完全没反应）
             var dir = living.position().subtract(player.position());
             if (dir.lengthSqr() > 1.0E-4D) {
@@ -398,6 +398,40 @@ public final class SpellCaster {
                     living.getX(), living.getY() + 0.8D, living.getZ(),
                     30, 0.4D, 0.7D, 0.4D, 0.02D);
         }
+    }
+
+    /**
+     * 缚手的实际时长 = 基础秒数 × 首领折扣 × 重复命中折扣。
+     *
+     * <p>作者 2026-10-20：12 秒的完全封锁会让玩家把首领当木桩打，必须削弱。
+     * 两条递减规则：
+     * <ul>
+     *   <li>**首领**（生命 ≥100，或凋灵 / 末影龙）时长为四折</li>
+     *   <li>**反复命中**：20 秒内每多糊一次就再减半，最多累计四次（约 1/16）</li>
+     * </ul>
+     * 结果是：杂鱼第一次 8 秒，首领 3.2 秒，连糊首领第三次只剩 0.8 秒 —— 秒不掉也得走位。
+     */
+    private static int boundHandsTicks(LivingEntity target, int baseSeconds) {
+        double factor = isBossLike(target) ? 0.4D : 1.0D;
+
+        var data = target.getPersistentData();
+        long now = target.level().getGameTime();
+        int streak = now - data.getLong("ev_bound_last") < 400L
+                ? Math.min(4, data.getInt("ev_bound_streak") + 1)
+                : 0;
+        data.putLong("ev_bound_last", now);
+        data.putInt("ev_bound_streak", streak);
+        factor *= Math.pow(0.5D, streak);
+
+        int ticks = (int) Math.round(baseSeconds * 20.0D * factor);
+        return Math.max(20, Math.min(ticks, 8 * 20));
+    }
+
+    /** 算不算"首领级"目标。铁傀儡 100 血，也算。 */
+    private static boolean isBossLike(LivingEntity target) {
+        return target.getMaxHealth() >= 100.0F
+                || target instanceof net.minecraft.world.entity.boss.wither.WitherBoss
+                || target instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon;
     }
 
     /**
