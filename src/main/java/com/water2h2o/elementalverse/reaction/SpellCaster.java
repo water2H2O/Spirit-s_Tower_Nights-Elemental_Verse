@@ -415,16 +415,6 @@ public final class SpellCaster {
             level.explode(player, at.x, at.y, at.z, power,
                     destroy ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);
 
-            // 原版爆炸会把**来源实体**排除在伤害列表外，所以自爆永远不疼。
-            // 作者要求"自爆要能炸到自己"，这里按距离补一次。
-            double radius = power * 1.4D;
-            double dist = player.position().distanceTo(at);
-            if (dist <= radius) {
-                float selfDamage = (float) (power * 4.0D * (1.0D - dist / radius));
-                if (selfDamage > 0.5F) {
-                    player.hurt(level.damageSources().explosion(null), selfDamage);
-                }
-            }
         }
     }
 
