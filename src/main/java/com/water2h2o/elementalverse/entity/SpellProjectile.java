@@ -76,7 +76,8 @@ public class SpellProjectile extends ThrowableItemProjectile {
         if (element == null || element.isEmpty()) {
             return new ItemStack(EVItems.ELEMENT_VIAL.get());
         }
-        return ElementVialItem.createStack(element);
+        // 作者：不要把瓶子本身扔出去 —— 飞出去的应该就是"元素"
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -134,8 +135,9 @@ public class SpellProjectile extends ThrowableItemProjectile {
         DustParticleOptions dust = new DustParticleOptions(
                 new org.joml.Vector3f(((color >> 16) & 0xFF) / 255.0F,
                         ((color >> 8) & 0xFF) / 255.0F,
-                        (color & 0xFF) / 255.0F), 0.9F);
-        for (int i = 0; i < 2; i++) {
+                        (color & 0xFF) / 255.0F), 1.6F);
+        // 没有瓶子可看，粒子就是它的"身体"，所以给密一点
+        for (int i = 0; i < 4; i++) {
             level().addParticle(dust, getX(), getY(), getZ(), 0.0D, 0.0D, 0.0D);
         }
     }

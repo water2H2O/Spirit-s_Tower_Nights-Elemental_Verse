@@ -88,6 +88,17 @@ public class DeclarationUpgradeRecipe implements SmithingRecipe {
         out.setCount(1);
         Declaration declaration = DeclarationPlateItem.getDeclaration(input.template()).withForm(form);
         out.set(EVDataComponents.DECLARATION.get(), declaration);
+
+        // 刻了申明的剑 / 书必须一眼认出来，否则和普通物品没差别
+        String key = "projectile".equals(form)
+                ? "item.elemental_verse.declaration_tome"
+                : "item.elemental_verse.declaration_sword";
+        net.minecraft.network.chat.Component magicName = declaration.magic().isEmpty()
+                ? declaration.element().displayName()
+                : net.minecraft.network.chat.Component.literal(declaration.magic());
+        out.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.translatable(key, magicName)
+                        .withStyle(net.minecraft.ChatFormatting.GOLD));
         return out;
     }
 

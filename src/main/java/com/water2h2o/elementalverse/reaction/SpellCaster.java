@@ -506,17 +506,17 @@ public final class SpellCaster {
                 }
             }
             case WIND -> {
-                // 追加 2 发风弹（只追加这一层；附加弹命中时不再触发三级附加）
+                // 追加 2 发**原版风弹**。
+                // 不能用 SpellProjectile —— 那等于把本法术又放了两遍，
+                // 玩家看到的就成了"莫名其妙多出两个法术"。
                 if (level instanceof ServerLevel server) {
                     for (int i = 0; i < 2; i++) {
-                        var extra = new com.water2h2o.elementalverse.entity.SpellProjectile(
-                                server, player, declaration, true);
-                        extra.setPos(player.getX(), player.getEyeY() - 0.15D, player.getZ());
-                        extra.setNoGravity(true);
-                        float spread = i == 0 ? -14.0F : 14.0F;
-                        extra.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
-                                0.0F, 1.6F, 1.5F);
-                        server.addFreshEntity(extra);
+                        var charge = new net.minecraft.world.entity.projectile.windcharge.WindCharge(
+                                player, server, player.getX(), player.getEyeY() - 0.2D, player.getZ());
+                        float spread = i == 0 ? -12.0F : 12.0F;
+                        charge.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
+                                0.0F, 1.6F, 1.0F);
+                        server.addFreshEntity(charge);
                     }
                 }
             }

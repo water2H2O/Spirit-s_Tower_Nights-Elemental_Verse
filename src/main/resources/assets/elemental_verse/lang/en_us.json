@@ -97,5 +97,7 @@
   "axis.elemental_verse.earth": "Earth",
   "axis.elemental_verse.wind": "Wind",
   "axis.elemental_verse.grass": "Grass",
-  "axis.elemental_verse.light": "Light"
+  "axis.elemental_verse.light": "Light",
+  "item.elemental_verse.declaration_sword": "Inscribed Sword · %s",
+  "item.elemental_verse.declaration_tome": "Inscribed Tome · %s"
 }

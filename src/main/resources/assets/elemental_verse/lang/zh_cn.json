@@ -97,5 +97,7 @@
   "axis.elemental_verse.earth": "地",
   "axis.elemental_verse.wind": "风",
   "axis.elemental_verse.grass": "草",
-  "axis.elemental_verse.light": "光"
+  "axis.elemental_verse.light": "光",
+  "item.elemental_verse.declaration_sword": "申明剑 · %s",
+  "item.elemental_verse.declaration_tome": "申明书 · %s"
 }
