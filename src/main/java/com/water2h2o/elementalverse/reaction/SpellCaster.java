@@ -100,29 +100,49 @@ public final class SpellCaster {
         com.water2h2o.elementalverse.element.DeclarationPlateItem.setDeclaration(plate,
                 declaration.withReadyAt(now + cooldownTicks(declaration)));
 
-        // 拼贴板：先第一段，再第二段（红石粉延迟 0.5 秒）
+        // 拼贴板：整条链按顺序放（两段、三段、四段都支持）
         if (declaration.hasSecond()) {
-            executeNow(level, player, declaration);
-            Declaration second = declaration.second();
-            if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
-                    com.water2h2o.elementalverse.element.Modifiers.DELAY)) {
-                PendingCasts.schedule(level, player, second,
-                        com.water2h2o.elementalverse.element.Modifiers.DELAY_TICKS);
-            } else {
-                executeNow(level, player, second);
-            }
-            // 回响碎片：第二段再放一次
+            runChain(level, player, declaration, 0);
+            // 回响碎片：整条链 2 秒后再放一次
             if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
                     com.water2h2o.elementalverse.element.Modifiers.ECHO)
                     && level instanceof ServerLevel server) {
                 PendingCasts.runLater(server,
                         com.water2h2o.elementalverse.element.Modifiers.ECHO_TICKS,
-                        () -> executeNow(level, player, second));
+                        () -> runChain(level, player, declaration, 0));
             }
             return true;
         }
 
         return executeNow(level, player, declaration);
+    }
+
+    /**
+     * 顺序执行整条法术链。
+     *
+     * <p>链是链表结构（每段自己还能带下一段），所以这里递归走完；
+     * 红石粉的延迟作用在**它所在那一段之后**。
+     *
+     * @param depth 防御性上限，避免异常数据造成死循环
+     */
+    private static void runChain(Level level, Player player, Declaration declaration, int depth) {
+        if (declaration == null || !declaration.isDefined() || depth > 8) {
+            return;
+        }
+        executeNow(level, player, declaration);
+        if (!declaration.hasSecond()) {
+            return;
+        }
+        Declaration next = declaration.second();
+        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                com.water2h2o.elementalverse.element.Modifiers.DELAY)
+                && level instanceof ServerLevel server) {
+            PendingCasts.runLater(server,
+                    com.water2h2o.elementalverse.element.Modifiers.DELAY_TICKS,
+                    () -> runChain(level, player, next, depth + 1));
+        } else {
+            runChain(level, player, next, depth + 1);
+        }
     }
 
     /**

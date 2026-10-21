@@ -153,6 +153,24 @@ public record Declaration(ElementType element, int tier, String operation, Strin
                 reagentElement, reagentTier, magic, second, newModifier, newModified, readyAt);
     }
 
+    /**
+     * 把 {@code tail} 接到这条链的**末尾**。
+     *
+     * <p>以前直接 withSecond 覆盖，会把"已经在链里的中间段"顶掉
+     * （彩虹 → 爆炸 再拼 浇灌，爆炸就没了）。
+     */
+    public Declaration appendTail(Declaration tail) {
+        if (!hasSecond()) {
+            return withSecond(tail, modifier, modified);
+        }
+        return withSecond(second.appendTail(tail), modifier, modified);
+    }
+
+    /** 链上一共有几段。 */
+    public int chainLength() {
+        return hasSecond() ? 1 + second.chainLength() : 1;
+    }
+
     /** 拼上第二段。 */
     public Declaration withSecond(Declaration newSecond, String newModifier, int newModified) {
         return new Declaration(element, tier, operation, form, stateElement, stateTier,

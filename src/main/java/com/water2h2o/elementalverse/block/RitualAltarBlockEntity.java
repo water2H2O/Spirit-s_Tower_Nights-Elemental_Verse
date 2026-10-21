@@ -128,10 +128,14 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             String mergedModifier = com.water2h2o.elementalverse.element.Modifiers
                     .merge(com.water2h2o.elementalverse.element.Modifiers.merge(
                             first.modifier(), second.modifier()), modifier);
-            Declaration chained = new Declaration(first.element(), first.tier(), first.operation(),
-                    first.form(), first.stateElement(), first.stateTier(),
-                    first.reagentElement(), first.reagentTier(), magic,
-                    second, mergedModifier, count, 0L);
+            // 接到链尾：三段、四段都能保留，不会顶掉中间段
+            Declaration appended = first.appendTail(second)
+                    .withModifier(mergedModifier, count);
+            Declaration chained = new Declaration(appended.element(), appended.tier(),
+                    appended.operation(), appended.form(), appended.stateElement(),
+                    appended.stateTier(), appended.reagentElement(), appended.reagentTier(),
+                    (first.magic() + " " + second.magic()).trim(),
+                    appended.second(), appended.modifier(), appended.modified(), 0L);
             ItemStack out = new ItemStack(EVItems.DECLARATION_PLATE.get());
             DeclarationPlateItem.setDeclaration(out, chained);
             applyNameFromSlot(out);
