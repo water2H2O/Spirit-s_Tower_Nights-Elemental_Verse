@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * 仪式台界面（176×184 底图）。
+ * 仪式台界面（176×194 底图）。
  *
  * <pre>
  *   [ 命名（铁砧式输入框） ]
@@ -28,7 +28,8 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
             ResourceLocation.fromNamespaceAndPath("elemental_verse", "textures/gui/ritual_altar.png");
 
     private static final int TEX_W = 176;
-    private static final int TEX_H = 184;
+    /** 底图 176×194：快捷栏 16px + 外框需要到 y=186，184 会切边。 */
+    private static final int TEX_H = 194;
 
     private EditBox nameField;
 
@@ -45,7 +46,8 @@ public class RitualAltarScreen extends AbstractContainerScreen<RitualAltarMenu> 
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        nameField = new EditBox(this.font, x + 15, y + 24, 146, 10, Component.literal("name"));
+        // 白字安全区 [14,20,148,10]
+        nameField = new EditBox(this.font, x + 14, y + 21, 148, 10, Component.literal("name"));
         nameField.setBordered(false);
         nameField.setMaxLength(32);
         nameField.setTextColor(0xFFFFFF);

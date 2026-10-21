@@ -55,14 +55,15 @@ public class RuneCabinetScreen extends AbstractContainerScreen<RuneCabinetMenu> 
         // 冷却条：一格 = 1 游戏日（1200 秒），共 8 格。
         // 用"格"而不是比例条 —— 0.5 日的余量在比例条上只有 6%，看着像坏了。
         double days = seconds / 1200.0D;
+        // 底图已经画好了 8 个格子的外框，这里只点亮内芯：[9+11i, 75, 8, 6]
         for (int i = 0; i < 8; i++) {
-            int sx = x + BAR_X + i * 11;
-            graphics.fill(sx, y + BAR_Y, sx + 10, y + BAR_Y + BAR_H, 0xFF2B2B2B);
             double frac = Math.max(0.0D, Math.min(1.0D, days - i));
-            if (frac > 0.0D) {
-                int width = Math.max(1, (int) Math.round(10 * frac));
-                graphics.fill(sx, y + BAR_Y, sx + width, y + BAR_Y + BAR_H, 0xFF3FA9F5);
+            if (frac <= 0.0D) {
+                continue;
             }
+            int innerX = x + 9 + i * 11;
+            int width = Math.max(1, (int) Math.round(8 * frac));
+            graphics.fill(innerX, y + 75, innerX + width, y + 75 + 6, 0xFF55FFFF);
         }
 
         // 右侧文字：剩余时长 / 未通电
