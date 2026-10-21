@@ -7,7 +7,7 @@
     "tag": "minecraft:swords"
   },
   "addition": {
-    "item": "minecraft:slime_ball"
+    "tag": "elemental_verse:modifiers"
   },
   "form": "touch"
 }

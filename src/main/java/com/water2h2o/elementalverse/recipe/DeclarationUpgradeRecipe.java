@@ -87,6 +87,12 @@ public class DeclarationUpgradeRecipe implements SmithingRecipe {
         ItemStack out = input.base().copy();
         out.setCount(1);
         Declaration declaration = DeclarationPlateItem.getDeclaration(input.template()).withForm(form);
+        // 修饰材料：粘液球=默认、红石粉=延迟、末影珍珠=即时
+        String modifier = com.water2h2o.elementalverse.element.Modifiers.of(input.addition());
+        if (modifier != null && !modifier.isEmpty()) {
+            declaration = declaration.withModifier(modifier,
+                    Math.min(Declaration.MAX_MODIFIED, declaration.modified() + 1));
+        }
         out.set(EVDataComponents.DECLARATION.get(), declaration);
 
         // 刻了申明的剑 / 书必须一眼认出来，否则和普通物品没差别

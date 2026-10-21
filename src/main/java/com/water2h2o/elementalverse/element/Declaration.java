@@ -24,21 +24,47 @@ import net.minecraft.network.codec.StreamCodec;
  */
 public record Declaration(ElementType element, int tier, String operation, String form,
                           ElementType stateElement, int stateTier,
-                          ElementType reagentElement, int reagentTier, String magic) {
+                          ElementType reagentElement, int reagentTier, String magic,
+                          Declaration second, String modifier, int modified) {
+
+    /** 一条法术链最多叠这么多次修饰。 */
+    public static final int MAX_MODIFIED = 3;
 
     public static final Declaration EMPTY = new Declaration(
             ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0,
-            ElementType.EMPTY, 0, "");
+            ElementType.EMPTY, 0, "", null, "", 0);
+
+    /** 有没有拼贴出来的第二段。 */
+    public boolean hasSecond() {
+        return second != null && second.isDefined();
+    }
+
+    /** 拼接后这条链算被修饰了几次：取两段里更大的 + 1。 */
+    public static int chainCount(Declaration first, Declaration second) {
+        int a = first == null ? 0 : first.modified();
+        int b = second == null ? 0 : second.modified();
+        return Math.max(a, b) + 1;
+    }
 
     /** 兼容旧写法（没有态）。 */
     public Declaration(ElementType element, int tier, String operation, String form) {
-        this(element, tier, operation, form, ElementType.EMPTY, 0, ElementType.EMPTY, 0);
+        this(element, tier, operation, form, ElementType.EMPTY, 0, ElementType.EMPTY, 0,
+                "", null, "", 0);
     }
 
     /** 兼容"没辅料"的写法。 */
     public Declaration(ElementType element, int tier, String operation, String form,
                        ElementType stateElement, int stateTier) {
-        this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0, "");
+        this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0,
+                "", null, "", 0);
+    }
+
+    /** 兼容"带魔法名、但没有拼贴"的写法。 */
+    public Declaration(ElementType element, int tier, String operation, String form,
+                       ElementType stateElement, int stateTier,
+                       ElementType reagentElement, int reagentTier, String magic) {
+        this(element, tier, operation, form, stateElement, stateTier,
+                reagentElement, reagentTier, magic, null, "", 0);
     }
 
     /** 兼容"没辅料也没魔法名"的写法。 */
@@ -46,7 +72,7 @@ public record Declaration(ElementType element, int tier, String operation, Strin
                        ElementType stateElement, int stateTier,
                        ElementType reagentElement, int reagentTier) {
         this(element, tier, operation, form, stateElement, stateTier,
-                reagentElement, reagentTier, "");
+                reagentElement, reagentTier, "", null, "", 0);
     }
 
     /**
@@ -62,19 +88,30 @@ public record Declaration(ElementType element, int tier, String operation, Strin
         return value;
     }
 
-    public static final Codec<Declaration> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            ElementType.CODEC.fieldOf("element").forGetter(Declaration::element),
-            Codec.INT.optionalFieldOf("tier", 1).forGetter(Declaration::tier),
-            Codec.STRING.optionalFieldOf("operation", "release").forGetter(Declaration::operation),
-            Codec.STRING.optionalFieldOf("form", "projectile").forGetter(Declaration::form),
-            ElementType.CODEC.optionalFieldOf("state_element", ElementType.EMPTY)
-                    .forGetter(Declaration::stateElement),
-            Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier),
-            ElementType.CODEC.optionalFieldOf("reagent_element", ElementType.EMPTY)
-                    .forGetter(Declaration::reagentElement),
-            Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier),
-            Codec.STRING.optionalFieldOf("magic", "").forGetter(Declaration::magic)
-    ).apply(instance, Declaration::new));
+    /**
+     * 递归编解码器：{@code second} 里还是一整条申明，所以要用 {@link Codec#recursive}。
+     * 直接在自己的初始化式里引用 {@code CODEC} 会读到 null。
+     */
+    public static final Codec<Declaration> CODEC = Codec.recursive("elemental_verse:declaration",
+            self -> RecordCodecBuilder.create(instance -> instance.group(
+                    ElementType.CODEC.fieldOf("element").forGetter(Declaration::element),
+                    Codec.INT.optionalFieldOf("tier", 1).forGetter(Declaration::tier),
+                    Codec.STRING.optionalFieldOf("operation", "release")
+                            .forGetter(Declaration::operation),
+                    Codec.STRING.optionalFieldOf("form", "projectile").forGetter(Declaration::form),
+                    ElementType.CODEC.optionalFieldOf("state_element", ElementType.EMPTY)
+                            .forGetter(Declaration::stateElement),
+                    Codec.INT.optionalFieldOf("state_tier", 0).forGetter(Declaration::stateTier),
+                    ElementType.CODEC.optionalFieldOf("reagent_element", ElementType.EMPTY)
+                            .forGetter(Declaration::reagentElement),
+                    Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier),
+                    Codec.STRING.optionalFieldOf("magic", "").forGetter(Declaration::magic),
+                    self.optionalFieldOf("second")
+                            .xmap(o -> o.orElse(null), java.util.Optional::ofNullable)
+                            .forGetter(Declaration::second),
+                    Codec.STRING.optionalFieldOf("modifier", "").forGetter(Declaration::modifier),
+                    Codec.INT.optionalFieldOf("modified", 0).forGetter(Declaration::modified)
+            ).apply(instance, Declaration::new)));
 
     public static final StreamCodec<io.netty.buffer.ByteBuf, Declaration> STREAM_CODEC =
             ByteBufCodecs.fromCodec(CODEC);
@@ -88,7 +125,19 @@ public record Declaration(ElementType element, int tier, String operation, Strin
     /** 换一个形态（板 = 自身 / 剑 = 接触 / 书 = 发射）。 */
     public Declaration withForm(String newForm) {
         return new Declaration(element, tier, operation, newForm, stateElement, stateTier,
-                reagentElement, reagentTier, magic);
+                reagentElement, reagentTier, magic, second, modifier, modified);
+    }
+
+    /** 挂上修饰材料与新的修饰次数。 */
+    public Declaration withModifier(String newModifier, int newModified) {
+        return new Declaration(element, tier, operation, form, stateElement, stateTier,
+                reagentElement, reagentTier, magic, second, newModifier, newModified);
+    }
+
+    /** 拼上第二段。 */
+    public Declaration withSecond(Declaration newSecond, String newModifier, int newModified) {
+        return new Declaration(element, tier, operation, form, stateElement, stateTier,
+                reagentElement, reagentTier, magic, newSecond, newModifier, newModified);
     }
 
     public boolean isDefined() {

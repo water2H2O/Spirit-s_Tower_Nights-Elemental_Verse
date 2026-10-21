@@ -32,6 +32,9 @@ public class RitualAltarMenu extends AbstractContainerMenu {
 
     private final RitualAltarBlockEntity altar;
 
+    /** 用来给玩家发"过于复杂"的提示。 */
+    private final Player player;
+
     /** 仪式台没有进度条之类的同步数据，给个空实现。 */
     private static final ContainerData NO_DATA = new ContainerData() {
         @Override
@@ -64,6 +67,7 @@ public class RitualAltarMenu extends AbstractContainerMenu {
                            RitualAltarBlockEntity altar, ContainerData data) {
         super(EVMenus.RITUAL_ALTAR.get(), containerId);
         this.altar = altar;
+        this.player = playerInventory.player;
 
         if (altar != null) {
             // 三个配料口：料 + 辅料 + 态
@@ -92,6 +96,15 @@ public class RitualAltarMenu extends AbstractContainerMenu {
         }
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInventory, col, 8 + col * CELL, 170));
+        }
+    }
+
+    @Override
+    public void slotsChanged(net.minecraft.world.Container container) {
+        super.slotsChanged(container);
+        if (altar != null && !player.level().isClientSide() && altar.isTooComplex()) {
+            player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable(com.water2h2o.elementalverse.util.EVLang.MSG_TOO_COMPLEX), true);
         }
     }
 

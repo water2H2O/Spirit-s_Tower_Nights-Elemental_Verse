@@ -77,10 +77,46 @@ public final class SpellCaster {
             return false;
         }
 
+        // 没有反应、也没有兜底 → 不扣材料
+        if (ReactionManager.match(input, bothSlotsSame(declaration)).isEmpty()
+                && !hasFallback(input)) {
+            player.displayClientMessage(Component.translatable(EVLang.MSG_NO_REACTION), true);
+            return false;
+        }
         if (!checkMaterials(level, player, declaration)) {
             return false;
         }
         consumeMaterials(player, declaration);
+
+        // 拼贴板：先第一段，再第二段（红石粉延迟 0.5 秒）
+        if (declaration.hasSecond()) {
+            executeNow(level, player, declaration);
+            Declaration second = declaration.second();
+            if (com.water2h2o.elementalverse.element.Modifiers.DELAY
+                    .equals(declaration.modifier())) {
+                PendingCasts.schedule(level, player, second,
+                        com.water2h2o.elementalverse.element.Modifiers.DELAY_TICKS);
+            } else {
+                executeNow(level, player, second);
+            }
+            return true;
+        }
+
+        return executeNow(level, player, declaration);
+    }
+
+    /**
+     * 执行一段申明（匹配 → 现象）。材料由调用方负责扣。
+     *
+     * <p>拼贴板会把两段依次交给这里；延时的那一段由 {@link PendingCasts} 稍后调用。
+     */
+    public static boolean executeNow(Level level, Player player, Declaration declaration) {
+        if (!declaration.isDefined()) {
+            return false;
+        }
+        ElementValue input = declaration.inputValue();
+        SpellParams params = SpellParams.of(declaration);
+        var matched = ReactionManager.match(input, bothSlotsSame(declaration));
 
         boolean flying = false;
         if (matched.isPresent()) {
@@ -251,6 +287,13 @@ public final class SpellCaster {
         // 老存档里的板子写的是 touch，也让它飞 —— 否则同一个法术，新板子飞、旧板子不飞，
         // 玩家会以为"时灵时不灵"。所以除"自身"以外，一律飞。
         if (providedHit == null) {
+            // 末影珍珠：没有飞行时间，直接命中准星指的地方
+            if (com.water2h2o.elementalverse.element.Modifiers.INSTANT
+                    .equals(declaration.modifier())) {
+                HitResult aim = player.pick(RANGE * 4.0D, 1.0F, false);
+                dispatch(level, player, phenomenon, params, aim, declaration, true);
+                return false;
+            }
             return launchProjectile(level, player, declaration);
         }
         // 触摸：射线命中

@@ -89,7 +89,51 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     }
 
     /** 按当前投入算出应该产出什么（不改动任何格子）。 */
+    private static boolean isWrittenPlate(ItemStack stack) {
+        return !stack.isEmpty()
+                && stack.is(EVItems.DECLARATION_PLATE.get())
+                && DeclarationPlateItem.getDeclaration(stack).isDefined();
+    }
+
+    /** 拼贴结果是不是"过于复杂"（超过 3 次修饰）。 */
+    public boolean isTooComplex() {
+        ItemStack a = items.getItem(SLOT_ELEMENT_A);
+        ItemStack b = items.getItem(SLOT_ELEMENT_B);
+        if (!isWrittenPlate(a) || !isWrittenPlate(b)) {
+            return false;
+        }
+        return Declaration.chainCount(DeclarationPlateItem.getDeclaration(a),
+                DeclarationPlateItem.getDeclaration(b)) > Declaration.MAX_MODIFIED;
+    }
+
     public ItemStack computeResult() {
+        // ---- 拼贴模式：料位与辅料位都放"写好的板" ----
+        ItemStack firstPlate = items.getItem(SLOT_ELEMENT_A);
+        ItemStack secondPlate = items.getItem(SLOT_ELEMENT_B);
+        if (isWrittenPlate(firstPlate) && isWrittenPlate(secondPlate)) {
+            Declaration first = DeclarationPlateItem.getDeclaration(firstPlate);
+            Declaration second = DeclarationPlateItem.getDeclaration(secondPlate);
+            int count = Declaration.chainCount(first, second);
+            if (count > Declaration.MAX_MODIFIED) {
+                return ItemStack.EMPTY;
+            }
+            String modifier = com.water2h2o.elementalverse.element.Modifiers
+                    .of(items.getItem(SLOT_PLATE));
+            if (modifier == null) {
+                modifier = com.water2h2o.elementalverse.element.Modifiers.NONE;
+            }
+            // 名字各取一半：A 名 + B 名
+            String magic = (first.magic() + " " + second.magic()).trim();
+            Declaration chained = new Declaration(first.element(), first.tier(), first.operation(),
+                    first.form(), first.stateElement(), first.stateTier(),
+                    first.reagentElement(), first.reagentTier(), magic,
+                    second, modifier, count);
+            ItemStack out = new ItemStack(EVItems.DECLARATION_PLATE.get());
+            DeclarationPlateItem.setDeclaration(out, chained);
+            applyNameFromSlot(out);
+            return out;
+        }
+
         ItemStack plate = items.getItem(SLOT_PLATE);
         if (plate.isEmpty() || !plate.is(EVItems.DECLARATION_PLATE.get())) {
             return ItemStack.EMPTY;
@@ -196,6 +240,21 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
      * @return 扣成功返回 true；输入在产出计算之后变了返回 false，调用方不要把产出交出去
      */
     public boolean consumeInputs() {
+        // 拼贴：吃两块板 + 一份修饰材料
+        ItemStack firstPlate = items.getItem(SLOT_ELEMENT_A);
+        ItemStack secondPlate = items.getItem(SLOT_ELEMENT_B);
+        if (isWrittenPlate(firstPlate) && isWrittenPlate(secondPlate)) {
+            if (Declaration.chainCount(DeclarationPlateItem.getDeclaration(firstPlate),
+                    DeclarationPlateItem.getDeclaration(secondPlate)) > Declaration.MAX_MODIFIED) {
+                return false;
+            }
+            firstPlate.shrink(1);
+            secondPlate.shrink(1);
+            shrinkSlot(SLOT_PLATE, 1);
+            items.setChanged();
+            return true;
+        }
+
         ItemStack plate = items.getItem(SLOT_PLATE);
         if (plate.isEmpty()) {
             return false;
@@ -344,8 +403,11 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
         return switch (slot) {
-            case SLOT_ELEMENT_A, SLOT_ELEMENT_B, SLOT_ELEMENT_C -> isElementStack(stack);
-            case SLOT_PLATE -> stack.is(EVItems.DECLARATION_PLATE.get());
+            case SLOT_ELEMENT_A, SLOT_ELEMENT_B ->
+                    isElementStack(stack) || stack.is(EVItems.DECLARATION_PLATE.get());
+            case SLOT_ELEMENT_C -> isElementStack(stack);
+            case SLOT_PLATE -> stack.is(EVItems.DECLARATION_PLATE.get())
+                    || com.water2h2o.elementalverse.element.Modifiers.isModifier(stack);
             default -> false;
         };
     }
