@@ -115,7 +115,12 @@ public record Declaration(ElementType element, int tier, String operation, Strin
                             .forGetter(Declaration::reagentElement),
                     Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier),
                     Codec.STRING.optionalFieldOf("magic", "").forGetter(Declaration::magic),
-                    self.optionalFieldOf("second", NONE).forGetter(Declaration::second),
+                    // 编解码都要能处理 null：
+                    //   解码缺省 → NONE（不能是 null，DataResult 装不了 null）
+                    //   编码 null → 字段直接省略（否则 optionalFieldOf 会去 encode null）
+                    self.optionalFieldOf("second")
+                            .xmap(o -> o.orElse(NONE), java.util.Optional::ofNullable)
+                            .forGetter(Declaration::second),
                     Codec.STRING.optionalFieldOf("modifier", "").forGetter(Declaration::modifier),
                     Codec.INT.optionalFieldOf("modified", 0).forGetter(Declaration::modified),
                     Codec.LONG.optionalFieldOf("ready_at", 0L).forGetter(Declaration::readyAt)
