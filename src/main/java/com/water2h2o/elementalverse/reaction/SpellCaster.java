@@ -102,14 +102,14 @@ public final class SpellCaster {
 
         // 拼贴板：整条链按顺序放（两段、三段、四段都支持）
         if (declaration.hasSecond()) {
-            runChain(level, player, declaration, 0);
+            runChain(level, player, declaration, declaration, 0, null);
             // 回响碎片：整条链 2 秒后再放一次
             if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
                     com.water2h2o.elementalverse.element.Modifiers.ECHO)
                     && level instanceof ServerLevel server) {
                 PendingCasts.runLater(server,
                         com.water2h2o.elementalverse.element.Modifiers.ECHO_TICKS,
-                        () -> runChain(level, player, declaration, 0));
+                        () -> runChain(level, player, declaration, declaration, 0, null));
             }
             return true;
         }
@@ -125,23 +125,50 @@ public final class SpellCaster {
      *
      * @param depth 防御性上限，避免异常数据造成死循环
      */
-    private static void runChain(Level level, Player player, Declaration declaration, int depth) {
-        if (declaration == null || !declaration.isDefined() || depth > 8) {
+    /**
+     * 顺序执行整条法术链。
+     *
+     * <p>三条规则（对应 issue #3 / #4）：
+     * <ul>
+     *   <li>**形态取头部**：整条链按载体的形态走 —— 书就整条都是弹射物，
+     *       不会再出现"第一段飞出去、后面几段打自己"</li>
+     *   <li>**延迟作用于每一段之后**：红石粉不再只在第一段后面生效</li>
+     *   <li>**弹射物只发一次**：头部是弹射物时先飞出去，命中后再在命中点跑完剩下的段</li>
+     * </ul>
+     *
+     * @param head     链头部（提供形态与修饰）
+     * @param current  当前这一段
+     * @param fixedHit 已经确定的命中点（剑/弹射物）；null 表示要自己射线或发射
+     */
+    private static void runChain(Level level, Player player, Declaration head, Declaration current,
+                                 int depth, HitResult fixedHit) {
+        if (current == null || !current.isDefined() || depth > 8) {
             return;
         }
-        executeNow(level, player, declaration);
-        if (!declaration.hasSecond()) {
+        // 整条链都用头部的形态
+        Declaration node = current.withForm(head.form());
+        boolean headIsProjectile = "projectile".equals(head.form());
+
+        if (depth == 0 && headIsProjectile && fixedHit == null) {
+            // 发射：弹射物带走整条链，命中时再继续（见 applyProjectileHit）
+            executeNow(level, player, node, null, true);
             return;
         }
-        Declaration next = declaration.second();
-        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
-                com.water2h2o.elementalverse.element.Modifiers.DELAY)
-                && level instanceof ServerLevel server) {
+
+        executeNow(level, player, node, fixedHit, depth == 0);
+
+        if (!node.hasSecond()) {
+            return;
+        }
+        Declaration next = node.second();
+        boolean delay = com.water2h2o.elementalverse.element.Modifiers.has(head.modifier(),
+                com.water2h2o.elementalverse.element.Modifiers.DELAY);
+        if (delay && level instanceof ServerLevel server) {
             PendingCasts.runLater(server,
                     com.water2h2o.elementalverse.element.Modifiers.DELAY_TICKS,
-                    () -> runChain(level, player, next, depth + 1));
+                    () -> runChain(level, player, head, next, depth + 1, fixedHit));
         } else {
-            runChain(level, player, next, depth + 1);
+            runChain(level, player, head, next, depth + 1, fixedHit);
         }
     }
 
@@ -200,6 +227,15 @@ public final class SpellCaster {
      * <p>拼贴板会把两段依次交给这里；延时的那一段由 {@link PendingCasts} 稍后调用。
      */
     public static boolean executeNow(Level level, Player player, Declaration declaration) {
+        return executeNow(level, player, declaration, null, true);
+    }
+
+    /**
+     * @param fixedHit     已经确定的命中目标（剑砍中谁、弹射物撞到谁）；null 表示自己射线
+     * @param aftereffects 是否处理荧石粉 / 龙息这类"命中后"的修饰；一条链只做一次
+     */
+    public static boolean executeNow(Level level, Player player, Declaration declaration,
+                                     HitResult fixedHit, boolean aftereffects) {
         if (!declaration.isDefined()) {
             return false;
         }
@@ -209,16 +245,18 @@ public final class SpellCaster {
 
         boolean flying = false;
         if (matched.isPresent()) {
-            flying = apply(level, player, matched.get().phenomenon(), params, declaration, null);
+            flying = apply(level, player, matched.get().phenomenon(), params, declaration, fixedHit);
         } else {
             applyFallback(level, player, input, params);
         }
 
         // 修饰材料的命中后效果（发光 / 龙息烟雾）—— 三种形态都走这里
-        applyModifierAftereffects(level, player, declaration,
-                new EntityHitResult(player), params,
-                matched.map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon)
-                        .orElse(null));
+        if (aftereffects) {
+            applyModifierAftereffects(level, player, declaration,
+                    fixedHit != null ? fixedHit : new EntityHitResult(player), params,
+                    matched.map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon)
+                            .orElse(null));
+        }
 
         // 表现：飞出去的法术自带拖尾，就不用再画一条连线了
         if (flying) {
@@ -256,10 +294,8 @@ public final class SpellCaster {
         }
 
         consumeMaterials(player, declaration);
-        // 武器触发一定是"已经打中了"，所以不走弹射物形态，直接结算。
-        dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, true);
-        applyModifierAftereffects(level, player, declaration, hit, params,
-                matched.get().phenomenon());
+        // 武器触发一定是"已经打中了"：整条链都在这个目标身上跑（issue #3）
+        runChain(level, player, declaration, declaration, 0, hit);
         playCastFeedback(level, player, input, hit);
         return true;
     }
@@ -349,6 +385,19 @@ public final class SpellCaster {
         return hit != null && hit.getType() != HitResult.Type.MISS
                 ? hit.getLocation()
                 : player.getEyePosition().add(player.getViewVector(1.0F).scale(2.5D));
+    }
+
+    /**
+     * 正面效果该给谁：自身形态给玩家，其余形态优先给命中的生物。
+     *
+     * <p>以前一律给玩家，于是「光合 / 火焰保护 / 再生」用剑砍人只会奶自己（issue #2）。
+     */
+    private static LivingEntity buffTarget(Declaration declaration, HitResult hit, Player player) {
+        if ("self".equals(declaration.form())) {
+            return player;
+        }
+        LivingEntity living = hitLiving(hit);
+        return living != null ? living : player;
     }
 
     /** 命中到的活体（没有就是 null）。 */
@@ -453,15 +502,8 @@ public final class SpellCaster {
         }
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
-        var matched = ReactionManager.match(input, bothSlotsSame(declaration));
-        if (matched.isPresent()) {
-            dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, allowTierBonus);
-        } else {
-            applyFallback(level, player, input, params, hit);
-        }
-        applyModifierAftereffects(level, player, declaration, hit, params,
-                matched.map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon)
-                        .orElse(null));
+        // 弹射物命中：整条链都在命中点展开（同一条链只发一次弹射物）
+        runChain(level, player, declaration, declaration, 0, hit);
         playImpactFeedback(level, input, hit);
     }
 
@@ -480,7 +522,7 @@ public final class SpellCaster {
             case "sustained_element_damage" -> strike(level, player, phenomenon, params, hit);
             case "steam" -> steam(level, player, hit, params);
             case "lava" -> lava(level, hit, phenomenon, params);
-            case "fire_resistance" -> fireResistance(player, phenomenon, params);
+            case "fire_resistance" -> fireResistance(player, hit, phenomenon, params, declaration);
             case "chaos" -> chaos(level, player, hit, phenomenon, params, declaration);
             case "explode" -> explode(level, player, params, hit, declaration);
             case "flash" -> flash(level, player, hit, phenomenon, params, declaration);
@@ -983,7 +1025,7 @@ public final class SpellCaster {
                     player.heal(4.0F);
                 }
             }
-            default -> applyNamedEffect(level, player, hit, phenomenon, params);
+            default -> applyNamedEffect(level, player, hit, phenomenon, params, declaration);
         }
     }
 
@@ -1116,7 +1158,8 @@ public final class SpellCaster {
      * <p>这样加一条"抗性提升"只要写 JSON，不用改 Java。
      */
     private static void applyNamedEffect(Level level, Player player, HitResult hit,
-                                         Phenomenon phenomenon, SpellParams params) {
+                                         Phenomenon phenomenon, SpellParams params,
+                                         Declaration declaration) {
         String type = phenomenon.type();
         if (!type.startsWith("effect:")) {
             level.playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
@@ -1137,7 +1180,8 @@ public final class SpellCaster {
         // 减益打空（射线只命中方块）时不落到自己头上——那等于自己吃了自己的法术。
         LivingEntity target;
         if (holder.get().value().isBeneficial()) {
-            target = player;
+            // 正面效果：自身形态给自己；剑/书的命中目标优先（issue #2）
+            target = buffTarget(declaration, hit, player);
         } else if (hit instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof LivingEntity living) {
             target = living;
@@ -1214,10 +1258,12 @@ public final class SpellCaster {
     }
 
     /** 火焰保护：给自己一个抗火。 */
-    private static void fireResistance(Player player, Phenomenon phenomenon, SpellParams params) {
+    private static void fireResistance(Player player, HitResult hit, Phenomenon phenomenon,
+                                       SpellParams params, Declaration declaration) {
         int ticks = Math.max(20, effectTicks(phenomenon, params));
-        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, ticks, 0));
+        buffTarget(declaration, hit, player).addEffect(
+                new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, ticks, 0));
     }
 
     /** 灭火：把命中点附近的火清掉。 */

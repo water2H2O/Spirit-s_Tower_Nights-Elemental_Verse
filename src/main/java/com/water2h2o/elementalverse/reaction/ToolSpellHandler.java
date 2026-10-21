@@ -27,6 +27,11 @@ public final class ToolSpellHandler {
             return;
         }
         var stack = player.getItemInHand(InteractionHand.MAIN_HAND);
+        // 只有**剑**才是攻击触发；板/书带同一个组件，但它们是右键触发，
+        // 否则拿着板子左键砍怪也会放法术（issue #1）
+        if (!stack.is(net.minecraft.tags.ItemTags.SWORDS)) {
+            return;
+        }
         var declaration = stack.get(EVDataComponents.DECLARATION.get());
         if (declaration == null || !declaration.isDefined()) {
             return;
