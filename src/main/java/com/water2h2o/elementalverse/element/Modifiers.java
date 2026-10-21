@@ -18,9 +18,25 @@ public final class Modifiers {
     public static final String NONE = "";
     public static final String DELAY = "delay";
     public static final String INSTANT = "instant";
+    /** 回响碎片：第二段在 2 秒后原地重放一次。 */
+    public static final String ECHO = "echo";
+    /** 糖：弹得又快又远，但会散。 */
+    public static final String SWIFT = "swift";
+    /** 紫颂果：穿墙，只打生物。 */
+    public static final String PHASE = "phase";
+    /** 火药：命中后再等 1.5 秒才结算。 */
+    public static final String FUSE = "fuse";
+    /** 荧石粉：命中目标发光。 */
+    public static final String GLOW = "glow";
+    /** 龙息：命中点留下 5 秒的元素雾。 */
+    public static final String BREATH = "breath";
 
     /** 延迟多久（tick）。 */
     public static final int DELAY_TICKS = 10;
+    /** 回响重放的间隔。 */
+    public static final int ECHO_TICKS = 40;
+    /** 火药引信。 */
+    public static final int FUSE_TICKS = 30;
 
     /** 不是修饰材料返回 null。 */
     public static String of(ItemStack stack) {
@@ -35,6 +51,24 @@ public final class Modifiers {
         }
         if (stack.is(Items.ENDER_PEARL)) {
             return INSTANT;
+        }
+        if (stack.is(Items.ECHO_SHARD)) {
+            return ECHO;
+        }
+        if (stack.is(Items.SUGAR)) {
+            return SWIFT;
+        }
+        if (stack.is(Items.CHORUS_FRUIT)) {
+            return PHASE;
+        }
+        if (stack.is(Items.GUNPOWDER)) {
+            return FUSE;
+        }
+        if (stack.is(Items.GLOWSTONE_DUST)) {
+            return GLOW;
+        }
+        if (stack.is(Items.DRAGON_BREATH)) {
+            return BREATH;
         }
         return null;
     }

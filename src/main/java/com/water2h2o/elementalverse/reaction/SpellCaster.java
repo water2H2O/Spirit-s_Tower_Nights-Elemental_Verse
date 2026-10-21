@@ -99,6 +99,13 @@ public final class SpellCaster {
             } else {
                 executeNow(level, player, second);
             }
+            // 回响碎片：第二段再放一次
+            if (com.water2h2o.elementalverse.element.Modifiers.ECHO
+                    .equals(declaration.modifier()) && level instanceof ServerLevel server) {
+                PendingCasts.runLater(server,
+                        com.water2h2o.elementalverse.element.Modifiers.ECHO_TICKS,
+                        () -> executeNow(level, player, second));
+            }
             return true;
         }
 
@@ -324,8 +331,12 @@ public final class SpellCaster {
             projectile.setHoming(params.homing());
 
             float spread = shots == 1 ? 0.0F : (i - (shots - 1) / 2.0F) * 9.0F;
+            boolean swift = com.water2h2o.elementalverse.element.Modifiers.SWIFT
+                    .equals(declaration.modifier());
+            // 糖：速度翻倍、射程更远，代价是准头
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
-                    0.0F, 1.6F, shots == 1 ? 0.4F : 2.0F);
+                    0.0F, swift ? 3.0F : 1.6F,
+                    swift ? 5.0F : (shots == 1 ? 0.4F : 2.0F));
             server.addFreshEntity(projectile);
         }
         return true;
@@ -357,6 +368,30 @@ public final class SpellCaster {
             dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, allowTierBonus);
         } else {
             applyFallback(level, player, input, params, hit);
+        }
+        // 荧石粉：命中目标发光，方便追踪
+        if (com.water2h2o.elementalverse.element.Modifiers.GLOW.equals(declaration.modifier())
+                && hit instanceof EntityHitResult glowHit
+                && glowHit.getEntity() instanceof LivingEntity glowing) {
+            glowing.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.GLOWING, 600, 0));
+        }
+        // 龙息：命中点留下 5 秒元素雾
+        if (com.water2h2o.elementalverse.element.Modifiers.BREATH.equals(declaration.modifier())
+                && level instanceof ServerLevel breathServer) {
+            var at = hit.getLocation();
+            var source = player;
+            for (int i = 1; i <= 10; i++) {
+                PendingCasts.runLater(breathServer, i * 10, () -> {
+                    for (LivingEntity living : breathServer.getEntitiesOfClass(LivingEntity.class,
+                            new net.minecraft.world.phys.AABB(at, at).inflate(2.5D),
+                            e -> e != source)) {
+                        living.hurt(breathServer.damageSources().magic(), 1.0F);
+                    }
+                    breathServer.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH,
+                            at.x, at.y + 0.4D, at.z, 8, 1.1D, 0.2D, 1.1D, 0.02D);
+                });
+            }
         }
         playImpactFeedback(level, input, hit);
     }

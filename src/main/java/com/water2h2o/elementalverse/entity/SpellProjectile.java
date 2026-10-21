@@ -4,6 +4,7 @@ import com.water2h2o.elementalverse.element.Declaration;
 import com.water2h2o.elementalverse.element.ElementAxis;
 import com.water2h2o.elementalverse.element.ElementType;
 import com.water2h2o.elementalverse.element.ElementVialItem;
+import com.water2h2o.elementalverse.reaction.PendingCasts;
 import com.water2h2o.elementalverse.reaction.SpellCaster;
 import com.water2h2o.elementalverse.registry.EVEntities;
 import com.water2h2o.elementalverse.registry.EVItems;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 
@@ -182,8 +184,18 @@ public class SpellProjectile extends ThrowableItemProjectile {
             return;
         }
         if (getOwner() instanceof Player player) {
-            // 附加风弹命中时不再触发三级附加，避免指数级分裂。
-            SpellCaster.applyProjectileHit(level(), player, declaration, result, !bonusProjectile);
+            boolean allowBonus = !bonusProjectile;
+            if (com.water2h2o.elementalverse.element.Modifiers.FUSE
+                    .equals(declaration.modifier()) && level() instanceof ServerLevel server) {
+                // 火药：先落地，1.5 秒后才结算
+                PendingCasts.runLater(server,
+                        com.water2h2o.elementalverse.element.Modifiers.FUSE_TICKS,
+                        () -> SpellCaster.applyProjectileHit(level(), player, declaration, result,
+                                allowBonus));
+            } else {
+                // 附加风弹命中时不再触发三级附加，避免指数级分裂。
+                SpellCaster.applyProjectileHit(level(), player, declaration, result, allowBonus);
+            }
         }
         discard();
     }
