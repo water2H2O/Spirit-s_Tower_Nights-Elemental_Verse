@@ -984,13 +984,14 @@ public final class SpellCaster {
                 player.resetFallDistance();
             }
             case "cleanse" -> {
-                player.getActiveEffects().stream()
+                LivingEntity cleansed = buffTarget(declaration, hit, player);
+                cleansed.getActiveEffects().stream()
                         .filter(effect -> !effect.getEffect().value().isBeneficial())
                         .map(effect -> effect.getEffect())
                         .toList()
-                        .forEach(player::removeEffect);
-                player.heal((float) (2.0D * params.intensity()));
-                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        .forEach(cleansed::removeEffect);
+                cleansed.heal((float) (2.0D * params.intensity()));
+                cleansed.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                         net.minecraft.world.effect.MobEffects.GLOWING, ticks, 0));
             }
             case "lock_inventory" -> lockInventory(level, player, phenomenon, params, hit, declaration);
@@ -1016,13 +1017,14 @@ public final class SpellCaster {
                 int tier = tierOf(declaration);
                 double mul = tier == 3 ? 2.0D : tier == 2 ? 1.5D : 1.2D;
                 int addLevel = tier == 3 ? 2 : tier == 2 ? 1 : 0;
-                player.getActiveEffects().stream().toList().forEach(effect ->
-                        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                LivingEntity buffed = buffTarget(declaration, hit, player);
+                buffed.getActiveEffects().stream().toList().forEach(effect ->
+                        buffed.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                                 effect.getEffect(),
                                 (int) Math.round(effect.getDuration() * mul),
                                 Math.min(3, effect.getAmplifier() + addLevel))));
                 if (tier == 3) {
-                    player.heal(4.0F);
+                    buffed.heal(4.0F);
                 }
             }
             default -> applyNamedEffect(level, player, hit, phenomenon, params, declaration);
