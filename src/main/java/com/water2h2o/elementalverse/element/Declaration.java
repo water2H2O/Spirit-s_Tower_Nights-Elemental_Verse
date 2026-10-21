@@ -30,9 +30,18 @@ public record Declaration(ElementType element, int tier, String operation, Strin
     /** 一条法术链最多叠这么多次修饰。 */
     public static final int MAX_MODIFIED = 3;
 
-    public static final Declaration EMPTY = new Declaration(
+    /**
+     * "没有第二段"的占位。
+     *
+     * <p>不能直接用 null：{@code DataResult.Success.result()} 内部是
+     * {@code Optional.of(value)}，装 null 会直接 NPE —— 旧存档里没有 second 字段，
+     * 一读玩家背包就崩。
+     */
+    private static final Declaration NONE = new Declaration(
             ElementType.EMPTY, 0, "release", "projectile", ElementType.EMPTY, 0,
             ElementType.EMPTY, 0, "", null, "", 0);
+
+    public static final Declaration EMPTY = NONE;
 
     /** 有没有拼贴出来的第二段。 */
     public boolean hasSecond() {
@@ -49,14 +58,14 @@ public record Declaration(ElementType element, int tier, String operation, Strin
     /** 兼容旧写法（没有态）。 */
     public Declaration(ElementType element, int tier, String operation, String form) {
         this(element, tier, operation, form, ElementType.EMPTY, 0, ElementType.EMPTY, 0,
-                "", null, "", 0);
+                "", NONE, "", 0);
     }
 
     /** 兼容"没辅料"的写法。 */
     public Declaration(ElementType element, int tier, String operation, String form,
                        ElementType stateElement, int stateTier) {
         this(element, tier, operation, form, stateElement, stateTier, ElementType.EMPTY, 0,
-                "", null, "", 0);
+                "", NONE, "", 0);
     }
 
     /** 兼容"带魔法名、但没有拼贴"的写法。 */
@@ -72,7 +81,7 @@ public record Declaration(ElementType element, int tier, String operation, Strin
                        ElementType stateElement, int stateTier,
                        ElementType reagentElement, int reagentTier) {
         this(element, tier, operation, form, stateElement, stateTier,
-                reagentElement, reagentTier, "", null, "", 0);
+                reagentElement, reagentTier, "", NONE, "", 0);
     }
 
     /**
@@ -106,9 +115,7 @@ public record Declaration(ElementType element, int tier, String operation, Strin
                             .forGetter(Declaration::reagentElement),
                     Codec.INT.optionalFieldOf("reagent_tier", 0).forGetter(Declaration::reagentTier),
                     Codec.STRING.optionalFieldOf("magic", "").forGetter(Declaration::magic),
-                    self.optionalFieldOf("second")
-                            .xmap(o -> o.orElse(null), java.util.Optional::ofNullable)
-                            .forGetter(Declaration::second),
+                    self.optionalFieldOf("second", NONE).forGetter(Declaration::second),
                     Codec.STRING.optionalFieldOf("modifier", "").forGetter(Declaration::modifier),
                     Codec.INT.optionalFieldOf("modified", 0).forGetter(Declaration::modified)
             ).apply(instance, Declaration::new)));
