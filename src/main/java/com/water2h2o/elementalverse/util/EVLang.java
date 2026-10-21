@@ -61,6 +61,7 @@ public final class EVLang {
     public static final String CREATIVE_POUCH_HINT = "tooltip.elemental_verse.creative_pouch";
     public static final String CREATIVE_POUCH_ONLY = "tooltip.elemental_verse.creative_pouch_only";
     public static final String MAGIC_NAME = "item.elemental_verse.magic";
+    public static final String PLATE_MODIFIERS = "tooltip.elemental_verse.plate.modifiers";
     public static final String PLATE_STATE = "tooltip.elemental_verse.plate.state";
     public static final String MSG_NOT_ENOUGH = "message.elemental_verse.not_enough";
     public static final String MSG_NO_REACTION = "message.elemental_verse.no_reaction";

@@ -104,5 +104,15 @@
   "tooltip.elemental_verse.form.touch": "Form: Release · Touch",
   "tooltip.elemental_verse.form.projectile": "Form: Release · Projectile",
   "message.elemental_verse.too_complex": "Too complex: already modified 3 times",
-  "message.elemental_verse.cooldown": "On cooldown: %s s"
+  "message.elemental_verse.cooldown": "On cooldown: %s s",
+  "tooltip.elemental_verse.plate.modifiers": "Modifiers: %s",
+  "modifier.elemental_verse.delay": "Redstone (0.5s delay)",
+  "modifier.elemental_verse.instant": "Ender Pearl (instant hit)",
+  "modifier.elemental_verse.echo": "Echo Shard (replay in 2s)",
+  "modifier.elemental_verse.swift": "Sugar (faster, farther)",
+  "modifier.elemental_verse.phase": "Chorus Fruit (phasing)",
+  "modifier.elemental_verse.fuse": "Gunpowder (delayed blast)",
+  "modifier.elemental_verse.glow": "Glowstone (glowing)",
+  "modifier.elemental_verse.breath": "Dragon Breath (spell cloud)",
+  "modifier.elemental_verse.cooldown": "Gold Ingot (-30% cooldown)"
 }

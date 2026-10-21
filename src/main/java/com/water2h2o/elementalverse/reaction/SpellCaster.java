@@ -146,6 +146,55 @@ public final class SpellCaster {
     }
 
     /**
+     * 修饰材料在「命中之后」的附加效果：荧石粉发光、龙息留下烟雾。
+     *
+     * <p>以前这两条只写在弹射物命中里，所以剑（接触）和自身形态都不生效。
+     * 现在三种形态统一走这里。
+     *
+     * @param phenomenon 本法术的现象，龙息脉冲会重复施加它；null 表示没有匹配到反应
+     */
+    private static void applyModifierAftereffects(Level level, Player player, Declaration declaration,
+                                                  HitResult hit, SpellParams params,
+                                                  Phenomenon phenomenon) {
+        if (hit == null || hit.getType() == HitResult.Type.MISS || level.isClientSide()) {
+            return;
+        }
+        String modifiers = declaration.modifier();
+
+        // 荧石粉：命中目标发光
+        if (com.water2h2o.elementalverse.element.Modifiers.has(modifiers,
+                com.water2h2o.elementalverse.element.Modifiers.GLOW)
+                && hit instanceof EntityHitResult glowHit
+                && glowHit.getEntity() instanceof LivingEntity glowing) {
+            glowing.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.GLOWING, 600, 0));
+        }
+
+        // 龙息：留下一滩魔法烟雾，持续对范围内单位施加本法术的效果
+        if (com.water2h2o.elementalverse.element.Modifiers.has(modifiers,
+                com.water2h2o.elementalverse.element.Modifiers.BREATH)
+                && level instanceof ServerLevel server) {
+            var at = hit.getLocation();
+            var source = player;
+            var pulse = phenomenon;
+            for (int i = 1; i <= 10; i++) {
+                PendingCasts.runLater(server, i * 10, () -> {
+                    if (pulse != null) {
+                        for (LivingEntity living : server.getEntitiesOfClass(LivingEntity.class,
+                                new net.minecraft.world.phys.AABB(at, at).inflate(2.5D),
+                                e -> e != source)) {
+                            dispatch(server, source, pulse, params,
+                                    new EntityHitResult(living), declaration, false);
+                        }
+                    }
+                    server.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH,
+                            at.x, at.y + 0.4D, at.z, 8, 1.1D, 0.2D, 1.1D, 0.02D);
+                });
+            }
+        }
+    }
+
+    /**
      * 执行一段申明（匹配 → 现象）。材料由调用方负责扣。
      *
      * <p>拼贴板会把两段依次交给这里；延时的那一段由 {@link PendingCasts} 稍后调用。
@@ -164,6 +213,12 @@ public final class SpellCaster {
         } else {
             applyFallback(level, player, input, params);
         }
+
+        // 修饰材料的命中后效果（发光 / 龙息烟雾）—— 三种形态都走这里
+        applyModifierAftereffects(level, player, declaration,
+                new EntityHitResult(player), params,
+                matched.map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon)
+                        .orElse(null));
 
         // 表现：飞出去的法术自带拖尾，就不用再画一条连线了
         if (flying) {
@@ -203,6 +258,8 @@ public final class SpellCaster {
         consumeMaterials(player, declaration);
         // 武器触发一定是"已经打中了"，所以不走弹射物形态，直接结算。
         dispatch(level, player, matched.get().phenomenon(), params, hit, declaration, true);
+        applyModifierAftereffects(level, player, declaration, hit, params,
+                matched.get().phenomenon());
         playCastFeedback(level, player, input, hit);
         return true;
     }
@@ -402,37 +459,9 @@ public final class SpellCaster {
         } else {
             applyFallback(level, player, input, params, hit);
         }
-        // 荧石粉：命中目标发光，方便追踪
-        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
-                com.water2h2o.elementalverse.element.Modifiers.GLOW)
-                && hit instanceof EntityHitResult glowHit
-                && glowHit.getEntity() instanceof LivingEntity glowing) {
-            glowing.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    net.minecraft.world.effect.MobEffects.GLOWING, 600, 0));
-        }
-        // 龙息：留下一滩魔法烟雾，持续对范围内的单位施加**本法术的效果**
-        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
-                com.water2h2o.elementalverse.element.Modifiers.BREATH)
-                && level instanceof ServerLevel breathServer) {
-            var at = hit.getLocation();
-            var source = player;
-            var pulse = matched
-                    .map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon).orElse(null);
-            for (int i = 1; i <= 10; i++) {
-                PendingCasts.runLater(breathServer, i * 10, () -> {
-                    if (pulse != null) {
-                        for (LivingEntity living : breathServer.getEntitiesOfClass(LivingEntity.class,
-                                new net.minecraft.world.phys.AABB(at, at).inflate(2.5D),
-                                e -> e != source)) {
-                            dispatch(breathServer, source, pulse, params,
-                                    new EntityHitResult(living), declaration, false);
-                        }
-                    }
-                    breathServer.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH,
-                            at.x, at.y + 0.4D, at.z, 8, 1.1D, 0.2D, 1.1D, 0.02D);
-                });
-            }
-        }
+        applyModifierAftereffects(level, player, declaration, hit, params,
+                matched.map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon)
+                        .orElse(null));
         playImpactFeedback(level, input, hit);
     }
 

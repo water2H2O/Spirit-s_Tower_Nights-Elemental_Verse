@@ -104,5 +104,15 @@
   "tooltip.elemental_verse.form.touch": "形：释放 · 接触",
   "tooltip.elemental_verse.form.projectile": "形：释放 · 发射",
   "message.elemental_verse.too_complex": "过于复杂：这条法术已经修饰过 3 次",
-  "message.elemental_verse.cooldown": "冷却中：还要 %s 秒"
+  "message.elemental_verse.cooldown": "冷却中：还要 %s 秒",
+  "tooltip.elemental_verse.plate.modifiers": "修饰：%s",
+  "modifier.elemental_verse.delay": "红石粉（延迟 0.5 秒）",
+  "modifier.elemental_verse.instant": "末影珍珠（即时命中）",
+  "modifier.elemental_verse.echo": "回响碎片（2 秒后重放）",
+  "modifier.elemental_verse.swift": "糖（更快更远）",
+  "modifier.elemental_verse.phase": "紫颂果（穿墙）",
+  "modifier.elemental_verse.fuse": "火药（延迟引爆）",
+  "modifier.elemental_verse.glow": "荧石粉（发光）",
+  "modifier.elemental_verse.breath": "龙息（留下法术烟雾）",
+  "modifier.elemental_verse.cooldown": "金锭（冷却 -30%）"
 }

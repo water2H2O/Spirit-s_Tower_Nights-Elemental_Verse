@@ -47,6 +47,13 @@ public final class InscribedTooltipHandler {
         tooltip.add(Component.translatable(formKey(declaration.form()))
                 .withStyle(ChatFormatting.DARK_GRAY));
 
+        net.minecraft.network.chat.Component modifiers = com.water2h2o.elementalverse.element
+                .Modifiers.describe(declaration.modifier());
+        if (!modifiers.getString().isEmpty()) {
+            tooltip.add(Component.translatable(EVLang.PLATE_MODIFIERS, modifiers)
+                    .withStyle(ChatFormatting.DARK_PURPLE));
+        }
+
         if (declaration.stateElement() != null && !declaration.stateElement().isEmpty()) {
             tooltip.add(Component.translatable(EVLang.PLATE_STATE,
                             declaration.stateElement().displayName(), declaration.stateTier())

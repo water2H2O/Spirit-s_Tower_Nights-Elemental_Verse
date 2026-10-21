@@ -123,6 +123,38 @@ public final class Modifiers {
         return of(stack) != null;
     }
 
+    /**
+     * 把修饰串翻译成一行可读文字（给悬浮框用）。
+     *
+     * @return 没有修饰时返回空组件
+     */
+    public static net.minecraft.network.chat.Component describe(String modifiers) {
+        if (modifiers == null || modifiers.isEmpty()) {
+            return net.minecraft.network.chat.Component.empty();
+        }
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        for (String part : modifiers.split(",")) {
+            String id = part.trim();
+            if (!id.isEmpty()) {
+                counts.merge(id, 1, Integer::sum);
+            }
+        }
+        net.minecraft.network.chat.MutableComponent out = net.minecraft.network.chat.Component.empty();
+        boolean first = true;
+        for (var entry : counts.entrySet()) {
+            if (!first) {
+                out.append(" · ");
+            }
+            first = false;
+            out.append(net.minecraft.network.chat.Component.translatable(
+                    "modifier.elemental_verse." + entry.getKey()));
+            if (entry.getValue() > 1) {
+                out.append(" ×" + entry.getValue());
+            }
+        }
+        return out;
+    }
+
     private Modifiers() {
     }
 }
