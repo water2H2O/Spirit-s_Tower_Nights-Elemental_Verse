@@ -55,6 +55,7 @@ public final class EVLang {
     public static final String BLOCK_RUNE_CABINET = "block.elemental_verse.rune_cabinet";
     public static final String RUNE_CABINET_UNPOWERED = "gui.elemental_verse.rune_cabinet.unpowered";
     public static final String RUNE_CABINET_REMAINING = "gui.elemental_verse.rune_cabinet.remaining";
+    public static final String MSG_COOLDOWN = "message.elemental_verse.cooldown";
     public static final String MSG_TOO_COMPLEX = "message.elemental_verse.too_complex";
     public static final String MSG_ONLY_COLD = "message.elemental_verse.only_cold";
     public static final String CREATIVE_POUCH_HINT = "tooltip.elemental_verse.creative_pouch";

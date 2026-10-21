@@ -124,10 +124,14 @@ public class RitualAltarBlockEntity extends BlockEntity implements Container, Me
             }
             // 名字各取一半：A 名 + B 名
             String magic = (first.magic() + " " + second.magic()).trim();
+            // 修饰要合并：两块板各自的 + 这次放进去的材料，最多 3 条
+            String mergedModifier = com.water2h2o.elementalverse.element.Modifiers
+                    .merge(com.water2h2o.elementalverse.element.Modifiers.merge(
+                            first.modifier(), second.modifier()), modifier);
             Declaration chained = new Declaration(first.element(), first.tier(), first.operation(),
                     first.form(), first.stateElement(), first.stateTier(),
                     first.reagentElement(), first.reagentTier(), magic,
-                    second, modifier, count);
+                    second, mergedModifier, count, 0L);
             ItemStack out = new ItemStack(EVItems.DECLARATION_PLATE.get());
             DeclarationPlateItem.setDeclaration(out, chained);
             applyNameFromSlot(out);

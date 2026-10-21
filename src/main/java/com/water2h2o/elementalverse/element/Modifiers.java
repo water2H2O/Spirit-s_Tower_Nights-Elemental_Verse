@@ -28,8 +28,51 @@ public final class Modifiers {
     public static final String FUSE = "fuse";
     /** 荧石粉：命中目标发光。 */
     public static final String GLOW = "glow";
-    /** 龙息：命中点留下 5 秒的元素雾。 */
+    /** 龙息：命中点留下一滩魔法烟雾。 */
     public static final String BREATH = "breath";
+    /** 金锭：冷却 -30%，最多叠两层。 */
+    public static final String COOLDOWN = "cooldown";
+
+    /** 金锭最多叠几层。 */
+    public static final int COOLDOWN_MAX_STACK = 2;
+    /** 每层减多少冷却。 */
+    public static final double COOLDOWN_PER_STACK = 0.30D;
+
+    /** 修饰是逗号分隔的集合，统计某个修饰出现了几次。 */
+    public static int count(String modifiers, String id) {
+        if (modifiers == null || modifiers.isEmpty()) {
+            return 0;
+        }
+        int n = 0;
+        for (String part : modifiers.split(",")) {
+            if (part.trim().equals(id)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /** 有没有某个修饰。 */
+    public static boolean has(String modifiers, String id) {
+        return count(modifiers, id) > 0;
+    }
+
+    /** 合并两组修饰（用于拼贴），最多保留 3 条。 */
+    public static String merge(String a, String b) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String src : new String[] {a, b}) {
+            if (src == null || src.isEmpty()) {
+                continue;
+            }
+            for (String part : src.split(",")) {
+                String id = part.trim();
+                if (!id.isEmpty() && out.size() < 3) {
+                    out.add(id);
+                }
+            }
+        }
+        return String.join(",", out);
+    }
 
     /** 延迟多久（tick）。 */
     public static final int DELAY_TICKS = 10;
@@ -69,6 +112,9 @@ public final class Modifiers {
         }
         if (stack.is(Items.DRAGON_BREATH)) {
             return BREATH;
+        }
+        if (stack.is(Items.GOLD_INGOT)) {
+            return COOLDOWN;
         }
         return null;
     }

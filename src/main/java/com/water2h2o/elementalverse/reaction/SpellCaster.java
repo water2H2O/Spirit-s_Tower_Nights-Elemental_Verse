@@ -67,6 +67,15 @@ public final class SpellCaster {
             return checkMaterials(level, player, declaration);
         }
 
+        // 冷却：每条申明各自计时（存在它自己的数据里）
+        long now = level.getGameTime();
+        if (declaration.readyAt() > now) {
+            long left = (declaration.readyAt() - now + 19) / 20;
+            player.displayClientMessage(
+                    Component.translatable(EVLang.MSG_COOLDOWN, left), true);
+            return false;
+        }
+
         ElementValue input = declaration.inputValue();
         SpellParams params = SpellParams.of(declaration);
         Optional<Reaction> matched = ReactionManager.match(input, bothSlotsSame(declaration));
@@ -87,21 +96,25 @@ public final class SpellCaster {
             return false;
         }
         consumeMaterials(player, declaration);
+        // 成功放出才进冷却
+        com.water2h2o.elementalverse.element.DeclarationPlateItem.setDeclaration(plate,
+                declaration.withReadyAt(now + cooldownTicks(declaration)));
 
         // 拼贴板：先第一段，再第二段（红石粉延迟 0.5 秒）
         if (declaration.hasSecond()) {
             executeNow(level, player, declaration);
             Declaration second = declaration.second();
-            if (com.water2h2o.elementalverse.element.Modifiers.DELAY
-                    .equals(declaration.modifier())) {
+            if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                    com.water2h2o.elementalverse.element.Modifiers.DELAY)) {
                 PendingCasts.schedule(level, player, second,
                         com.water2h2o.elementalverse.element.Modifiers.DELAY_TICKS);
             } else {
                 executeNow(level, player, second);
             }
             // 回响碎片：第二段再放一次
-            if (com.water2h2o.elementalverse.element.Modifiers.ECHO
-                    .equals(declaration.modifier()) && level instanceof ServerLevel server) {
+            if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                    com.water2h2o.elementalverse.element.Modifiers.ECHO)
+                    && level instanceof ServerLevel server) {
                 PendingCasts.runLater(server,
                         com.water2h2o.elementalverse.element.Modifiers.ECHO_TICKS,
                         () -> executeNow(level, player, second));
@@ -295,8 +308,8 @@ public final class SpellCaster {
         // 玩家会以为"时灵时不灵"。所以除"自身"以外，一律飞。
         if (providedHit == null) {
             // 末影珍珠：没有飞行时间，直接命中准星指的地方
-            if (com.water2h2o.elementalverse.element.Modifiers.INSTANT
-                    .equals(declaration.modifier())) {
+            if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                    com.water2h2o.elementalverse.element.Modifiers.INSTANT)) {
                 HitResult aim = player.pick(RANGE * 4.0D, 1.0F, false);
                 dispatch(level, player, phenomenon, params, aim, declaration, true);
                 return false;
@@ -331,8 +344,8 @@ public final class SpellCaster {
             projectile.setHoming(params.homing());
 
             float spread = shots == 1 ? 0.0F : (i - (shots - 1) / 2.0F) * 9.0F;
-            boolean swift = com.water2h2o.elementalverse.element.Modifiers.SWIFT
-                    .equals(declaration.modifier());
+            boolean swift = com.water2h2o.elementalverse.element.Modifiers.has(
+                    declaration.modifier(), com.water2h2o.elementalverse.element.Modifiers.SWIFT);
             // 糖：速度翻倍、射程更远，代价是准头
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot() + spread,
                     0.0F, swift ? 3.0F : 1.6F,
@@ -370,23 +383,30 @@ public final class SpellCaster {
             applyFallback(level, player, input, params, hit);
         }
         // 荧石粉：命中目标发光，方便追踪
-        if (com.water2h2o.elementalverse.element.Modifiers.GLOW.equals(declaration.modifier())
+        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                com.water2h2o.elementalverse.element.Modifiers.GLOW)
                 && hit instanceof EntityHitResult glowHit
                 && glowHit.getEntity() instanceof LivingEntity glowing) {
             glowing.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                     net.minecraft.world.effect.MobEffects.GLOWING, 600, 0));
         }
-        // 龙息：命中点留下 5 秒元素雾
-        if (com.water2h2o.elementalverse.element.Modifiers.BREATH.equals(declaration.modifier())
+        // 龙息：留下一滩魔法烟雾，持续对范围内的单位施加**本法术的效果**
+        if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                com.water2h2o.elementalverse.element.Modifiers.BREATH)
                 && level instanceof ServerLevel breathServer) {
             var at = hit.getLocation();
             var source = player;
+            var pulse = matched
+                    .map(com.water2h2o.elementalverse.reaction.Reaction::phenomenon).orElse(null);
             for (int i = 1; i <= 10; i++) {
                 PendingCasts.runLater(breathServer, i * 10, () -> {
-                    for (LivingEntity living : breathServer.getEntitiesOfClass(LivingEntity.class,
-                            new net.minecraft.world.phys.AABB(at, at).inflate(2.5D),
-                            e -> e != source)) {
-                        living.hurt(breathServer.damageSources().magic(), 1.0F);
+                    if (pulse != null) {
+                        for (LivingEntity living : breathServer.getEntitiesOfClass(LivingEntity.class,
+                                new net.minecraft.world.phys.AABB(at, at).inflate(2.5D),
+                                e -> e != source)) {
+                            dispatch(breathServer, source, pulse, params,
+                                    new EntityHitResult(living), declaration, false);
+                        }
                     }
                     breathServer.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH,
                             at.x, at.y + 0.4D, at.z, 8, 1.1D, 0.2D, 1.1D, 0.02D);
@@ -1252,6 +1272,22 @@ public final class SpellCaster {
      *
      * <p>成本只按**主轴**收；辅料/态在写板时已经付过，释放不按次扣。
      */
+    /**
+     * 这条申明的冷却：基础 3 秒，每高一级 +1 秒，拼贴 +1 秒；金锭每层 -30%（最多两层）。
+     */
+    public static int cooldownTicks(Declaration declaration) {
+        int base = 60 + 20 * (Math.max(1, Math.min(3, declaration.tier())) - 1);
+        if (declaration.hasSecond()) {
+            base += 20;
+        }
+        int gold = Math.min(com.water2h2o.elementalverse.element.Modifiers.COOLDOWN_MAX_STACK,
+                com.water2h2o.elementalverse.element.Modifiers.count(
+                        declaration.modifier(),
+                        com.water2h2o.elementalverse.element.Modifiers.COOLDOWN));
+        double mul = 1.0D - com.water2h2o.elementalverse.element.Modifiers.COOLDOWN_PER_STACK * gold;
+        return Math.max(10, (int) Math.round(base * mul));
+    }
+
     private static double castCost(Declaration declaration) {
         return switch (Math.max(1, Math.min(3, declaration.tier()))) {
             case 3 -> 16.0D;

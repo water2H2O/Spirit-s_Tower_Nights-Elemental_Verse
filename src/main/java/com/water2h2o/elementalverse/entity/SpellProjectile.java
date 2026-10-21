@@ -185,8 +185,9 @@ public class SpellProjectile extends ThrowableItemProjectile {
         }
         if (getOwner() instanceof Player player) {
             boolean allowBonus = !bonusProjectile;
-            if (com.water2h2o.elementalverse.element.Modifiers.FUSE
-                    .equals(declaration.modifier()) && level() instanceof ServerLevel server) {
+            if (com.water2h2o.elementalverse.element.Modifiers.has(declaration.modifier(),
+                    com.water2h2o.elementalverse.element.Modifiers.FUSE)
+                    && level() instanceof ServerLevel server) {
                 // 火药：先落地，1.5 秒后才结算
                 PendingCasts.runLater(server,
                         com.water2h2o.elementalverse.element.Modifiers.FUSE_TICKS,

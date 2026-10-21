@@ -103,5 +103,6 @@
   "tooltip.elemental_verse.form.self": "Form: Release · Self",
   "tooltip.elemental_verse.form.touch": "Form: Release · Touch",
   "tooltip.elemental_verse.form.projectile": "Form: Release · Projectile",
-  "message.elemental_verse.too_complex": "Too complex: already modified 3 times"
+  "message.elemental_verse.too_complex": "Too complex: already modified 3 times",
+  "message.elemental_verse.cooldown": "On cooldown: %s s"
 }

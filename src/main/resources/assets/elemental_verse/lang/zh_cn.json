@@ -103,5 +103,6 @@
   "tooltip.elemental_verse.form.self": "形：释放 · 自身",
   "tooltip.elemental_verse.form.touch": "形：释放 · 接触",
   "tooltip.elemental_verse.form.projectile": "形：释放 · 发射",
-  "message.elemental_verse.too_complex": "过于复杂：这条法术已经修饰过 3 次"
+  "message.elemental_verse.too_complex": "过于复杂：这条法术已经修饰过 3 次",
+  "message.elemental_verse.cooldown": "冷却中：还要 %s 秒"
 }
