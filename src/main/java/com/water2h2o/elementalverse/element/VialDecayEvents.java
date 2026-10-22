@@ -5,11 +5,14 @@ import com.water2h2o.elementalverse.registry.EVItems;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /**
@@ -74,6 +77,84 @@ public final class VialDecayEvents {
             }
         }
 
+        // 鼠标拿着的那一叠不在任何槽位里，必须单独推进（issue #7）
+        tickCarried(player, interval);
+    }
+
+    /**
+     * 鼠标拿着的那一叠（容器界面里的 carried stack）也要老。
+     *
+     * <p>issue #7：从一叠里拆一半拿在手上时，它既不在背包槽位、也不在地面，
+     * 原来的扫描完全覆盖不到 —— 拿着的那半永远停在拆分那一刻，
+     * 放回去就和原叠"不是同一个物品"（原版按数据组件判等），合并不上，
+     * 右键分堆的表现因此很怪。这里让它和背包里的兄弟同步老化。
+     */
+    private static void tickCarried(Player player, int interval) {
+        AbstractContainerMenu menu = player.containerMenu;
+        if (menu == null) {
+            return;
+        }
+        ItemStack carried = menu.getCarried();
+        if (!ElementCarrier.isCarrier(carried)) {
+            return;
+        }
+        ItemStack replacement = advance(carried, player.getCommandSenderWorld(),
+                player.blockPosition(), interval);
+        if (replacement != null) {
+            menu.setCarried(replacement);
+        }
+    }
+
+    /**
+     * 捡起地上的元素时，把两边的时间拉到**加权平均**。
+     *
+     * <p>issue #7：原版按"物品 + 全部数据组件"判断能不能合并，而 {@code decay_timer}
+     * 是每叠各存一份的 —— 两边时间差一个 tick 就合并不上，只能另占一格。
+     * 这里在真正放进背包**之前**把两边改成同一个值，原版照常合并。
+     * 时间取加权平均，和采集时的并入（{@link ElementStackMerger}）同一口径。
+     */
+    @SubscribeEvent
+    static void onItemPickup(ItemEntityPickupEvent.Pre event) {
+        if (!EVConfig.isDecayEnabled()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        ItemStack picked = event.getItemEntity().getItem();
+        if (!ElementCarrier.isCarrier(picked)
+                || !DecayEngine.decays(ElementVialItem.getElement(picked))) {
+            return;
+        }
+
+        ElementType type = ElementVialItem.getElement(picked);
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack existing = inventory.getItem(slot);
+            if (existing.isEmpty() || existing.getItem() != picked.getItem()
+                    || ElementVialItem.getElement(existing) != type) {
+                continue;
+            }
+            int space = existing.getMaxStackSize() - existing.getCount();
+            if (space <= 0) {
+                continue;
+            }
+            int moved = Math.min(space, picked.getCount());
+            long weighted = (long) ElementVialItem.getTimer(existing) * existing.getCount()
+                    + (long) ElementVialItem.getTimer(picked) * moved;
+            int total = existing.getCount() + moved;
+            int averaged = total == 0 ? 0 : (int) (weighted / total);
+
+            if (averaged != ElementVialItem.getTimer(existing)) {
+                ElementVialItem.setTimer(existing, averaged);
+                ElementVialItem.refreshProgress(existing);
+            }
+            if (averaged != ElementVialItem.getTimer(picked)) {
+                ElementVialItem.setTimer(picked, averaged);
+                ElementVialItem.refreshProgress(picked);
+            }
+            inventory.setChanged();
+            // 只对齐一个目标：原版的 add 会继续处理剩下的数量
+            return;
+        }
     }
 
     /** 掉在地上的元素容器：区块卸载就不再 tick，正好符合"世界停下就停下"。 */
