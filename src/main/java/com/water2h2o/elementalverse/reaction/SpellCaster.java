@@ -258,11 +258,18 @@ public final class SpellCaster {
                             .orElse(null));
         }
 
-        // 表现：飞出去的法术自带拖尾，就不用再画一条连线了
+        // 表现：飞出去的法术自带拖尾，就不用再画一条连线了。
+        // 命中点已经确定的（剑 / 弹射物命中）也不在这里画 —— 它们各自有命中反馈
+        // （castAtEntity 的连线、playImpactFeedback 的爆发），再补一条只会闪一下。
         if (flying) {
             playLaunchSound(level, player, input);
-        } else {
-            playCastFeedback(level, player, input, null);
+        } else if (fixedHit == null && aftereffects) {
+            if ("self".equals(declaration.form())) {
+                // 自身形态落在施法者身上，**不能**画一条"向前飞"的连线 —— 那看起来就像射了一发（issue #6）
+                playSelfCastFeedback(level, player, input);
+            } else {
+                playCastFeedback(level, player, input, null);
+            }
         }
         return true;
     }
@@ -1089,7 +1096,54 @@ public final class SpellCaster {
                 target.x, target.y, target.z, 18, 0.35D, 0.35D, 0.35D, 0.02D);
 
         // 元素对应的声音
-        var sound = switch (axis == null ? ElementAxis.FIRE : axis) {
+        var sound = castSound(axis);
+        level.playSound(null, target.x, target.y, target.z, sound, SoundSource.PLAYERS, 0.8F, 1.1F);
+        // 再补一声"施法"底噪，保证任何时候都有明确反馈
+        level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
+                SoundSource.PLAYERS, 0.45F, 1.4F);
+    }
+
+    /**
+     * 自身形态的施法反馈：**不画向前的弹道连线**。
+     *
+     * <p>issue #6：拿申明板对自身施法时，原本也会沿视线画一条 12 段粒子线，
+     * 看上去像往前射了一发弹射物（疾风、阴燃尤其明显）。自身形态根本没有"飞出去"这件事，
+     * 所以改成**绕施法者一圈的元素光点 + 原地爆发**，颜色仍按主成分轴。
+     */
+    private static void playSelfCastFeedback(Level level, Player player, ElementValue input) {
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+        ElementAxis axis = input.dominant();
+        int color = colorOf(axis);
+        var dust = new net.minecraft.core.particles.DustParticleOptions(
+                new org.joml.Vector3f(((color >> 16) & 0xFF) / 255.0F,
+                        ((color >> 8) & 0xFF) / 255.0F,
+                        (color & 0xFF) / 255.0F), 1.2F);
+
+        double centerY = player.getY() + player.getBbHeight() * 0.5D;
+        double radius = Math.max(0.55D, player.getBbWidth() * 0.5D + 0.35D);
+        for (int i = 0; i < 16; i++) {
+            double angle = (Math.PI * 2.0D) * i / 16.0D;
+            server.sendParticles(dust,
+                    player.getX() + Math.cos(angle) * radius,
+                    centerY + 0.15D + (i % 4) * 0.18D,
+                    player.getZ() + Math.sin(angle) * radius,
+                    1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+        // 中心再爆一小团，表示法术确实落在自己身上了
+        server.sendParticles(dust, player.getX(), centerY, player.getZ(),
+                14, 0.45D, 0.5D, 0.45D, 0.02D);
+
+        level.playSound(null, player.getX(), centerY, player.getZ(),
+                castSound(axis), SoundSource.PLAYERS, 0.8F, 1.1F);
+        level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
+                SoundSource.PLAYERS, 0.45F, 1.4F);
+    }
+
+    /** 元素轴对应的施法音效（连线反馈与自身反馈共用）。 */
+    private static net.minecraft.sounds.SoundEvent castSound(ElementAxis axis) {
+        return switch (axis == null ? ElementAxis.FIRE : axis) {
             case FIRE -> SoundEvents.BLAZE_SHOOT;
             case WATER -> SoundEvents.BUCKET_EMPTY;
             case GRASS -> SoundEvents.GRASS_BREAK;
@@ -1097,10 +1151,6 @@ public final class SpellCaster {
             case WIND -> SoundEvents.PHANTOM_FLAP;
             case LIGHT -> SoundEvents.AMETHYST_BLOCK_CHIME;
         };
-        level.playSound(null, target.x, target.y, target.z, sound, SoundSource.PLAYERS, 0.8F, 1.1F);
-        // 再补一声"施法"底噪，保证任何时候都有明确反馈
-        level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
-                SoundSource.PLAYERS, 0.45F, 1.4F);
     }
 
     /** 元素轴对应的颜色：火橙、水蓝、草绿、地褐、风白、光金。 */
